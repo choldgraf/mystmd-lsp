@@ -8,12 +8,20 @@ If warnings don't show up, see [](troubleshooting.md).
 
 ## VS Code
 
-Build the extension from this repository, in [packages/vscode](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/vscode):
+The extension isn't on the Marketplace yet, so install it from a `.vsix` file:
 
-1. From the repository root, run `npm ci`, then `npm run package -w packages/vscode`.
-   This writes a `.vsix` file in `packages/vscode`.
-2. In VS Code, run {gui}`Extensions: Install from VSIX...` and pick that file.
+1. Download the `.vsix` from the latest `vscode-v*` [release](https://github.com/choldgraf/mystmd-lsp/releases), or with `gh`:
+
+   ```sh
+   gh release download --repo choldgraf/mystmd-lsp --pattern '*.vsix' vscode-v0.1.0
+   ```
+
+2. In VS Code, run {gui}`Extensions: Install from VSIX...` and pick that file, or run `code --install-extension mystmd-vscode-0.1.0.vsix`.
+   This also works in Cursor, VSCodium and other VS Code forks.
 3. Open your project folder as the workspace.
+
+It doesn't update itself, so repeat these steps for a new release.
+To build the `.vsix` from source instead, run `npm ci`, then `npm run package -w packages/vscode`, from the repository root.
 
 The extension includes the server, so the only other thing to install is [mystmd](https://mystmd.org/guide/quickstart), for project-wide features.
 It also highlights MyST syntax.

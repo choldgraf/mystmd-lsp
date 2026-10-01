@@ -9,7 +9,7 @@ This page covers how to work on the server, the editor clients and the docs.
 This repository holds the server and its editor clients, with one docs site for all of them:
 
 - `packages/mystmd-lsp`: the server, published to npm.
-- `packages/vscode`: the VS Code extension, with a grammar, commands and a copy of the server's bundle, released to the Marketplace and Open VSX by `release.yml`.
+- `packages/vscode`: the VS Code extension, with a grammar, commands and a copy of the server's bundle, released as a `.vsix` on GitHub by `release.yml`.
 - `packages/jupyterlab`: `jupyter-mystmd-lsp`, a Python package that registers the server with jupyterlab-lsp, published to PyPI.
 - `docs`: this site.
 
@@ -82,8 +82,10 @@ The versions in `package.json` and `pyproject.toml` aren't used for releases.
 | Package | Publishes to | Needs |
 |---|---|---|
 | `mystmd-lsp` | npm | [trusted publisher](https://docs.npmjs.com/trusted-publishers) for `release.yml` |
-| `vscode` | VS Code Marketplace, Open VSX | `VSCE_PAT`, `OVSX_PAT` secrets |
+| `vscode` | a `.vsix` attached to the GitHub release | nothing |
 | `jupyterlab` | PyPI | [trusted publisher](https://docs.pypi.org/trusted-publishers/) for `release.yml`, `pypi` environment |
 
 Versions are independent, so the extension and the server don't need to match.
 The VS Code extension bundles its own copy of the server, so release it after a server change you want to ship there.
+It isn't on the VS Code Marketplace or Open VSX yet.
+The Marketplace no longer accepts new tokens valid for all organizations, so publishing there from CI needs [Microsoft Entra ID](https://code.visualstudio.com/api/working-with-extensions/publishing-extension); until then, the release's `.vsix` can be uploaded by hand on the [publisher page](https://marketplace.visualstudio.com/manage).
