@@ -7,7 +7,8 @@
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "docs": "cd docs && myst build --html",
-    "docs:live": "cd docs && myst start"
+    "docs:live": "cd docs && myst start",
+    "demo:live": "cd demo && myst start"
   },
   "devDependencies": {
     "mystmd": "^1.11.0"
