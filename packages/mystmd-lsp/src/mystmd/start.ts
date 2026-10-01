@@ -16,18 +16,17 @@ function freePort(): Promise<number> {
 }
 
 /**
- * Run `myst start --headless` in `root`.
- * We pick the content server's port, so `url` is known before the first build; `ready` resolves once it's serving.
+ * Run `myst start` in `root`, which serves the built site and the content server the language server reads from.
+ * We pick both ports, so `url` (content server) and `siteUrl` are known before the first build; `ready` resolves once they're serving.
  * `ready` rejects with the message `mystmdMissing` if mystmd isn't installed.
  * `exited` rejects if mystmd dies.
  * mystmd's output goes to `log`, a line at a time.
  */
 export async function startMyst(root: string, log = console.log) {
-  const port = await freePort();
-  // myst reads PORT as its own theme-server port. Pin HOST so it doesn't bind IPv6-only `localhost`, which proxies like code-server's miss.
-  const { PORT, ...rest } = process.env;
-  const env = { ...rest, HOST: '127.0.0.1' };
-  const args = ['start', '--headless', '--server-port', String(port)];
+  const [port, sitePort] = await Promise.all([freePort(), freePort()]); // asked together, so they differ
+  // Pin HOST so it doesn't bind IPv6-only `localhost`, which proxies like code-server's miss.
+  const env = { ...process.env, HOST: '127.0.0.1' };
+  const args = ['start', '--port', String(sitePort), '--server-port', String(port)];
   const child = spawn(process.env.MYST_BIN ?? 'myst', args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
   const stop = () => child.kill();
   process.on('exit', stop);
@@ -46,10 +45,10 @@ export async function startMyst(root: string, log = console.log) {
     for (const stream of [child.stdout, child.stderr]) {
       createInterface({ input: stream }).on('line', (line) => {
         log(`[myst] ${line}`);
-        if (line.includes('Content server started')) resolve();
+        if (line.includes('started on port')) resolve(); // the site's line, or the content server's
       });
     }
   });
   ready.catch(() => {}); // callers that don't wait for mystmd mustn't crash when it's missing
-  return { url: `http://127.0.0.1:${port}`, ready, exited, stop };
+  return { url: `http://127.0.0.1:${port}`, siteUrl: `http://127.0.0.1:${sitePort}`, ready, exited, stop };
 }

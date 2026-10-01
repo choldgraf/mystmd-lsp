@@ -49,7 +49,7 @@ test('server completes, hints and diagnoses over stdio', async (t) => {
 
 const hasMyst = spawnSync('myst', ['--version']).status === 0;
 
-test('with real mystmd: the project loads, and the user is warned when mystmd dies', { skip: !hasMyst, timeout: 90_000 }, async (t) => {
+test('with real mystmd: the project loads, the site is served, and the user is warned when mystmd dies', { skip: !hasMyst, timeout: 90_000 }, async (t) => {
   const root = tmpWorkspace(t, {
     'myst.yml': 'version: 1\nproject:\n  id: test\nsite:\n  template: book-theme\n',
     'index.md': '# Title\n\n(sec-a)=\n## Section\n',
@@ -67,6 +67,9 @@ test('with real mystmd: the project loads, and the user is warned when mystmd di
   for (let found = false; !found; await new Promise((r) => setTimeout(r, 500))) {
     found = ((await conn.sendRequest('workspace/symbol', { query: '' })) as any[]).length > 0;
   }
+
+  const site = (await conn.sendRequest('workspace/executeCommand', { command: 'mystmd.siteUrl' })) as string;
+  assert.equal((await fetch(site)).status, 200);
 
   spawnSync('pkill', ['-P', String(child.pid)]); // mystmd is the server's only child
   assert.match((await warning).message, /myst exited/);
