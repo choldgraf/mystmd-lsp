@@ -1,28 +1,28 @@
-# Releases are triggered by pushing a tag named <package>-v<version>:
+# Publishing a GitHub release with a tag named <package>-v<version> releases that package, at that version:
 #   mystmd-lsp-v0.1.0 -> npm, vscode-v0.1.0 -> VS Code Marketplace and Open VSX, jupyterlab-v0.1.0 -> PyPI
 # See docs/contributing.md.
 name: Release
 on:
-  push:
-    tags: ["mystmd-lsp-v*", "vscode-v*", "jupyterlab-v*"]
+  release:
+    types: [published]
 jobs:
   npm:
     if: startsWith(github.ref_name, 'mystmd-lsp-v')
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write # npm provenance
+      id-token: write # npm trusted publishing
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@latest # trusted publishing needs npm 11.5.1 or newer
       - run: npm ci
       - run: npm test
-      - run: npm publish -w packages/mystmd-lsp --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: npm version "${GITHUB_REF_NAME#mystmd-lsp-v}" --no-git-tag-version -w packages/mystmd-lsp
+      - run: npm publish -w packages/mystmd-lsp
   vscode:
     if: startsWith(github.ref_name, 'vscode-v')
     runs-on: ubuntu-latest
@@ -32,6 +32,7 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
+      - run: npm version "${GITHUB_REF_NAME#vscode-v}" --no-git-tag-version -w packages/vscode
       - run: npm run build -w packages/vscode
       - run: npx vsce publish --no-dependencies -p "$VSCE_PAT"
         working-directory: packages/vscode
@@ -52,6 +53,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      - run: sed -i "s/^version = .*/version = \"${GITHUB_REF_NAME#jupyterlab-v}\"/" packages/jupyterlab/pyproject.toml
       - run: pip install build && python -m build packages/jupyterlab
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:

@@ -68,14 +68,20 @@ The site deploys to GitHub Pages when `main` changes.
 
 ## Releasing
 
-Each package is released by pushing a tag named `<package>-v<version>`.
-`.github/workflows/release.yml` publishes the package named by the tag.
+Each package is released by publishing a GitHub release with a tag named `<package>-v<version>`.
+`.github/workflows/release.yml` publishes the package named by the tag, at the tag's version.
+The versions in `package.json` and `pyproject.toml` aren't used for releases.
 
-| Package | Version lives in | Tag | Publishes to | Needs |
-|---|---|---|---|---|
-| `packages/mystmd-lsp` | `package.json` | `mystmd-lsp-v0.1.0` | npm | `NPM_TOKEN` |
-| `packages/vscode` | `package.json` | `vscode-v0.1.0` | VS Code Marketplace, Open VSX | `VSCE_PAT`, `OVSX_PAT` |
-| `packages/jupyterlab` | `pyproject.toml` | `jupyterlab-v0.1.0` | PyPI | trusted publisher, `pypi` environment |
+| Package | Tag | Publishes to | Needs |
+|---|---|---|---|
+| `packages/mystmd-lsp` | `mystmd-lsp-v0.1.0` | npm | [trusted publisher](https://docs.npmjs.com/trusted-publishers) for `release.yml` |
+| `packages/vscode` | `vscode-v0.1.0` | VS Code Marketplace, Open VSX | `VSCE_PAT`, `OVSX_PAT` |
+| `packages/jupyterlab` | `jupyterlab-v0.1.0` | PyPI | trusted publisher, `pypi` environment |
 
-Before tagging, bump the version in that file, and write the release notes with `github-activity`.
+Write the release notes with `github-activity`, then create the release in the GitHub UI or with `gh`:
+
+```sh
+gh release create mystmd-lsp-v0.1.0 --title "mystmd-lsp v0.1.0" --notes-file notes.md
+```
+
 Versions are independent, so the extension and the server don't need to match.
