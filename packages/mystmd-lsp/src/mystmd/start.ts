@@ -28,8 +28,7 @@ export async function startMyst(root: string, log = console.log) {
   const env = { ...process.env, HOST: '127.0.0.1' };
   const args = ['start', '--port', String(sitePort), '--server-port', String(port)];
   const child = spawn(process.env.MYST_BIN ?? 'myst', args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
-  const stop = () => child.kill();
-  process.on('exit', stop);
+  process.on('exit', () => child.kill());
 
   // Rejects if mystmd dies, even after `ready` has resolved.
   const exited = new Promise<never>((_, reject) => child.on('exit', (code) => reject(new Error(`myst exited with code ${code}`))));
@@ -50,5 +49,5 @@ export async function startMyst(root: string, log = console.log) {
     }
   });
   ready.catch(() => {}); // callers that don't wait for mystmd mustn't crash when it's missing
-  return { url: `http://127.0.0.1:${port}`, siteUrl: `http://127.0.0.1:${sitePort}`, ready, exited, stop };
+  return { url: `http://127.0.0.1:${port}`, siteUrl: `http://127.0.0.1:${sitePort}`, ready, exited };
 }

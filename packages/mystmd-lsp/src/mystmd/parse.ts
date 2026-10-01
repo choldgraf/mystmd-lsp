@@ -72,5 +72,5 @@ export function parseMyst(md: string) {
     .use(keysPlugin)
     .runSync(tree as any, vfile);
 
-  return { tree, messages: vfile.messages.map((m) => m.message), frontmatter };
+  return { tree };
 }
