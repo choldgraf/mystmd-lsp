@@ -19,6 +19,7 @@ function freePort(): Promise<number> {
  * Run `myst start --headless` in `root`.
  * We pick the content server's port, so `url` is known before the first build; `ready` resolves once it's serving.
  * `ready` rejects with the message `mystmdMissing` if mystmd isn't installed.
+ * `exited` rejects if mystmd dies.
  * mystmd's output goes to `log`, a line at a time.
  */
 export async function startMyst(root: string, log = console.log) {
@@ -31,13 +32,17 @@ export async function startMyst(root: string, log = console.log) {
   const stop = () => child.kill();
   process.on('exit', stop);
 
+  // Rejects if mystmd dies, even after `ready` has resolved.
+  const exited = new Promise<never>((_, reject) => child.on('exit', (code) => reject(new Error(`myst exited with code ${code}`))));
+  exited.catch(() => {});
+
   const ready = new Promise<void>((resolve, reject) => {
     child.on('error', (err: NodeJS.ErrnoException) => {
       if (err.code !== 'ENOENT') return reject(err);
       log('mystmd not found; built preview disabled (install mystmd or set MYST_BIN)');
       reject(new Error(mystmdMissing));
     });
-    child.on('exit', (code) => reject(new Error(`myst exited with code ${code}`)));
+    exited.catch(reject);
     for (const stream of [child.stdout, child.stderr]) {
       createInterface({ input: stream }).on('line', (line) => {
         log(`[myst] ${line}`);
@@ -46,5 +51,5 @@ export async function startMyst(root: string, log = console.log) {
     }
   });
   ready.catch(() => {}); // callers that don't wait for mystmd mustn't crash when it's missing
-  return { url: `http://127.0.0.1:${port}`, ready, stop };
+  return { url: `http://127.0.0.1:${port}`, ready, exited, stop };
 }

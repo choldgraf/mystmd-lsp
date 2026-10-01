@@ -52,7 +52,7 @@ connection.onInitialize(async (params) => {
   let url = args['content-server'];
   if (!url && !args['no-myst'] && root && existsSync(join(root, 'myst.yml'))) {
     const myst = await startMyst(root);
-    myst.ready.catch((e) => fail(e.message));
+    myst.ready.then(() => myst.exited).catch((e) => fail(e.message));
     url = myst.url;
   }
   loading = !!url;
