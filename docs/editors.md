@@ -28,6 +28,7 @@ It also highlights MyST syntax.
 This is inspired by the [myst-highlight](https://marketplace.visualstudio.com/items?itemName=ExecutableBookProject.myst-highlight) extension but is a separate implementation, kept up to date with mystmd.
 Both highlight the same syntax, so turn one of them off.
 To use your own build of the server, set `mystmd.serverPath` and reload the window.
+The extension turns off VS Code's built-in Markdown link suggestions (`markdown.suggest.paths.enabled`), since the server suggests the same files and headings along with the rest of the project's labels.
 
 These commands are in the {gui}`Command Palette`:
 

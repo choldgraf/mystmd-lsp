@@ -24,6 +24,9 @@
         }
       }
     },
+    "configurationDefaults": {
+      "markdown.suggest.paths.enabled": false
+    },
     "grammars": [
       {
         "scopeName": "text.myst.injection",
