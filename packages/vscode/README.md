@@ -1,6 +1,5 @@
 # mystmd-vscode
 
-A small VS Code extension that runs [mystmd-lsp](https://github.com/myst-contrib/mystmd-lsp/tree/main/packages/mystmd-lsp), the language server for MyST projects, on Markdown files.
-It only starts the server.
+VS Code support for MyST Markdown: syntax highlighting, the [mystmd-lsp](https://github.com/myst-contrib/mystmd-lsp/tree/main/packages/mystmd-lsp) language server, and a command to preview your site.
 
-Install steps and status are in the [editor setup docs](https://myst-contrib.github.io/mystmd-lsp/editors#vs-code).
+Install steps and commands are in the [editor setup docs](https://myst-contrib.github.io/mystmd-lsp/editors#vs-code).

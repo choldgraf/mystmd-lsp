@@ -3,3 +3,5 @@
 !package.json
 !README.md
 !LICENSE
+!dist/server.cjs
+!syntaxes/myst.tmLanguage.json

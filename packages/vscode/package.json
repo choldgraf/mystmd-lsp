@@ -1,7 +1,7 @@
 {
   "name": "mystmd-vscode",
   "displayName": "MyST Markdown (mystmd-lsp)",
-  "description": "VS Code client for the mystmd-lsp language server.",
+  "description": "VS Code support for MyST Markdown: syntax highlighting, the mystmd-lsp language server, and a site preview.",
   "version": "0.0.1",
   "publisher": "myst-contrib",
   "license": "BSD-3-Clause",
@@ -19,11 +19,34 @@
       "properties": {
         "mystmd.serverPath": {
           "type": "string",
-          "default": "mystmd-lsp",
-          "description": "The mystmd-lsp command. Set a full path if it isn't on VS Code's PATH."
+          "default": "",
+          "description": "Path to your own mystmd-lsp command. Leave empty to use the server bundled with this extension."
         }
       }
-    }
+    },
+    "grammars": [
+      {
+        "scopeName": "text.myst.injection",
+        "path": "./syntaxes/myst.tmLanguage.json",
+        "injectTo": [
+          "text.html.markdown"
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "command": "mystmd.startPreview",
+        "title": "MyST: Start preview"
+      },
+      {
+        "command": "mystmd.restartServer",
+        "title": "MyST: Restart language server"
+      },
+      {
+        "command": "mystmd.showLog",
+        "title": "MyST: Show language server log"
+      }
+    ]
   },
   "devDependencies": {
     "@types/vscode": "^1.90.0",
@@ -32,7 +55,7 @@
     "esbuild": "^0.28.2"
   },
   "scripts": {
-    "build": "esbuild extension.js --bundle --platform=node --external:vscode --outfile=dist/extension.js",
+    "build": "npm run build -w mystmd-lsp && esbuild extension.js --bundle --platform=node --external:vscode --outfile=dist/extension.js && node -e \"require('fs').copyFileSync('../mystmd-lsp/dist/server.cjs','dist/server.cjs')\"",
     "package": "npm run build && vsce package --no-dependencies"
   },
   "repository": {
