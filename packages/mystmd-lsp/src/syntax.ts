@@ -12,6 +12,7 @@ export type RefContext = { trigger: Trigger; prefix: string; start: number; end:
  * A reference in the text. `start`/`end` span the target; `after` is just past the closing delimiter.
  * `text` is the link text of an `xref:` link (undefined for autolinks).
  * `cite` is a `{cite}` key or an `@key`, which may be a citation or a label.
+ * `doc` is a `{doc}` target or a Markdown link to a local file.
  * `path` is the file argument of a `figure`, `image`, `include` or `literalinclude` directive (not URLs, `#cell` ids, or `.*` wildcards).
  */
 export type Ref = { kind: 'ref' | 'numref' | 'eq' | 'doc' | 'link' | 'xref' | 'cite' | 'path'; target: string; line: number; start: number; end: number; after: number; text?: string };
@@ -80,6 +81,8 @@ const refPatterns: [RegExp, (m: RegExpExecArray) => Ref['kind']][] = [
   [/\{(ref|numref|eq|doc)\}`(?:[^`<]*<)?([^`<>]+)>?`/g, (m) => m[1] as Ref['kind']],
   [/\]\(#([^)\s]+)\)/g, () => 'link'],
   [/<#([^>\s]+)>/g, () => 'link'],
+  // A link to a local file, like `[](chapter.md#intro)`; not URLs or `#label`. The lookahead keeps `#intro` out of the match, so a fragment that repeats the path can't move `start`.
+  [/\]\((?!\w+:|#)([^)\s#]+)(?=[#)])/g, () => 'doc'],
   [/\[(?<text>[^\]]*)\]\(xref:([^)\s]+)\)/g, () => 'xref'],
   [/<xref:([^>\s]+)>/g, () => 'xref'],
   [/(?<=\{cite(?::\w+)?\}`(?:[^`]*[,;])?\s*)[^`,;\s]+(?=[^`]*`)/g, () => 'cite'], // each key of a `{cite}` role

@@ -196,6 +196,17 @@ test('directive file arguments: links, completion, and a warning when missing', 
   assert.deepEqual((service.completion({ textDocument: { uri: doc }, position: at[0] }) as any[]).map((i) => i.label), ['img/plot.png']);
 });
 
+test('Markdown links to local files get links and go to definition, but no warning when missing', (t) => {
+  const dir = tmpWorkspace(t, { 'ch/one.md': '' });
+  const service = createService(dir, stubProject());
+  const doc = pathToFileURL(join(dir, 'index.md')).href;
+  service.update(doc, '[](ch/one.md#intro) [](missing.md)');
+  const one = pathToFileURL(join(dir, 'ch', 'one.md')).href;
+  assert.deepEqual(service.documentLinks({ textDocument: { uri: doc } }).map((l) => l.target), [one]);
+  assert.equal(service.definition({ textDocument: { uri: doc }, position: { line: 0, character: 5 } })?.uri, one);
+  assert.deepEqual(service.diagnostics(doc), []);
+});
+
 test('duplicate labels are flagged, but not implicit heading labels', () => {
   const heading = (file: string, line: number) => ({ identifier: 'examples', kind: 'heading', text: 'Examples', file, line, implicit: true });
   const targets = [{ ...built, file: 'index.md', line: 2 }, built, heading('index.md', 4), heading('other.md', 1)];

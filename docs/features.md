@@ -26,7 +26,7 @@ See [](configuration.md#what-it-reads-from-myst-yml) for when they're re-read.
 
 - **References**: hover and go to definition.
 - **Directive names, directive options, and role names**: hover shows the docs from mystmd's specs.
-- **`{doc}` references**: document links and go to definition, when the file exists.
+- **`{doc}` references and links to local files** (`[](chapter.md)`): document links and go to definition, when the file exists.
 
 ## File arguments
 

@@ -57,6 +57,11 @@ test('xref links: completion contexts and references', () => {
   );
 });
 
+test('links to local files are doc references, but not URLs or labels', () => {
+  const refs = refsInText('[a](ch/one.md) [](setup#setup) ![x](a.png) [](https://x.org) [](mailto:a@b.c) [](#label)');
+  assert.deepEqual(refs.map((r) => [r.kind, r.target, r.start, r.end]), [['doc', 'ch/one.md', 4, 13], ['doc', 'setup', 18, 23], ['doc', 'a.png', 36, 41], ['link', 'label', 82, 87]]);
+});
+
 test('optionAt finds the enclosing directive and options already used', () => {
   const lines = ['```{figure} a.png', ':label: fig', ':wi', '```'];
   assert.deepEqual(optionAt(lines, 2, 3), { directive: 'figure', used: ['label'], prefix: 'wi', start: 1, end: 3 });
