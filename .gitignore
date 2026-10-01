@@ -1,5 +1,5 @@
 node_modules/
 dist/
-docs/_build/
 __pycache__/
 *.egg-info/
+_build
