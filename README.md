@@ -41,6 +41,21 @@ The server's log is in the Output panel, under "MyST".
 This needs [mystmd](https://mystmd.org/guide/quickstart) installed, as in [Install](#install).
 The demo window turns off the `myst-author.myst-author-vscode` extension if you have it, since two language servers would show duplicate completions.
 
+## Try it locally in JupyterLab
+
+From the repository root:
+
+```sh
+npm ci && npm run build
+pip install -e packages/jupyterlab jupyterlab-lsp
+PATH=$PWD/node_modules/.bin:$PATH jupyter lab --notebook-dir=demo --debug
+```
+
+Open `index.md` and follow its steps.
+To see the rendered site beside it, run `npm run demo:live` in another terminal.
+The server's log is in the terminal running Jupyter.
+After changing the code, run `npm run build` and restart the language server from the status bar, no need to restart Jupyter.
+
 ## Features this should enable
 
 Here are a few common editor features that this is meant to enable:
