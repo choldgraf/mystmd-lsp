@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // F5: rebuilds, then opens demo/ in a new window with the extension and the local server.
+      "name": "Demo extension on demo/",
+      "type": "extensionHost",
+      "request": "launch",
+      // The other MyST language server would add its own completions next to ours, so switch it off here.
+      "args": ["--extensionDevelopmentPath=${workspaceFolder}/packages/vscode", "--disable-extension=myst-author.myst-author-vscode", "${workspaceFolder}/demo"],
+      // The extension runs `mystmd-lsp`; this puts the workspace's build of it first on PATH.
+      "env": { "PATH": "${workspaceFolder}/node_modules/.bin:${env:PATH}" },
+      "preLaunchTask": "npm: build"
+    }
+  ]
+}

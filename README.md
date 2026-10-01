@@ -23,6 +23,24 @@ Most people will use this as part of a plugin, but some editors let you manually
 To do so, point your editor at `mystmd-lsp --stdio` for Markdown files.
 See [editor setup](docs/editors.md) for VS Code and JupyterLab, and [troubleshooting](docs/troubleshooting.md) if something doesn't work.
 
+## Try it locally in VS Code
+
+To see the server working before installing anything, run it from a clone of this repository:
+
+1. Run `npm ci` in the repository root.
+2. Open the repository root in VS Code.
+3. Press F5 and pick "Demo extension on demo/".
+   This builds the server and extension, then opens a second VS Code window on the [demo project](demo/index.md) with both loaded.
+4. In the new window, open `index.md` and follow its "Try this" steps.
+
+The first run is slower because mystmd downloads its theme, and the external references need network access.
+Wait for "Loading project" to finish before expecting warnings.
+After changing the code, press Cmd+Shift+F5 (Ctrl+Shift+F5 on Windows and Linux) to rebuild and reopen the window.
+The server's log is in the Output panel, under "MyST".
+
+This needs [mystmd](https://mystmd.org/guide/quickstart) installed, as in [Install](#install).
+The demo window turns off the `myst-author.myst-author-vscode` extension if you have it, since two language servers would show duplicate completions.
+
 ## Features this should enable
 
 Here are a few common editor features that this is meant to enable:
