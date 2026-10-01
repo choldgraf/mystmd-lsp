@@ -1,13 +1,10 @@
 # mystmd-lsp
 
 A language server for [MyST](https://mystmd.org) projects, built on the mystmd engine.
-This implements the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) (LSP) so that it can be used across editors like VS Code and JupyterLab.
+It speaks the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) (LSP), so it works in any editor with an LSP client, including VS Code and JupyterLab.
 
-This project leverage's the [MyST Document Engine](https://mystmd.org) to create an index of objects that are available for referencing or labeling.
-MyST is designed with modular, machine-readable content in mind, and the goal of this project is to leverage that structure to make it easier to write MyST documents in an editor.
-
-It works by running a headless `myst` server under the hood, and updating its index of objects for referencing by letting the server re-build the MyST documents in real-time.
-It also comes bundled with a few editor-specific packages to use this LSP in their own plugins.
+It runs a headless `myst` server and rebuilds your documents as you edit, so it knows which labels, citations and other objects you can reference.
+The editor packages in this repository wrap the server for VS Code and JupyterLab.
 
 ## Install
 
@@ -16,6 +13,7 @@ npm install -g mystmd-lsp
 ```
 
 This needs Node 22 or newer, and [mystmd](https://mystmd.org/guide/quickstart) for project-wide features.
+Note: The VS Code extension includes the server, so it doesn't need this step; see [editor setup](docs/editors.md).
 
 ## Run
 
@@ -38,8 +36,7 @@ Wait for "Loading project" to finish before expecting warnings.
 After changing the code, press Cmd+Shift+F5 (Ctrl+Shift+F5 on Windows and Linux) to rebuild and reopen the window.
 The server's log is in the Output panel, under "MyST".
 
-This needs [mystmd](https://mystmd.org/guide/quickstart) installed, as in [Install](#install).
-The demo window turns off the `myst-author.myst-author-vscode` extension if you have it, since two language servers would show duplicate completions.
+This needs [mystmd](https://mystmd.org/guide/quickstart) installed.
 
 ## Try it locally in JupyterLab
 
@@ -56,19 +53,17 @@ To see the rendered site beside it, run `npm run demo:live` in another terminal.
 The server's log is in the terminal running Jupyter.
 After changing the code, run `npm run build` and restart the language server from the status bar, no need to restart Jupyter.
 
-## Features this should enable
+## What you get
 
-Here are a few common editor features that this is meant to enable:
-
-- Completion for references, citations, files, directives, roles and directive options. There are many kinds of "objects" within MyST, and this should expose as much of them as we can.
-- Support for _external references and objects_ as well, via the `xref` mechanism.
+- Completion for references, citations, files, directives, roles and directive options.
+- Links to labels and objects in external projects, through `xref`.
 - Hover, go to definition, find references, and rename for labels.
 - Warnings for unknown references, missing files, and duplicate labels.
-- Inline hints about what a reference points to, outline and workspace symbols
-- Support for Markdown cells in notebooks like JupyterLab or vscode notebooks.
+- Inline hints about what a reference points to, plus outline and workspace symbols.
+- Markdown cells in notebooks, such as JupyterLab or VS Code notebooks.
 
 See [features](docs/features.md) for the full list.
 
 ## Inspiration
 
-This takes inspiration from the [myst-lsp project](https://marketplace.visualstudio.com/items?itemName=chrisjsewell.myst-lsp), adapting that approach for the modern MyST engine.
+This takes inspiration from the [myst-lsp project](https://marketplace.visualstudio.com/items?itemName=chrisjsewell.myst-lsp), adapting that approach for the current MyST engine.

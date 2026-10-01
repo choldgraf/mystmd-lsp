@@ -2,7 +2,6 @@
 title: Contributing
 ---
 
-Thanks for helping out!
 This page covers how to work on the server, the editor clients and the docs.
 
 ## Layout
@@ -10,7 +9,7 @@ This page covers how to work on the server, the editor clients and the docs.
 This repository holds the server and its editor clients, with one docs site for all of them:
 
 - `packages/mystmd-lsp`: the server, published to npm.
-- `packages/vscode`: the VS Code extension, released to the Marketplace and Open VSX by `release.yml`.
+- `packages/vscode`: the VS Code extension, with a grammar, commands and a copy of the server's bundle, released to the Marketplace and Open VSX by `release.yml`.
 - `packages/jupyterlab`: `jupyter-mystmd-lsp`, a Python package that registers the server with jupyterlab-lsp, published to PyPI.
 - `docs`: this site.
 
@@ -33,6 +32,7 @@ For `packages/jupyterlab`, run `pip install -e "packages/jupyterlab[test]"` and 
 CI runs the same commands.
 
 The server's `build` bundles it into `dist/server.cjs` with esbuild (`packages/mystmd-lsp/build.mjs`), which starts faster than the source.
+The extension's build runs the server's build and copies that bundle.
 
 ## Code map
 
@@ -44,7 +44,7 @@ The server's `build` bundles it into `dist/server.cjs` with esbuild (`packages/m
 - `packages/mystmd-lsp/src/cite.ts`: reads the project's `.bib` files.
 - `packages/mystmd-lsp/src/service.ts`: the features (completion, hover, diagnostics, ...) without an LSP connection, so tests can call them directly.
 - `packages/mystmd-lsp/src/server.ts`: the LSP wiring.
-- `packages/mystmd-lsp/src/mystmd/`: mystmd's parser with its default extensions (`parse.ts`), a client for the `myst start` content server, and a launcher for `myst start --headless`.
+- `packages/mystmd-lsp/src/mystmd/`: mystmd's parser with its default extensions (`parse.ts`), a client for the `myst start` content server, and a launcher for `myst start`.
 
 Tests sit next to the code they cover, as `*.test.ts`.
 To add a feature, such as a new diagnostic:

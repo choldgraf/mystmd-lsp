@@ -7,6 +7,7 @@ project:
   github: https://github.com/myst-contrib/mystmd-lsp
   plugins:
     - https://github.com/myst-contrib/myst-include-link-rewrites/releases/latest/download/index.mjs
+    - https://github.com/myst-contrib/myst-gui-text/releases/latest/download/index.mjs
   toc:
     - file: index.md
     - file: editors.md
