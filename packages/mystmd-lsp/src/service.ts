@@ -39,6 +39,20 @@ const targetIcons: Record<string, CompletionItemKind> = {
   code: CompletionItemKind.Snippet,
 };
 
+// External targets carry their kind too: MyST sites use the same names as above, Sphinx inventories use `domain:role` (e.g. `py:function`).
+const sphinxIcons: Record<string, CompletionItemKind> = {
+  function: CompletionItemKind.Function,
+  method: CompletionItemKind.Method,
+  class: CompletionItemKind.Class,
+  exception: CompletionItemKind.Class,
+  module: CompletionItemKind.Module,
+  attribute: CompletionItemKind.Property,
+  data: CompletionItemKind.Variable,
+  label: CompletionItemKind.Reference,
+  term: CompletionItemKind.Text,
+};
+const xrefIcon = (kind: string) => targetIcons[kind] ?? sphinxIcons[kind.split(':')[1]] ?? CompletionItemKind.Reference;
+
 /**
  * Semantic tokens: each reference is a `label`, with its target's kind as a modifier (e.g. `label.figure`).
  * Kinds not listed here get the bare `label` type.
@@ -284,7 +298,7 @@ export function createService(root: string | undefined, project: ReturnType<type
           const all = (xrefs[key]?.entries ?? []).filter((e) => has(e) && `${e.name} ${e.title ?? ''}`.toLowerCase().includes(q));
           const matches = [...all.filter((e) => e.name.toLowerCase().startsWith(q)), ...all.filter((e) => !e.name.toLowerCase().startsWith(q))];
           // Sphinx inventories can have tens of thousands of entries: send the best 200 and ask the client to re-query as the user types.
-          const items = matches.slice(0, 200).map((e) => item(e.name, CompletionItemKind.Reference, { detail: e.title && e.title !== e.name ? `${e.title} · ${e.kind}` : e.kind, filterText: `${e.name} ${e.title ?? ''}` }));
+          const items = matches.slice(0, 200).map((e) => item(e.name, xrefIcon(e.kind), { labelDetails: { description: e.kind }, detail: e.title && e.title !== e.name ? `${e.title} · ${e.kind}` : e.kind, filterText: `${e.name} ${e.title ?? ''}` }));
           return { isIncomplete: matches.length > 200, items };
         }
         case 'directive':
