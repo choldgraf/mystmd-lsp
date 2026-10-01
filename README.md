@@ -73,4 +73,6 @@ This takes inspiration from the [myst-lsp project](https://marketplace.visualstu
 Currently, this is being developed primarily for Chris to have VSCode and JupyterLab LSP support for the mystmd engine!
 It's also a way to explore how complex it would be to implement some of this core functionality using the capabilities of that engine.
 So treat it as part "alpha product", part "prototype for experimentation", and part "hopefully useful tool".
-It's being developed with a fair amount of Claude support, though with a lot of heavy loops of review and design work w/ a human.
+If the Jupyter Book team ever wants to use `mystmd-lsp` for its npm package I'm happy to donate this repository and/or the `mystmd-lsp` npm name to the project!
+
+Note: This is being developed with a fair amount of Claude support, though with a lot of heavy loops of review and design work w/ a human.
