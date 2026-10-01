@@ -2,6 +2,7 @@ import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { CompletionItemKind } from 'vscode-languageserver';
 import { createProject } from './project.ts';
 import { createService, semanticTokensLegend } from './service.ts';
 import { marks, stubProject as stubTargets, tmpWorkspace } from './test-helpers.ts';
@@ -109,6 +110,21 @@ test('xrefs resolve against loaded inventories, and only loaded ones are checked
   assert.deepEqual(service.diagnostics(uri).map((d) => d.message), [
     '`docs/guide#nope` not found in docs (https://docs.example.org)',
     'Unknown external project `nokey` (add it to `project.references` in myst.yml)',
+  ]);
+});
+
+test('external completion shows each target\'s kind, from MyST sites and Sphinx inventories', () => {
+  const xrefs = {
+    docs: { url: 'https://docs.example.org', kind: 'myst' as const, entries: [{ name: 'fig-a', kind: 'figure', title: 'A plot', url: 'https://docs.example.org/guide#fig-a', page: '/guide' }] },
+    py: { url: 'https://py.example.org', kind: 'sphinx' as const, entries: [{ name: 'os.join', kind: 'py:function', title: 'os.join', url: 'https://py.example.org/os#os.join' }] },
+  };
+  const service = createService(root, stubProject(), xrefs);
+  const { text, at } = marks('[](xref:docs#|) [](xref:py#|)\n');
+  service.update(uri, text);
+  const items = at.map((position) => (service.completion({ textDocument: { uri }, position }) as any).items[0]);
+  assert.deepEqual(items.map((i) => [i.label, i.kind, i.labelDetails.description]), [
+    ['fig-a', CompletionItemKind.Color, 'figure'],
+    ['os.join', CompletionItemKind.Function, 'py:function'],
   ]);
 });
 

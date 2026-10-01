@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { CompletionItemKind, DiagnosticSeverity, ErrorCodes, ResponseError, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position, type TextEdit } from 'vscode-languageserver';
 import { directives, roles } from './mystmd/parse.ts';
 import { authorYear, readBibliography, type BibEntry } from './cite.ts';
+import { kindIcon } from './kinds.ts';
 import type { createProject } from './project.ts';
 import { labelDefinition, nameAt, optionAt, refAt, refsInText, type Ref } from './syntax.ts';
 import type { Target } from './index-targets.ts';
@@ -29,29 +30,6 @@ function hint(t: Target) {
   if (t.kind === 'equation' && t.enumerator) return `(${t.enumerator})`;
   return t.enumerator || !t.text ? title(t) : `${title(t)}: ${t.text}`;
 }
-
-// Completion icons come from a fixed list of kinds made for code, so these are the closest fits. Other targets get `Reference`.
-const targetIcons: Record<string, CompletionItemKind> = {
-  figure: CompletionItemKind.Color,
-  table: CompletionItemKind.Struct,
-  equation: CompletionItemKind.Operator,
-  heading: CompletionItemKind.Module,
-  code: CompletionItemKind.Snippet,
-};
-
-// External targets carry their kind too: MyST sites use the same names as above, Sphinx inventories use `domain:role` (e.g. `py:function`).
-const sphinxIcons: Record<string, CompletionItemKind> = {
-  function: CompletionItemKind.Function,
-  method: CompletionItemKind.Method,
-  class: CompletionItemKind.Class,
-  exception: CompletionItemKind.Class,
-  module: CompletionItemKind.Module,
-  attribute: CompletionItemKind.Property,
-  data: CompletionItemKind.Variable,
-  label: CompletionItemKind.Reference,
-  term: CompletionItemKind.Text,
-};
-const xrefIcon = (kind: string) => targetIcons[kind] ?? sphinxIcons[kind.split(':')[1]] ?? CompletionItemKind.Reference;
 
 /**
  * Semantic tokens: each reference is a `label`, with its target's kind as a modifier (e.g. `label.figure`).
@@ -259,7 +237,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       const citeItems = () =>
         bib.entries.map((e) => item(e.key, CompletionItemKind.Value, { detail: [authorYear(e), e.title].filter(Boolean).join(' · '), filterText: `${e.key} ${e.author ?? ''} ${e.title ?? ''}` }));
       const labelItem = (t: Target) =>
-        item(t.identifier, targetIcons[t.kind] ?? CompletionItemKind.Reference, {
+        item(t.identifier, kindIcon(t.kind), {
           labelDetails: { description: title(t) }, // shown on every row, unlike `detail`
           detail: `${title(t)} · ${t.file}`,
           documentation: t.text,
@@ -298,7 +276,7 @@ export function createService(root: string | undefined, project: ReturnType<type
           const all = (xrefs[key]?.entries ?? []).filter((e) => has(e) && `${e.name} ${e.title ?? ''}`.toLowerCase().includes(q));
           const matches = [...all.filter((e) => e.name.toLowerCase().startsWith(q)), ...all.filter((e) => !e.name.toLowerCase().startsWith(q))];
           // Sphinx inventories can have tens of thousands of entries: send the best 200 and ask the client to re-query as the user types.
-          const items = matches.slice(0, 200).map((e) => item(e.name, xrefIcon(e.kind), { labelDetails: { description: e.kind }, detail: e.title && e.title !== e.name ? `${e.title} · ${e.kind}` : e.kind, filterText: `${e.name} ${e.title ?? ''}` }));
+          const items = matches.slice(0, 200).map((e) => item(e.name, kindIcon(e.kind), { labelDetails: { description: e.kind }, detail: e.title && e.title !== e.name ? `${e.title} · ${e.kind}` : e.kind, filterText: `${e.name} ${e.title ?? ''}` }));
           return { isIncomplete: matches.length > 200, items };
         }
         case 'directive':
