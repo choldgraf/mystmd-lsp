@@ -31,7 +31,7 @@ jobs:
       - run: npm install -g npm@latest # trusted publishing needs npm 11.5.1 or newer
       - run: npm ci
       - run: npm test
-      - run: npm version "$VERSION" --no-git-tag-version -w packages/mystmd-lsp
+      - run: npm version "$VERSION" --no-git-tag-version --allow-same-version -w packages/mystmd-lsp
       - run: npm publish -w packages/mystmd-lsp
   vscode:
     if: inputs.package == 'vscode'
@@ -42,7 +42,7 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
-      - run: npm version "$VERSION" --no-git-tag-version -w packages/vscode
+      - run: npm version "$VERSION" --no-git-tag-version --allow-same-version -w packages/vscode
       # ponytail: only a .vsix on the GitHub release; add `vsce publish` / `ovsx publish` here once there are Marketplace / Open VSX credentials.
       - run: npm run package -w packages/vscode
       - uses: actions/upload-artifact@v4
