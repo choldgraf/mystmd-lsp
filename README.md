@@ -67,3 +67,10 @@ See [features](docs/features.md) for the full list.
 ## Inspiration
 
 This takes inspiration from the [myst-lsp project](https://marketplace.visualstudio.com/items?itemName=chrisjsewell.myst-lsp), adapting that approach for the current MyST engine.
+
+## Project status
+
+Currently, this is being developed primarily for Chris to have VSCode and JupyterLab LSP support for the mystmd engine!
+It's also a way to explore how complex it would be to implement some of this core functionality using the capabilities of that engine.
+So treat it as part "alpha product", part "prototype for experimentation", and part "hopefully useful tool".
+It's being developed with a fair amount of Claude support, though with a lot of heavy loops of review and design work w/ a human.
