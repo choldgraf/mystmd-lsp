@@ -5,7 +5,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { createProtocolConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-languageserver/node';
+import { CompletionItemKind, createProtocolConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-languageserver/node';
 
 const text = `(fig-a)=
 # Heading
@@ -44,7 +44,7 @@ test('server completes, hints and diagnoses over stdio', async (t) => {
   assert.deepEqual(rest, []);
 
   const items: any[] = await conn.sendRequest('textDocument/completion', { textDocument: { uri }, position: { line: 10, character: 9 } });
-  assert.deepEqual(items.map((i) => [i.label, i.detail]), [['fig-logo', 'Figure 1 · index.md']]);
+  assert.deepEqual(items.map((i) => [i.label, i.detail, i.labelDetails.description, i.kind]), [['fig-logo', 'Figure 1 · index.md', 'Figure 1', CompletionItemKind.Color]]);
 
   const hints: any[] = await conn.sendRequest('textDocument/inlayHint', { textDocument: { uri }, range: { start: { line: 0, character: 0 }, end: { line: 11, character: 0 } } });
   assert.deepEqual(hints.map((h) => h.label), ['Figure 1']);

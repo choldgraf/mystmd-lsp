@@ -30,6 +30,15 @@ function hint(t: Target) {
   return t.enumerator || !t.text ? title(t) : `${title(t)}: ${t.text}`;
 }
 
+// Completion icons come from a fixed list of kinds made for code, so these are the closest fits. Other targets get `Reference`.
+const targetIcons: Record<string, CompletionItemKind> = {
+  figure: CompletionItemKind.Color,
+  table: CompletionItemKind.Struct,
+  equation: CompletionItemKind.Operator,
+  heading: CompletionItemKind.Module,
+  code: CompletionItemKind.Snippet,
+};
+
 /**
  * Semantic tokens: each reference is a `label`, with its target's kind as a modifier (e.g. `label.figure`).
  * Kinds not listed here get the bare `label` type.
@@ -235,7 +244,13 @@ export function createService(root: string | undefined, project: ReturnType<type
 
       const citeItems = () =>
         bib.entries.map((e) => item(e.key, CompletionItemKind.Value, { detail: [authorYear(e), e.title].filter(Boolean).join(' · '), filterText: `${e.key} ${e.author ?? ''} ${e.title ?? ''}` }));
-      const labelItem = (t: Target) => item(t.identifier, CompletionItemKind.Reference, { detail: `${title(t)} · ${t.file}`, documentation: t.text, filterText: `${t.identifier} ${t.text}` });
+      const labelItem = (t: Target) =>
+        item(t.identifier, targetIcons[t.kind] ?? CompletionItemKind.Reference, {
+          labelDetails: { description: title(t) }, // shown on every row, unlike `detail`
+          detail: `${title(t)} · ${t.file}`,
+          documentation: t.text,
+          filterText: `${t.identifier} ${t.text}`,
+        });
 
       switch (ctx.trigger) {
         case 'cite':
