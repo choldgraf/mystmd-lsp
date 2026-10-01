@@ -8,7 +8,7 @@ If warnings don't show up, see [](troubleshooting.md).
 
 ## VS Code
 
-Build the extension from this repository, in [packages/vscode](https://github.com/myst-contrib/mystmd-lsp/tree/main/packages/vscode):
+Build the extension from this repository, in [packages/vscode](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/vscode):
 
 1. From the repository root, run `npm ci`, then `npm run package -w packages/vscode`.
    This writes a `.vsix` file in `packages/vscode`.
@@ -36,7 +36,7 @@ npm install -g mystmd-lsp
 pip install jupyterlab-lsp jupyter-mystmd-lsp
 ```
 
-[jupyter-mystmd-lsp](https://github.com/myst-contrib/mystmd-lsp/tree/main/packages/jupyterlab) registers the server with jupyterlab-lsp, so there's no config to write.
+[jupyter-mystmd-lsp](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/jupyterlab) registers the server with jupyterlab-lsp, so there's no config to write.
 jupyterlab-lsp uses the Jupyter server's root folder as the workspace, so start Jupyter in your project folder.
 This covers Markdown files opened in the editor.
 

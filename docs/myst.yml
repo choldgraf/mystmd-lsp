@@ -4,7 +4,7 @@ extends:
 project:
   id: mystmd-lsp
   title: mystmd-lsp
-  github: https://github.com/myst-contrib/mystmd-lsp
+  github: https://github.com/choldgraf/mystmd-lsp
   plugins:
     - https://github.com/myst-contrib/myst-include-link-rewrites/releases/latest/download/index.mjs
     - https://github.com/myst-contrib/myst-gui-text/releases/latest/download/index.mjs

@@ -18,4 +18,4 @@ test = ["pytest"]
 mystmd-lsp = "jupyter_mystmd_lsp:spec"
 
 [project.urls]
-Source = "https://github.com/myst-contrib/mystmd-lsp"
+Source = "https://github.com/choldgraf/mystmd-lsp"
