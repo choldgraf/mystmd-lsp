@@ -68,20 +68,22 @@ The site deploys to GitHub Pages when `main` changes.
 
 ## Releasing
 
-Each package is released by publishing a GitHub release with a tag named `<package>-v<version>`.
-`.github/workflows/release.yml` publishes the package named by the tag, at the tag's version.
-The versions in `package.json` and `pyproject.toml` aren't used for releases.
-
-| Package | Tag | Publishes to | Needs |
-|---|---|---|---|
-| `packages/mystmd-lsp` | `mystmd-lsp-v0.1.0` | npm | [trusted publisher](https://docs.npmjs.com/trusted-publishers) for `release.yml` |
-| `packages/vscode` | `vscode-v0.1.0` | VS Code Marketplace, Open VSX | `VSCE_PAT`, `OVSX_PAT` |
-| `packages/jupyterlab` | `jupyterlab-v0.1.0` | PyPI | trusted publisher, `pypi` environment |
-
-Write the release notes with `github-activity`, then create the release in the GitHub UI or with `gh`:
+Each package is released on its own by the Release workflow (`.github/workflows/release.yml`).
+Run it from the Actions tab (Release → Run workflow), pick the package and type the version, or run:
 
 ```sh
-gh release create mystmd-lsp-v0.1.0 --title "mystmd-lsp v0.1.0" --notes-file notes.md
+gh workflow run release.yml -f package=vscode -f version=0.1.0
 ```
 
+It publishes the package at that version, then tags the commit `<package>-v<version>` and creates a GitHub release with generated notes.
+Edit the release afterwards to replace the notes with ones from `github-activity`.
+The versions in `package.json` and `pyproject.toml` aren't used for releases.
+
+| Package | Publishes to | Needs |
+|---|---|---|
+| `mystmd-lsp` | npm | [trusted publisher](https://docs.npmjs.com/trusted-publishers) for `release.yml` |
+| `vscode` | VS Code Marketplace, Open VSX | `VSCE_PAT`, `OVSX_PAT` secrets |
+| `jupyterlab` | PyPI | [trusted publisher](https://docs.pypi.org/trusted-publishers/) for `release.yml`, `pypi` environment |
+
 Versions are independent, so the extension and the server don't need to match.
+The VS Code extension bundles its own copy of the server, so release it after a server change you want to ship there.

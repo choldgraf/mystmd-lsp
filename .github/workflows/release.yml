@@ -1,13 +1,22 @@
-# Publishing a GitHub release with a tag named <package>-v<version> releases that package, at that version:
-#   mystmd-lsp-v0.1.0 -> npm, vscode-v0.1.0 -> VS Code Marketplace and Open VSX, jupyterlab-v0.1.0 -> PyPI
+# Publishes one package at the version you choose, then tags the commit <package>-v<version> and creates a GitHub release.
+# Run it from the Actions tab (Release → Run workflow), or: gh workflow run release.yml -f package=vscode -f version=0.1.0
 # See docs/contributing.md.
 name: Release
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package to publish
+        type: choice
+        options: [mystmd-lsp, vscode, jupyterlab]
+      version:
+        description: Version, e.g. 0.1.0
+        required: true
+env:
+  VERSION: ${{ inputs.version }}
 jobs:
   npm:
-    if: startsWith(github.ref_name, 'mystmd-lsp-v')
+    if: inputs.package == 'mystmd-lsp'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -21,10 +30,10 @@ jobs:
       - run: npm install -g npm@latest # trusted publishing needs npm 11.5.1 or newer
       - run: npm ci
       - run: npm test
-      - run: npm version "${GITHUB_REF_NAME#mystmd-lsp-v}" --no-git-tag-version -w packages/mystmd-lsp
+      - run: npm version "$VERSION" --no-git-tag-version -w packages/mystmd-lsp
       - run: npm publish -w packages/mystmd-lsp
   vscode:
-    if: startsWith(github.ref_name, 'vscode-v')
+    if: inputs.package == 'vscode'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -32,18 +41,18 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
-      - run: npm version "${GITHUB_REF_NAME#vscode-v}" --no-git-tag-version -w packages/vscode
+      - run: npm version "$VERSION" --no-git-tag-version -w packages/vscode
       - run: npm run build -w packages/vscode
       - run: npx vsce publish --no-dependencies -p "$VSCE_PAT"
         working-directory: packages/vscode
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-      - run: npx ovsx publish --no-dependencies -p "$OVSX_PAT"
+      - run: npx --yes ovsx publish --no-dependencies -p "$OVSX_PAT"
         working-directory: packages/vscode
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
   pypi:
-    if: startsWith(github.ref_name, 'jupyterlab-v')
+    if: inputs.package == 'jupyterlab'
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
@@ -53,8 +62,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - run: sed -i "s/^version = .*/version = \"${GITHUB_REF_NAME#jupyterlab-v}\"/" packages/jupyterlab/pyproject.toml
+      - run: sed -i "s/^version = .*/version = \"$VERSION\"/" packages/jupyterlab/pyproject.toml
       - run: pip install build && python -m build packages/jupyterlab
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: packages/jupyterlab/dist
+  github-release:
+    needs: [npm, vscode, pypi]
+    # The other two publish jobs are skipped, which is fine; a failed one isn't.
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - run: gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$TAG" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.package }}-v${{ inputs.version }}
