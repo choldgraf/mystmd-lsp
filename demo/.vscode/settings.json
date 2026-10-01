@@ -1,0 +1,13 @@
+{
+  "editor.inlayHints.enabled": "on",
+  "editor.semanticHighlighting.enabled": true,
+  "editor.semanticTokenColorCustomizations": {
+    "rules": {
+      "label.figure": "#2a9d8f",
+      "label.table": "#e9c46a",
+      "label.equation": "#e76f51",
+      "label.heading": "#6a8fd8",
+      "label.citation": "#c77dff"
+    }
+  }
+}

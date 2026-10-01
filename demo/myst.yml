@@ -1,0 +1,19 @@
+version: 1
+project:
+  id: mystmd-lsp-demo
+  title: mystmd-lsp demo
+  bibliography:
+    - refs.bib
+  references:
+    myst: https://mystmd.org/guide
+    python: https://docs.python.org/3
+  toc:
+    - file: index.md
+    - file: 1-references.md
+    - file: 2-citations.md
+    - file: 3-directives.md
+    - file: 4-external.md
+    - file: 5-warnings.md
+    - file: notebook.ipynb
+site:
+  template: book-theme
