@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createConnection, DidChangeWatchedFilesNotification, NotebookDocuments, ProposedFeatures, TextDocuments, TextDocumentSyncKind, type WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { contentServer } from './mystmd/content-server.ts';
 import { startMyst } from './mystmd/start.ts';
 import { createProject } from './project.ts';
 import { findProjectRoot } from './root.ts';
@@ -58,7 +59,7 @@ connection.onInitialize(async (params) => {
     siteUrl = myst.ready.then(() => myst.siteUrl, () => undefined);
   }
   loading = !!url;
-  const project = createProject(url, refresh);
+  const project = createProject(url ? contentServer(url) : undefined, refresh);
   // External projects from myst.yml `project.references`, refreshed as their inventories load.
   const xrefs: Record<string, XrefProject> = {};
   const readXrefs = () => syncXrefs(xrefs, root ? readReferences(root) : {}, refresh);

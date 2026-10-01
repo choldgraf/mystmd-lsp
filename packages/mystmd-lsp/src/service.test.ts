@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { CompletionItemKind } from 'vscode-languageserver';
+import { parseMyst } from './mystmd/parse.ts';
 import { createProject } from './project.ts';
 import { createService, semanticTokensLegend } from './service.ts';
 import { marks, stubProject as stubTargets, tmpWorkspace } from './test-helpers.ts';
@@ -213,6 +214,29 @@ test('duplicate labels are flagged, but not implicit heading labels', () => {
   const service = createService(root, stubTargets(targets));
   service.update(uri, '(fig-built)=\n# Built\n\n## Examples\n');
   assert.deepEqual(service.diagnostics(uri).map((d) => [d.message, d.range.start.line, d.range.start.character]), [['Duplicate label `fig-built`, also defined in chapter/plots.md', 0, 1]]);
+});
+
+test('an open document replaces its built page once mystmd has built the project', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const page = (location: string, md: string) => ({ location, mdast: parseMyst(md).tree });
+  let reload = () => {};
+  const project = createProject({ pages: async () => [page('/index.md', '(dup)=\n# A\n'), page('/chapter.md', '(dup)=\n# B\n')], watch: (cb) => void (reload = cb) }, () => {});
+  const service = createService(root, project);
+  const duplicates = () => service.diagnostics(uri).map((d) => d.message);
+  service.update(uri, '(dup)=\n# A\n');
+  assert.deepEqual(duplicates(), []); // not built yet
+
+  reload();
+  await new Promise(setImmediate);
+  assert.deepEqual(duplicates(), ['Duplicate label `dup`, also defined in chapter.md']);
+
+  // The live parse replaces the built `index.md`, so its URI must map to the content server's location.
+  service.update(uri, '# A\n');
+  t.mock.timers.tick(150);
+  assert.deepEqual(duplicates(), []);
+
+  service.close(uri);
+  assert.deepEqual(project.targets().filter((t) => t.identifier === 'dup').map((t) => t.file), ['index.md', 'chapter.md']);
 });
 
 test('notebook cells are documents in their notebook file', (t) => {
