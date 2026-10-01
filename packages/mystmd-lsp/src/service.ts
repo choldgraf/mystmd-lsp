@@ -6,7 +6,7 @@ import { directives, roles } from './mystmd/parse.ts';
 import { authorYear, readBibliography, type BibEntry } from './cite.ts';
 import { kindIcon } from './kinds.ts';
 import type { createProject } from './project.ts';
-import { labelDefinition, nameAt, optionAt, refAt, refsInText, type Ref } from './syntax.ts';
+import { labelDefinition, nameAt, optionAt, refAt, refsInText, splitLines, type Ref } from './syntax.ts';
 import type { Target } from './index-targets.ts';
 import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
 
@@ -149,7 +149,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       const r = resolveRef(ref, at.textDocument.uri);
       return r.kind === 'label' ? { target: r.target, range: rangeOf(ref) } : undefined;
     }
-    const def = labelDefinition(texts.get(at.textDocument.uri)?.split('\n')[line] ?? '');
+    const def = labelDefinition(splitLines(texts.get(at.textDocument.uri) ?? '')[line] ?? '');
     if (!def || character < def.start || def.end < character) return;
     const target = lookup().get(def.target.toLowerCase());
     return target && { target, range: rangeOf({ ...def, line }) };
@@ -157,7 +157,7 @@ export function createService(root: string | undefined, project: ReturnType<type
 
   /** Where a label is written. The definition closest to the target's line, since built directives can report a line inside them. */
   function definitionOf(t: Target, uri = t.uri ?? toUri(t.file)) {
-    const defs = source(uri).split('\n').flatMap((text, line) => {
+    const defs = splitLines(source(uri)).flatMap((text, line) => {
       const d = labelDefinition(text);
       return d?.target.toLowerCase() === t.identifier ? [{ ...d, line }] : [];
     });
@@ -176,7 +176,7 @@ export function createService(root: string | undefined, project: ReturnType<type
 
   /** mystmd's docs for the directive, directive option, or role name under the cursor. */
   function specHover({ textDocument, position }: At) {
-    const n = nameAt((texts.get(textDocument.uri) ?? '').split('\n'), position.line, position.character);
+    const n = nameAt(splitLines(texts.get(textDocument.uri) ?? ''), position.line, position.character);
     if (!n) return null;
     const spec: { doc?: string; arg?: { doc?: string } } | undefined =
       n.kind === 'option'
@@ -221,10 +221,10 @@ export function createService(root: string | undefined, project: ReturnType<type
     completion({ textDocument, position }: At) {
       const text = texts.get(textDocument.uri);
       if (text === undefined) return [];
-      const lines = text.split('\n');
+      const lines = splitLines(text);
       const opt = optionAt(lines, position.line, position.character);
       if (opt) return optionItems(opt, position.line);
-      const ctx = refAt((lines[position.line] ?? '').replace(/\r$/, ''), position.character);
+      const ctx = refAt(lines[position.line] ?? '', position.character);
       if (!ctx) return [];
       const range = { start: { line: position.line, character: ctx.start }, end: { line: position.line, character: ctx.end } };
       const item = (label: string, kind: CompletionItemKind, extra: Partial<CompletionItem> = {}): CompletionItem => ({
@@ -374,7 +374,7 @@ export function createService(root: string | undefined, project: ReturnType<type
     documentSymbols({ textDocument }: { textDocument: { uri: string } }) {
       const text = texts.get(textDocument.uri);
       if (text === undefined) return [];
-      const lines = text.split('\n');
+      const lines = splitLines(text);
       const endOf = (line: number) => ({ line, character: lines[line]?.length ?? 0 });
       const top: DocumentSymbol[] = [];
       const open: { depth: number; children: DocumentSymbol[]; symbol?: DocumentSymbol }[] = [{ depth: 0, children: top }];
@@ -409,7 +409,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       const duplicates = explicit.filter((t) => inDocument(t, uri)).flatMap((t) => {
         const others = explicit.filter((o) => o !== t && o.identifier === t.identifier);
         if (!others.length) return [];
-        const range = definitionOf(t, uri)?.range ?? rangeOf({ line: t.line - 1, start: 0, end: (texts.get(uri)?.split('\n')[t.line - 1] ?? '').length });
+        const range = definitionOf(t, uri)?.range ?? rangeOf({ line: t.line - 1, start: 0, end: (splitLines(texts.get(uri) ?? '')[t.line - 1] ?? '').length });
         const message = `Duplicate label \`${t.identifier}\`, also defined in ${[...new Set(others.map((o) => o.file))].join(', ')}`;
         return [{ severity: DiagnosticSeverity.Warning, range, message, source: 'myst' }];
       });

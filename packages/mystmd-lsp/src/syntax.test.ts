@@ -27,6 +27,7 @@ test('refsInText skips code but not directive bodies', () => {
     '::::{tab-set}', ':::{code-block} md', '{ref}`i`', ':::', ':::{tab-item} T', '{ref}`j`', ':::', '::::', // colon fences
   ].join('\n');
   assert.deepEqual(refsInText(text).map((r) => r.target), ['c', 'f', 'h', 'j']);
+  assert.deepEqual(refsInText(text.replaceAll('\n', '\r\n')).map((r) => r.target), ['c', 'f', 'h', 'j']); // Windows line endings
 });
 
 test('refsInText finds references with target and end ranges', () => {

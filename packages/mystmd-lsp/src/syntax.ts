@@ -94,11 +94,14 @@ const refPatterns: [RegExp, (m: RegExpExecArray) => Ref['kind']][] = [
 const maskInlineCode = (line: string) =>
   line.replace(/\{[^}\s]+\}(`+).*?\1|(`+).*?\2/g, (m, role) => (role ? m : ' '.repeat(m.length)));
 
+/** A document's lines, without their line endings (`\n` or Windows' `\r\n`). */
+export const splitLines = (text: string) => text.split(/\r?\n/);
+
 export function refsInText(text: string): Ref[] {
   const refs: Ref[] = [];
   // Open fences (``` ~~~ :::). Code fences (plain ``` / ~~~, or a {code}/{code-block}/{code-cell} directive) hide everything until they close.
   const fences: { fence: string; code: boolean }[] = [];
-  text.split('\n').forEach((raw, line) => {
+  splitLines(text).forEach((raw, line) => {
     const f = raw.match(/^\s*(`{3,}|~{3,}|:{3,})\s*(.*)$/);
     const top = fences.at(-1);
     if (f && top && f[1][0] === top.fence[0] && f[1].length >= top.fence.length && !f[2]) return void fences.pop();
