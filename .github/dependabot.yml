@@ -1,0 +1,12 @@
+# Keep the bundled myst-* packages (live parsing, directive specs) in step with mystmd, which builds the project index.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    allow:
+      - dependency-name: "myst*"
+    groups:
+      myst:
+        patterns: ["myst*"]
