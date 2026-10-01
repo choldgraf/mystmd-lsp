@@ -1,7 +1,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { deflateSync } from 'node:zlib';
-import { parseInventory, resolveXref, splitXref } from './xref.ts';
+import { parseInventory, resolveXref, splitXref, syncXrefs, type XrefProject } from './xref.ts';
+
+test('syncXrefs keeps unchanged projects, drops removed or moved ones, and loads new ones', { timeout: 5000 }, async () => {
+  const offline = 'http://127.0.0.1:1'; // refuses connections, so loads finish fast with no entries
+  const xrefs: Record<string, XrefProject> = {
+    kept: { url: `${offline}/kept`, entries: [] },
+    moved: { url: `${offline}/old`, entries: [] },
+    removed: { url: `${offline}/removed`, entries: [] },
+  };
+  await new Promise<void>((resolve) => {
+    let loads = 0;
+    syncXrefs(xrefs, { kept: `${offline}/kept`, moved: `${offline}/new`, added: `${offline}/added` }, () => ++loads === 2 && resolve());
+  });
+  assert.deepEqual(xrefs, { kept: { url: `${offline}/kept`, entries: [] }, moved: { url: `${offline}/new` }, added: { url: `${offline}/added` } });
+});
 
 test('parseInventory reads a Sphinx objects.inv', () => {
   const header = '# Sphinx inventory version 2\n# Project: X\n# Version: 1\n# The remainder of this file is compressed using zlib.\n';

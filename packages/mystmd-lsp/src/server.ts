@@ -9,7 +9,7 @@ import { startMyst } from './mystmd/start.ts';
 import { createProject } from './project.ts';
 import { findProjectRoot } from './root.ts';
 import { createService, semanticTokensLegend } from './service.ts';
-import { loadProject, readReferences, type XrefProject } from './xref.ts';
+import { readReferences, syncXrefs, type XrefProject } from './xref.ts';
 
 // The LSP wiring: features live in service.ts.
 const connection = createConnection(ProposedFeatures.all);
@@ -61,15 +61,7 @@ connection.onInitialize(async (params) => {
   const project = createProject(url, refresh);
   // External projects from myst.yml `project.references`, refreshed as their inventories load.
   const xrefs: Record<string, XrefProject> = {};
-  const readXrefs = () => {
-    const refs = root ? readReferences(root) : {};
-    for (const key of Object.keys(xrefs)) if (xrefs[key].url !== refs[key]) delete xrefs[key];
-    for (const [key, href] of Object.entries(refs)) {
-      if (xrefs[key]) continue;
-      const p = (xrefs[key] = { url: href });
-      loadProject(p).then(refresh, (e) => console.error(`[lsp] failed to load ${p.url}: ${e}`));
-    }
-  };
+  const readXrefs = () => syncXrefs(xrefs, root ? readReferences(root) : {}, refresh);
   readXrefs();
   service = createService(root, project, xrefs);
   reloadConfig = () => (service.reloadBibliography(), readXrefs(), refresh());

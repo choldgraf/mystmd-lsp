@@ -65,6 +65,16 @@ export function readReferences(root: string): Record<string, string> {
   }
 }
 
+/** Keep `xrefs` in step with `refs` (key → url): drop projects that went away or moved, and load new ones, calling `onLoad` as each arrives. */
+export function syncXrefs(xrefs: Record<string, XrefProject>, refs: Record<string, string>, onLoad: () => void) {
+  for (const key of Object.keys(xrefs)) if (xrefs[key].url !== refs[key]) delete xrefs[key];
+  for (const [key, url] of Object.entries(refs)) {
+    if (xrefs[key]) continue;
+    const p = (xrefs[key] = { url });
+    loadProject(p).then(onLoad, (e) => console.error(`[lsp] failed to load ${p.url}: ${e}`));
+  }
+}
+
 /** Fetch a project's inventory: `myst.xref.json` first, then Sphinx `objects.inv`. Leaves `entries` undefined if both fail. */
 export async function loadProject(project: XrefProject) {
   const base = project.url.replace(/\/?$/, '/');
