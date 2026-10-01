@@ -158,6 +158,16 @@ test('hover shows mystmd docs for directives, options and roles, but references 
   assert.match(hover(3)!, /^\*\*Figure 2\*\*/);
 });
 
+test('directive option completion offers the directive\'s options, minus ones already set', () => {
+  const service = createService(root, stubProject());
+  const { text, at } = marks('```{figure} a.png\n:name: x\n:|\n```\n');
+  service.update(uri, text);
+  const items = service.completion({ textDocument: { uri }, position: at[0] }) as any[];
+  const labels = items.map((i) => i.label);
+  assert.ok(labels.includes('width') && !labels.includes('label'), 'offers figure options, minus `label` (set via its alias `name`)');
+  assert.equal(items.find((i) => i.label === 'width').textEdit.newText, 'width: ');
+});
+
 test('directive file arguments: links, completion, and a warning when missing', (t) => {
   const dir = tmpWorkspace(t, { 'img/plot.png': '' });
   const service = createService(dir, stubProject());
