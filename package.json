@@ -1,0 +1,15 @@
+{
+  "name": "mystmd-lsp-monorepo",
+  "private": true,
+  "workspaces": ["packages/mystmd-lsp", "packages/vscode"],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "docs": "cd docs && myst build --html",
+    "docs:live": "cd docs && myst start"
+  },
+  "devDependencies": {
+    "mystmd": "^1.11.0"
+  }
+}

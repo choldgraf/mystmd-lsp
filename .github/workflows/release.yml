@@ -1,0 +1,58 @@
+# Releases are triggered by pushing a tag named <package>-v<version>:
+#   mystmd-lsp-v0.1.0 -> npm, vscode-v0.1.0 -> VS Code Marketplace and Open VSX, jupyterlab-v0.1.0 -> PyPI
+# See docs/contributing.md.
+name: Release
+on:
+  push:
+    tags: ["mystmd-lsp-v*", "vscode-v*", "jupyterlab-v*"]
+jobs:
+  npm:
+    if: startsWith(github.ref_name, 'mystmd-lsp-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm test
+      - run: npm publish -w packages/mystmd-lsp --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  vscode:
+    if: startsWith(github.ref_name, 'vscode-v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build -w packages/vscode
+      - run: npx vsce publish --no-dependencies -p "$VSCE_PAT"
+        working-directory: packages/vscode
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      - run: npx ovsx publish --no-dependencies -p "$OVSX_PAT"
+        working-directory: packages/vscode
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+  pypi:
+    if: startsWith(github.ref_name, 'jupyterlab-v')
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write # PyPI trusted publishing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install build && python -m build packages/jupyterlab
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/jupyterlab/dist

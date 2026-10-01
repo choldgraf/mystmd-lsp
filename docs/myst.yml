@@ -1,0 +1,21 @@
+version: 1
+extends:
+  - https://raw.githubusercontent.com/myst-contrib/myst-contrib.github.io/main/docs/footer.yml
+project:
+  id: mystmd-lsp
+  title: mystmd-lsp
+  github: https://github.com/myst-contrib/mystmd-lsp
+  plugins:
+    - https://github.com/myst-contrib/myst-include-link-rewrites/releases/latest/download/index.mjs
+  toc:
+    - file: index.md
+    - file: editors.md
+    - file: features.md
+    - file: configuration.md
+    - file: how-it-works.md
+    - file: troubleshooting.md
+    - file: contributing.md
+site:
+  template: book-theme
+  options:
+    logo_text: mystmd-lsp

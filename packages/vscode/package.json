@@ -1,0 +1,43 @@
+{
+  "name": "mystmd-vscode",
+  "displayName": "MyST Markdown (mystmd-lsp)",
+  "description": "VS Code client for the mystmd-lsp language server.",
+  "version": "0.0.1",
+  "publisher": "myst-contrib",
+  "license": "BSD-3-Clause",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onLanguage:markdown",
+    "workspaceContains:**/myst.yml"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "MyST",
+      "properties": {
+        "mystmd.serverPath": {
+          "type": "string",
+          "default": "mystmd-lsp",
+          "description": "The mystmd-lsp command. Set a full path if it isn't on VS Code's PATH."
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.0.0",
+    "vscode-languageclient": "^9.0.1",
+    "esbuild": "^0.28.2"
+  },
+  "scripts": {
+    "build": "esbuild extension.js --bundle --platform=node --external:vscode --outfile=dist/extension.js",
+    "package": "npm run build && vsce package --no-dependencies"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myst-contrib/mystmd-lsp.git",
+    "directory": "packages/vscode"
+  }
+}

@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "jupyter-mystmd-lsp"
+version = "0.0.1"
+description = "Registers the mystmd-lsp language server with jupyterlab-lsp."
+readme = "README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.9"
+dependencies = ["jupyter-lsp>=2.2"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.entry-points.jupyter_lsp_spec_v1]
+mystmd-lsp = "jupyter_mystmd_lsp:spec"
+
+[project.urls]
+Source = "https://github.com/myst-contrib/mystmd-lsp"
