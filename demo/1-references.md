@@ -24,6 +24,10 @@ The MyST logo.
 | B     | 2     |
 ```
 
+```{table}
+```
+
+
 $$
 E = mc^2
 $$ (eq-energy)

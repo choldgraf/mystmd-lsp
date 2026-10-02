@@ -3,6 +3,9 @@
   "injectionSelector": "L:text.html.markdown -meta.embedded -markup.inline.raw",
   "patterns": [
     {
+      "include": "#backtick-directive"
+    },
+    {
       "include": "#colon-directive"
     },
     {
@@ -25,6 +28,44 @@
     }
   ],
   "repository": {
+    "backtick-directive": {
+      "begin": "^\\s*(`{3,})\\s*(\\{)(?!(?:code|code-block|code-cell|sourcecode|math|mermaid|raw)\\})([\\w:.+-]+)(\\})(.*)$",
+      "end": "^\\s*\\1\\s*$",
+      "name": "meta.directive.myst",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.directive.myst"
+        },
+        "2": {
+          "name": "punctuation.definition.directive.myst"
+        },
+        "3": {
+          "name": "entity.name.function.directive.myst"
+        },
+        "4": {
+          "name": "punctuation.definition.directive.myst"
+        },
+        "5": {
+          "name": "string.unquoted.argument.myst"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.directive.myst"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#yaml-options"
+        },
+        {
+          "include": "#option"
+        },
+        {
+          "include": "text.html.markdown"
+        }
+      ]
+    },
     "colon-directive": {
       "begin": "^\\s*(:{3,})\\s*(\\{)([\\w:.+-]+)(\\})(.*)$",
       "end": "^\\s*\\1\\s*$",
