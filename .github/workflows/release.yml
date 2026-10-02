@@ -1,15 +1,10 @@
-# Publishes one package at the version you choose, then tags the commit <package>-v<version> and creates a GitHub release.
-# The VS Code extension isn't published anywhere yet: its .vsix is attached to the release.
-# Run it from the Actions tab (Release → Run workflow), or: gh workflow run release.yml -f package=vscode -f version=0.1.0
+# Publishes mystmd-lsp to npm at the version you choose, then tags the commit mystmd-lsp-v<version> and creates a GitHub release.
+# Run it from the Actions tab (Release → Run workflow), or: gh workflow run release.yml -f version=0.1.0
 # See docs/contributing.md.
 name: Release
 on:
   workflow_dispatch:
     inputs:
-      package:
-        description: Package to publish
-        type: choice
-        options: [mystmd-lsp, vscode, jupyterlab]
       version:
         description: Version, e.g. 0.1.0
         required: true
@@ -17,7 +12,6 @@ env:
   VERSION: ${{ inputs.version }}
 jobs:
   npm:
-    if: inputs.package == 'mystmd-lsp'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,51 +27,13 @@ jobs:
       - run: npm test
       - run: npm version "$VERSION" --no-git-tag-version --allow-same-version -w packages/mystmd-lsp
       - run: npm publish -w packages/mystmd-lsp
-  vscode:
-    if: inputs.package == 'vscode'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-      - run: npm ci
-      - run: npm version "$VERSION" --no-git-tag-version --allow-same-version -w packages/vscode
-      # ponytail: only a .vsix on the GitHub release; add `vsce publish` / `ovsx publish` here once there are Marketplace / Open VSX credentials.
-      - run: npm run package -w packages/vscode
-      - uses: actions/upload-artifact@v4
-        with:
-          name: vsix
-          path: packages/vscode/*.vsix
-  pypi:
-    if: inputs.package == 'jupyterlab'
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write # PyPI trusted publishing
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - run: sed -i "s/^version = .*/version = \"$VERSION\"/" packages/jupyterlab/pyproject.toml
-      - run: pip install build && python -m build packages/jupyterlab
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: packages/jupyterlab/dist
   github-release:
-    needs: [npm, vscode, pypi]
-    # The other two publish jobs are skipped, which is fine; a failed one isn't.
-    if: ${{ !failure() && !cancelled() }}
+    needs: [npm]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
-        if: inputs.package == 'vscode'
-        with:
-          name: vsix
-      - run: shopt -s nullglob && gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$TAG" --generate-notes *.vsix
+      - run: gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$TAG" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.package }}-v${{ inputs.version }}
+          TAG: mystmd-lsp-v${{ inputs.version }}

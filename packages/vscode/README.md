@@ -1,5 +1,0 @@
-# mystmd-vscode
-
-VS Code support for MyST Markdown: syntax highlighting, the [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/mystmd-lsp) language server, and a command to preview your site.
-
-Install steps and commands are in the [editor setup docs](https://choldgraf.github.io/mystmd-lsp/editors#vs-code).

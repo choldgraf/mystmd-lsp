@@ -1,10 +1,10 @@
 # mystmd-lsp
 
 A language server for [MyST](https://mystmd.org) projects, built on the mystmd engine.
-It speaks the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) (LSP), so it works in any editor with an LSP client, including VS Code and JupyterLab.
+It speaks the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) (LSP), so it works in any editor with an LSP client.
 
 It runs a headless `myst` server and rebuilds your documents as you edit, so it knows which labels, citations and other objects you can reference.
-The editor packages in this repository wrap the server for VS Code and JupyterLab.
+For VS Code and JupyterLab, [MyST Author](https://github.com/choldgraf/myst-author) runs it for you, along with a live preview.
 
 ## Install
 
@@ -13,44 +13,20 @@ npm install -g mystmd-lsp
 ```
 
 This needs Node 22 or newer, and [mystmd](https://mystmd.org/guide/quickstart) for project-wide features.
-Note: The VS Code extension includes the server, so it doesn't need this step; see [editor setup](docs/editors.md).
+MyST Author's extensions include the server, so they don't need this step.
 
 ## Run
 
 Most people will use this as part of a plugin, but some editors let you manually configure an LSP for certain types of files.
 To do so, point your editor at `mystmd-lsp --stdio` for Markdown files.
-See [editor setup](docs/editors.md) for VS Code and JupyterLab, and [troubleshooting](docs/troubleshooting.md) if something doesn't work.
+See [editor setup](docs/editors.md) for examples, and [troubleshooting](docs/troubleshooting.md) if something doesn't work.
 
-## Try it locally in VS Code
+## Try it locally
 
-To see the server working before installing anything, run it from a clone of this repository:
-
-1. Run `npm ci` in the repository root.
-2. Open the repository root in VS Code.
-3. Press F5 and pick "Demo extension on demo/".
-   This builds the server and extension, copies the [demo project](demo/index.md) to `/tmp/mystmd-lsp-demo`, and opens a second VS Code window on the copy with both loaded.
-4. In the new window, open `index.md` and follow its "Try this" steps.
-
-The demos work on a copy, so `demo/` isn't edited.
-Each start resets the copy to match `demo/`, including Cmd+Shift+F5 and the JupyterLab demo below.
-
-The first run is slower because mystmd downloads its theme, and the external references need network access.
-Wait for "Loading project" to finish before expecting warnings.
-After changing the code, press Cmd+Shift+F5 (Ctrl+Shift+F5 on Windows and Linux) to rebuild and reopen the window.
-The server's log is in the Output panel, under "MyST".
-
-This needs [mystmd](https://mystmd.org/guide/quickstart) installed.
-
-## Try it locally in JupyterLab
-
-From the repository root, run `npm ci`, then `npm run demo:lab`.
-This builds the server, copies the demo project to `/tmp/mystmd-lsp-demo`, and opens JupyterLab on the copy, in a throwaway [uv](https://docs.astral.sh/uv/) environment with jupyterlab-lsp and this repository's Python package.
-Add Jupyter options after `--`, e.g. `npm run demo:lab -- --debug`.
-
-Open `index.md` and follow its steps.
-To see the rendered site beside it, run `npm run demo:live` in another terminal before you start editing, since it resets the copy too.
-The server's log is in the browser's developer console.
-After changing the code, run `npm run build` and restart the language server from the status bar, no need to restart Jupyter.
+The [demo project](demo/index.md) walks through each feature.
+To try your own build of the server on it, run `npm ci`, `npm run build` and `npm run demo:copy`, then open `/tmp/mystmd-lsp-demo` in an editor that uses `packages/mystmd-lsp/dist/server.cjs`.
+In VS Code, that's MyST Author's extension with `mystAuthor.serverPath` set; see [contributing](docs/contributing.md).
+The demo works on a copy, so `demo/` isn't edited.
 
 ## What you get
 

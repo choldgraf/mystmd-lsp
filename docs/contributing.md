@@ -2,22 +2,19 @@
 title: Contributing
 ---
 
-This page covers how to work on the server, the editor clients and the docs.
+This page covers how to work on the server and the docs.
 
 ## Layout
 
-This repository holds the server and its editor clients, with one docs site for all of them:
-
 - `packages/mystmd-lsp`: the server, published to npm.
-- `packages/vscode`: the VS Code extension, with a grammar, commands and a copy of the server's bundle, released as a `.vsix` on GitHub by `release.yml`.
-- `packages/jupyterlab`: `jupyter-mystmd-lsp`, a Python package that registers the server with jupyterlab-lsp, published to PyPI.
+- `demo`: a MyST project that walks through each feature.
 - `docs`: this site.
 
-Each package has its own version.
+The editor extensions for VS Code and JupyterLab live in [MyST Author](https://github.com/choldgraf/myst-author).
 
 ## Set up
 
-You need Node 22 or newer, and Python for `packages/jupyterlab`.
+You need Node 22 or newer.
 From the repository root:
 
 ```sh
@@ -27,12 +24,11 @@ npm run typecheck
 npm run build
 ```
 
-These run in each package that defines them.
-For `packages/jupyterlab`, run `pip install -e "packages/jupyterlab[test]"` and `pytest packages/jupyterlab`, and format with `black`.
 CI runs the same commands.
 
 The server's `build` bundles it into `dist/server.cjs` with esbuild (`packages/mystmd-lsp/build.mjs`), which starts faster than the source.
-The extension's build runs the server's build and copies that bundle.
+
+To try your build in VS Code, install MyST Author's extension, set `mystAuthor.serverPath` to the full path of `packages/mystmd-lsp/dist/server.cjs`, and reload the window after each build.
 
 ## Code map
 
@@ -60,7 +56,7 @@ The docs are a MyST site in `docs/`.
 Each fact has one home, so change it there rather than repeating it:
 
 - [](features.md) and [](configuration.md) are the reference.
-- [](editors.md) has one section per client; add new clients there.
+- [](editors.md) has the setup for each kind of client; add new clients there.
 - The README only has what a visitor to the repository needs, and the home page of this site includes it.
 
 Run `npm run docs:live` to preview the site, and `npm run docs` to build it.
@@ -68,24 +64,15 @@ The site deploys to GitHub Pages when `main` changes.
 
 ## Releasing
 
-Each package is released on its own by the Release workflow (`.github/workflows/release.yml`).
-Run it from the Actions tab (Release → Run workflow), pick the package and type the version, or run:
+The Release workflow (`.github/workflows/release.yml`) publishes the server to npm.
+Run it from the Actions tab (Release → Run workflow) and type the version, or run:
 
 ```sh
-gh workflow run release.yml -f package=vscode -f version=0.1.0
+gh workflow run release.yml -f version=0.1.0
 ```
 
-It publishes the package at that version, then tags the commit `<package>-v<version>` and creates a GitHub release with generated notes.
+It publishes the package at that version, then tags the commit `mystmd-lsp-v<version>` and creates a GitHub release with generated notes.
 Edit the release afterwards to replace the notes with ones from `github-activity`.
-The versions in `package.json` and `pyproject.toml` aren't used for releases.
-
-| Package | Publishes to | Needs |
-|---|---|---|
-| `mystmd-lsp` | npm | [trusted publisher](https://docs.npmjs.com/trusted-publishers) for `release.yml` |
-| `vscode` | a `.vsix` attached to the GitHub release | nothing |
-| `jupyterlab` | PyPI | [trusted publisher](https://docs.pypi.org/trusted-publishers/) for `release.yml`, `pypi` environment |
-
-Versions are independent, so the extension and the server don't need to match.
-The VS Code extension bundles its own copy of the server, so release it after a server change you want to ship there.
-It isn't on the VS Code Marketplace or Open VSX yet.
-The Marketplace no longer accepts new tokens valid for all organizations, so publishing there from CI needs [Microsoft Entra ID](https://code.visualstudio.com/api/working-with-extensions/publishing-extension); until then, the release's `.vsix` can be uploaded by hand on the [publisher page](https://marketplace.visualstudio.com/manage).
+The version in `package.json` isn't used for releases.
+Publishing needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`.
+MyST Author picks up a new release through its dependency on `mystmd-lsp`.

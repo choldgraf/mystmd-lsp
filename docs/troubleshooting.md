@@ -5,7 +5,7 @@ title: Troubleshooting
 ## No warnings or completions for other pages
 
 Warnings about unknown references, and completion of labels in other pages, come from mystmd's content server.
-The language server starts it for you with `myst start`, and it builds your whole project, so the server knows every page, label and citation.
+The language server starts it for you with `myst start --headless`, and it builds your whole project, so the server knows every page, label and citation.
 Most gaps come from the content server not running.
 Check that:
 

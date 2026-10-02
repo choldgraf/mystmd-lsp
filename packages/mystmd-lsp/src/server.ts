@@ -24,7 +24,6 @@ let loading = false;
 let progress: WorkDoneProgressServerReporter | undefined;
 let reloadConfig = () => {};
 let canWatchFiles = false;
-let siteUrl: Promise<string | undefined> = Promise.resolve(undefined); // the built site, once mystmd serves it
 const args = parseArgs({ strict: false, options: { 'content-server': { type: 'string' }, root: { type: 'string' }, 'no-myst': { type: 'boolean' } } }).values as { 'content-server'?: string; root?: string; 'no-myst'?: boolean };
 
 // mystmd couldn't start or stopped: tell the user, and carry on with open documents only.
@@ -56,7 +55,6 @@ connection.onInitialize(async (params) => {
     const myst = await startMyst(root);
     myst.ready.then(() => myst.exited).catch((e) => fail(e.message));
     url = myst.url;
-    siteUrl = myst.ready.then(() => myst.siteUrl, () => undefined);
   }
   loading = !!url;
   const project = createProject(url ? contentServer(url) : undefined, refresh);
@@ -80,7 +78,6 @@ connection.onInitialize(async (params) => {
       documentSymbolProvider: true,
       documentLinkProvider: {},
       semanticTokensProvider: { legend: semanticTokensLegend, full: true },
-      executeCommandProvider: { commands: ['mystmd.siteUrl'] },
     },
   };
 });
@@ -109,8 +106,6 @@ connection.languages.semanticTokens.on((p) => service.semanticTokens(p));
 connection.onDocumentLinks((p) => service.documentLinks(p));
 connection.onWorkspaceSymbol((p) => service.workspaceSymbols(p));
 connection.onDocumentSymbol((p) => service.documentSymbols(p));
-// The built site, for clients that offer a preview. Null when we didn't start mystmd.
-connection.onExecuteCommand(async ({ command }) => (command === 'mystmd.siteUrl' ? ((await siteUrl) ?? null) : null));
 
 // Diagnostics are sent when the project changes (after the service re-parses an edited document), not on every keystroke.
 for (const docs of [documents, cells]) {
@@ -120,6 +115,9 @@ for (const docs of [documents, cells]) {
     connection.sendDiagnostics({ uri: document.uri, diagnostics: [] });
   });
 }
+
+// Node skips `exit` handlers on SIGTERM, which would leave the mystmd we started running.
+process.on('SIGTERM', () => process.exit());
 
 documents.listen(connection);
 notebooks.listen(connection);

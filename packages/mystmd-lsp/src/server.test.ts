@@ -49,7 +49,7 @@ test('server completes, hints and diagnoses over stdio', async (t) => {
 
 const hasMyst = spawnSync('myst', ['--version']).status === 0;
 
-test('with real mystmd: the project loads, the site is served, and the user is warned when mystmd dies', { skip: !hasMyst, timeout: 90_000 }, async (t) => {
+test('with real mystmd: the project loads, and the user is warned when mystmd dies', { skip: !hasMyst, timeout: 90_000 }, async (t) => {
   const root = tmpWorkspace(t, {
     'myst.yml': 'version: 1\nproject:\n  id: test\nsite:\n  template: book-theme\n',
     'index.md': '# Title\n\n(sec-a)=\n## Section\n',
@@ -68,9 +68,30 @@ test('with real mystmd: the project loads, the site is served, and the user is w
     found = ((await conn.sendRequest('workspace/symbol', { query: '' })) as any[]).length > 0;
   }
 
-  const site = (await conn.sendRequest('workspace/executeCommand', { command: 'mystmd.siteUrl' })) as string;
-  assert.equal((await fetch(site)).status, 200);
-
   spawnSync('pkill', ['-P', String(child.pid)]); // mystmd is the server's only child
   assert.match((await warning).message, /myst exited/);
+});
+
+test('with real mystmd: stopping the server with SIGTERM stops its mystmd', { skip: !hasMyst, timeout: 90_000 }, async (t) => {
+  const root = tmpWorkspace(t, {
+    'myst.yml': 'version: 1\nproject:\n  id: test\nsite:\n  template: book-theme\n',
+    'index.md': '# Title\n\n(sec-a)=\n## Section\n',
+  });
+  const child = spawn(process.execPath, [new URL('server.ts', import.meta.url).pathname, '--stdio']);
+  const conn = createProtocolConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
+  t.after(() => (conn.dispose(), child.kill()));
+  conn.listen();
+  await conn.sendRequest('initialize', { processId: null, rootUri: pathToFileURL(root).href, capabilities: {} });
+  conn.sendNotification('initialized', {});
+  // mystmd outlives its parent once it's built and idle, so wait for the first build.
+  for (let found = false; !found; await new Promise((r) => setTimeout(r, 500))) {
+    found = ((await conn.sendRequest('workspace/symbol', { query: '' })) as any[]).length > 0;
+  }
+
+  const myst = Number(spawnSync('pgrep', ['-P', String(child.pid)]).stdout.toString().trim());
+  assert.ok(myst, 'the server started mystmd');
+  child.kill('SIGTERM');
+  await new Promise((r) => child.on('exit', r));
+  await new Promise((r) => setTimeout(r, 500));
+  assert.throws(() => process.kill(myst, 0), 'mystmd stopped');
 });

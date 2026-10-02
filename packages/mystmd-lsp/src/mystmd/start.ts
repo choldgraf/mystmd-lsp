@@ -16,17 +16,17 @@ function freePort(): Promise<number> {
 }
 
 /**
- * Run `myst start` in `root`, which serves the built site and the content server the language server reads from.
- * We pick both ports, so `url` (content server) and `siteUrl` are known before the first build; `ready` resolves once the site is serving.
+ * Run `myst start --headless` in `root`: the content server the language server reads from, without the site.
+ * We pick the port, so `url` is known before the first build; `ready` resolves once it's serving.
  * `ready` rejects with the message `mystmdMissing` if mystmd isn't installed.
  * `exited` rejects if mystmd dies.
  * mystmd's output goes to `log`, a line at a time.
  */
 export async function startMyst(root: string, log = console.log) {
-  const [port, sitePort] = await Promise.all([freePort(), freePort()]); // asked together, so they differ
+  const port = await freePort();
   // Pin HOST so it doesn't bind IPv6-only `localhost`, which proxies like code-server's miss.
   const env = { ...process.env, HOST: '127.0.0.1' };
-  const args = ['start', '--port', String(sitePort), '--server-port', String(port)];
+  const args = ['start', '--headless', '--server-port', String(port)];
   const child = spawn(process.env.MYST_BIN ?? 'myst', args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
   process.on('exit', () => child.kill());
 
@@ -44,11 +44,10 @@ export async function startMyst(root: string, log = console.log) {
     for (const stream of [child.stdout, child.stderr]) {
       createInterface({ input: stream }).on('line', (line) => {
         log(`[myst] ${line}`);
-        // The content server starts first; the site comes up later, once its theme is ready.
-        if (line.includes(`started on port ${sitePort}!`)) resolve();
+        if (line.includes('Content server started')) resolve();
       });
     }
   });
   ready.catch(() => {}); // callers that don't wait for mystmd mustn't crash when it's missing
-  return { url: `http://127.0.0.1:${port}`, siteUrl: `http://127.0.0.1:${sitePort}`, ready, exited };
+  return { url: `http://127.0.0.1:${port}`, ready, exited };
 }

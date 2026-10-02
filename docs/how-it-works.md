@@ -8,7 +8,8 @@ This page explains where the server gets its information, for people who want to
 
 The server combines two views of your project:
 
-- **The content server.** In a project with a `myst.yml`, the server starts `myst start`, which builds every page and serves the site and a content server.
+- **The content server.** In a project with a `myst.yml`, the server starts `myst start --headless`, which builds every page and serves a content server.
+  Hosts that already run mystmd, like MyST Author, pass its address with `--content-server` instead.
   The server indexes the result, so it knows every page, label and citation.
   It reloads the index when the content server reports a change.
   Project-wide features need this, such as warnings for unknown targets and find references across files.
