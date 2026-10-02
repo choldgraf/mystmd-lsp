@@ -21,6 +21,7 @@ The extension isn't on the Marketplace yet, so install it from a `.vsix` file:
 3. Open your project folder as the workspace.
 
 It doesn't update itself, so repeat these steps for a new release.
+For a build of the latest commit on `main`, download `mystmd-vscode.vsix` from the [`latest` release](https://github.com/choldgraf/mystmd-lsp/releases/tag/latest), or run `npm run install:vscode` from the repository root to download and install it.
 To build the `.vsix` from source instead, run `npm ci`, then `npm run package -w packages/vscode`, from the repository root.
 
 The extension includes the server, so the only other thing to install is [mystmd](https://mystmd.org/guide/quickstart), for project-wide features.
@@ -44,6 +45,8 @@ You need the server and the Python package, since the package only registers the
 npm install -g mystmd-lsp
 pip install jupyterlab-lsp jupyter-mystmd-lsp
 ```
+
+For a build of the latest commit on `main`, run `npm run install:jupyterlab` from the repository root instead.
 
 [jupyter-mystmd-lsp](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/jupyterlab) registers the server with jupyterlab-lsp, so there's no config to write.
 jupyterlab-lsp uses the Jupyter server's root folder as the workspace, so start Jupyter in your project folder.

@@ -24,3 +24,27 @@ jobs:
           python-version: "3.13"
       - run: pip install -e "packages/jupyterlab[test]"
       - run: pytest packages/jupyterlab
+  # Moves the `latest` tag to this commit and replaces the .vsix and server tarball on the `latest` pre-release.
+  latest:
+    if: github.event_name == 'push'
+    needs: [js, jupyterlab]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency: latest-release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run package -w packages/vscode
+      - run: mv packages/vscode/*.vsix mystmd-vscode.vsix
+      - run: npm pack -w packages/mystmd-lsp && mv mystmd-lsp-*.tgz mystmd-lsp.tgz
+      - run: git push -f origin HEAD:refs/tags/latest
+      - run: |
+          gh release create latest --prerelease --title latest --notes "$NOTES" || gh release edit latest --notes "$NOTES"
+          gh release upload latest mystmd-vscode.vsix mystmd-lsp.tgz --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTES: Built from ${{ github.sha }}, the latest commit on main that passed CI.
