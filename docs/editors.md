@@ -52,6 +52,12 @@ For a build of the latest commit on `main`, run `npm run install:jupyterlab` fro
 jupyterlab-lsp uses the Jupyter server's root folder as the workspace, so start Jupyter in your project folder.
 This covers Markdown files opened in the editor.
 
+:::{note} Markdown cells in notebooks aren't supported in JupyterLab yet
+They should work in VSCode though - I can't figure out why it doesn't work in JupyterLab!
+:::
+
+Press Tab to see completions, or turn on {gui}`Settings → Code Completion → Enable autocompletion` to see them as you type.
+
 To register the server by hand instead, add this to `jupyter_server_config.json`.
 If you can't start Jupyter in the project folder, also add `"--root=/path/to/project"` to `argv`; [](configuration.md) explains `--root`.
 

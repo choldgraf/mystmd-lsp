@@ -9,6 +9,7 @@
     "docs": "cd docs && myst build --html",
     "docs:live": "cd docs && myst start",
     "demo:live": "cd demo && myst start",
+    "demo:lab": "npm run build -w mystmd-lsp && cd demo && uvx --from jupyterlab --with jupyterlab-lsp --with-editable ../packages/jupyterlab jupyter lab",
     "install:vscode": "curl -fsSL -o \"${TMPDIR:-/tmp}/mystmd-vscode.vsix\" https://github.com/choldgraf/mystmd-lsp/releases/download/latest/mystmd-vscode.vsix && code --install-extension \"${TMPDIR:-/tmp}/mystmd-vscode.vsix\" --force",
     "install:jupyterlab": "npm install -g https://github.com/choldgraf/mystmd-lsp/releases/download/latest/mystmd-lsp.tgz && pip install --force-reinstall --no-deps \"git+https://github.com/choldgraf/mystmd-lsp@latest#subdirectory=packages/jupyterlab\"",
     "install:all": "npm run install:vscode && npm run install:jupyterlab"

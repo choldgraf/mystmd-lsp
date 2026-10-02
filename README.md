@@ -40,13 +40,9 @@ This needs [mystmd](https://mystmd.org/guide/quickstart) installed.
 
 ## Try it locally in JupyterLab
 
-From the repository root:
-
-```sh
-npm ci && npm run build
-pip install -e packages/jupyterlab jupyterlab-lsp
-PATH=$PWD/node_modules/.bin:$PATH jupyter lab --notebook-dir=demo --debug
-```
+From the repository root, run `npm ci`, then `npm run demo:lab`.
+This builds the server and opens JupyterLab on the demo project, in a throwaway [uv](https://docs.astral.sh/uv/) environment with jupyterlab-lsp and this repository's Python package.
+Add Jupyter options after `--`, e.g. `npm run demo:lab -- --debug`.
 
 Open `index.md` and follow its steps.
 To see the rendered site beside it, run `npm run demo:live` in another terminal.

@@ -8,7 +8,12 @@ def spec(manager):
             "version": 2,
             "display_name": "mystmd-lsp",
             "argv": [shutil.which("mystmd-lsp") or "mystmd-lsp", "--stdio"],
-            "languages": ["markdown"],
-            "mime_types": ["text/markdown", "text/x-markdown"],
+            "languages": ["markdown", "ipythongfm", "gfm"],
+            "mime_types": [
+                "text/markdown",
+                "text/x-markdown",
+                "text/x-gfm",
+                "text/x-ipythongfm",
+            ],
         }
     }
