@@ -273,9 +273,10 @@ export function createService(root: string | undefined, project: ReturnType<type
           return workspaceFiles(root, ctx.trigger === 'path' ? /./ : undefined).map((f) => item(relative(here, f), CompletionItemKind.File));
         }
         case 'xref-key':
+          // Clients sort by `sortText` (else label), so list every project key before any of its pages.
           return Object.entries(xrefs).flatMap(([key, p]) => [
-            item(key, CompletionItemKind.Module, { detail: p.url }),
-            ...(p.entries ?? []).filter((e) => e.kind === 'page' && e.page !== '/').map((e) => item(key + e.page, CompletionItemKind.File, { detail: e.url })),
+            item(key, CompletionItemKind.Module, { detail: p.url, sortText: `0${key}` }),
+            ...(p.entries ?? []).filter((e) => e.kind === 'page' && e.page !== '/').map((e) => item(key + e.page, CompletionItemKind.File, { detail: e.url, sortText: `1${key}${e.page}` })),
           ]);
         case 'xref-target': {
           const { key, page } = splitXref(ctx.key!);

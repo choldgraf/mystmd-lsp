@@ -17,7 +17,7 @@ function freePort(): Promise<number> {
 
 /**
  * Run `myst start` in `root`, which serves the built site and the content server the language server reads from.
- * We pick both ports, so `url` (content server) and `siteUrl` are known before the first build; `ready` resolves once they're serving.
+ * We pick both ports, so `url` (content server) and `siteUrl` are known before the first build; `ready` resolves once the site is serving.
  * `ready` rejects with the message `mystmdMissing` if mystmd isn't installed.
  * `exited` rejects if mystmd dies.
  * mystmd's output goes to `log`, a line at a time.
@@ -44,7 +44,8 @@ export async function startMyst(root: string, log = console.log) {
     for (const stream of [child.stdout, child.stderr]) {
       createInterface({ input: stream }).on('line', (line) => {
         log(`[myst] ${line}`);
-        if (line.includes('started on port')) resolve(); // the site's line, or the content server's
+        // The content server starts first; the site comes up later, once its theme is ready.
+        if (line.includes(`started on port ${sitePort}!`)) resolve();
       });
     }
   });

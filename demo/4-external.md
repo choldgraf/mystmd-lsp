@@ -16,3 +16,5 @@ A Python class: [](xref:).
 - Cmd-click a link to open it in your browser.
 - Change `python` to `pythno`. You get a warning that the project isn't in `project.references`.
 :::
+
+[](xref:python)
