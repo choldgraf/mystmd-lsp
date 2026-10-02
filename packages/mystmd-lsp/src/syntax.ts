@@ -1,6 +1,6 @@
 // Pure, line-based recognition of MyST reference syntax. Character offsets are 0-based.
 
-export type Trigger = 'ref' | 'numref' | 'eq' | 'doc' | 'link-hash' | 'link-path' | 'xref-key' | 'xref-target' | 'directive' | 'role' | 'cite' | 'at' | 'path';
+export type Trigger = 'ref' | 'numref' | 'eq' | 'doc' | 'term' | 'link-hash' | 'link-path' | 'xref-key' | 'xref-target' | 'directive' | 'role' | 'cite' | 'at' | 'path';
 
 /**
  * What the cursor is inside: `prefix` is the text typed so far, `start`/`end` the span a completion replaces.
@@ -13,9 +13,10 @@ export type RefContext = { trigger: Trigger; prefix: string; start: number; end:
  * `text` is the link text of an `xref:` link (undefined for autolinks).
  * `cite` is a `{cite}` key or an `@key`, which may be a citation or a label.
  * `doc` is a `{doc}` target or a Markdown link to a local file.
+ * `term` is a `{term}` role's glossary term, as written.
  * `path` is the file argument of a `figure`, `image`, `include` or `literalinclude` directive (not URLs, `#cell` ids, or `.*` wildcards).
  */
-export type Ref = { kind: 'ref' | 'numref' | 'eq' | 'doc' | 'link' | 'xref' | 'cite' | 'path'; target: string; line: number; start: number; end: number; after: number; text?: string };
+export type Ref = { kind: 'ref' | 'numref' | 'eq' | 'doc' | 'term' | 'link' | 'xref' | 'cite' | 'path'; target: string; line: number; start: number; end: number; after: number; text?: string };
 
 // The start of a directive whose argument is a file path.
 const fileDirective = /^(\s*(?:`{3,}|:{3,})\{(?:figure|image|include|literalinclude)\}\s+)/;
@@ -24,7 +25,7 @@ const fileDirective = /^(\s*(?:`{3,}|:{3,})\{(?:figure|image|include|literalincl
 const contexts: [RegExp, Trigger | null][] = [
   [/\{cite(?::\w+)?\}`(?:[^`]*[,;]\s*)?([^`,;\s]*)$/, 'cite'],
   [/(?<=^|[\s[(]|[\s[]-)@([\w:.#$%&+?~/-]*)$/, 'at'],
-  [/\{(ref|numref|eq|doc)\}`(?:[^`<]*<)?([^`<>]*)$/, null], // trigger is the role name
+  [/\{(ref|numref|eq|doc|term)\}`(?:[^`<]*<)?([^`<>]*)$/, null], // trigger is the role name
   [/(?:\]\(|<)xref:([^#)>\s]+)#([^)>\s]*)$/, 'xref-target'],
   [/(?:\]\(|<)xref:([^#)>\s]*)$/, 'xref-key'],
   [/\]\(#([^)\s]*)$/, 'link-hash'],
@@ -78,7 +79,7 @@ export function refAt(lineText: string, character: number): RefContext | null {
 }
 
 const refPatterns: [RegExp, (m: RegExpExecArray) => Ref['kind']][] = [
-  [/\{(ref|numref|eq|doc)\}`(?:[^`<]*<)?([^`<>]+)>?`/g, (m) => m[1] as Ref['kind']],
+  [/\{(ref|numref|eq|doc|term)\}`(?:[^`<]*<)?([^`<>]+)>?`/g, (m) => m[1] as Ref['kind']],
   [/\]\(#([^)\s]+)\)/g, () => 'link'],
   [/<#([^>\s]+)>/g, () => 'link'],
   // A link to a local file, like `[](chapter.md#intro)`; not URLs or `#label`. The lookahead keeps `#intro` out of the match, so a fragment that repeats the path can't move `start`.

@@ -30,6 +30,17 @@ test('a loaded project resolves built targets and flags unknown ones', () => {
   assert.equal(service.definition({ textDocument: { uri }, position: { line: 1, character: 7 } })?.uri, 'file:///elsewhere/notes.md');
 });
 
+test('`{term}` completes, resolves and flags glossary terms', () => {
+  const term = { identifier: 'term-myst markdown', kind: 'term', text: 'MyST Markdown', doc: 'A markup language.', file: 'glossary.md', line: 3 };
+  const service = createService(root, stubTargets([term]));
+  const { text, at } = marks('{term}`MyST| markdown` and {term}`markup <MyST Markdown>`, {term}`nope`.\n{term}`|');
+  service.update(uri, text);
+  assert.deepEqual(service.diagnostics(uri).map((d) => d.message), ['Unknown glossary term `nope`']);
+  assert.deepEqual(service.inlayHints({ textDocument: { uri } }), []);
+  assert.equal((service.hover({ textDocument: { uri }, position: at[0] }) as any).contents.value, '**Term** · glossary.md\n\nA markup language.');
+  assert.deepEqual((service.completion({ textDocument: { uri }, position: at[1] }) as any[]).map((i) => i.textEdit.newText), ['MyST Markdown']);
+});
+
 test('labels match by text', () => {
   const service = createService(root, stubProject());
   assert.deepEqual(service.workspaceSymbols({ query: 'plot' }).map((s) => s.name), ['fig-built']);

@@ -7,7 +7,7 @@ The server downloads each one's inventory when it starts, so this needs network 
 
 A link to a page in the MyST guide: [](xref:myst/quickstart).
 A link to a figure in it: [](xref:myst/quickstart#frontmatter-before).
-A Python class: [](xref:python#pathlib.Path).
+A Python class: [](xref:).
 
 :::{tip} Try this
 - Delete the text after `xref:` in a link above and type it again. You get the keys (`myst`, `python`), then pages (`myst/quickstart`), then targets after `#`.

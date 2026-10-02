@@ -12,6 +12,7 @@ It uses mystmd's own parser and directive specs, so what it completes and warns 
 | `` {ref}` ``, `` {numref}` ``, `` {eq}` ``, `[](#`, `<#` | reference targets |
 | `@`, `[@` | citation keys and reference targets |
 | `` {cite}` `` | citation keys |
+| `` {term}` `` | glossary terms |
 | `` {doc}` ``, `[](` | files, relative to the current file |
 | ```` ```{figure} ````, `{image}`, `{include}`, `{literalinclude}` argument | any file, relative to the current file |
 | ```` ```{ ````, `:::{` | directive names |
@@ -52,6 +53,12 @@ Like mystmd, headings without an explicit label can share a name.
 - **Inlay hints** show the resolved text after each reference, e.g. `Figure 1` or `(1)`.
 - **Semantic tokens** make each reference a `label` token, with its target's kind as a modifier (`label.figure`, `label.table`, `label.equation`, `label.heading`, ...), or `label.citation` for citations.
   See [](configuration.md#semantic-token-colours) to colour them.
+
+## Glossary terms
+
+`` {term}`text` `` and `` {term}`shown <text>` `` get hover with the term's definition, go to definition, find references, and a warning for unknown terms.
+Terms are matched as mystmd matches them, ignoring case and quotes.
+Rename isn't offered, since a term's label is its text.
 
 ## Citations
 

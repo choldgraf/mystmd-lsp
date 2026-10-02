@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { normalizeLabel } from 'myst-common';
 import { CompletionItemKind, DiagnosticSeverity, ErrorCodes, ResponseError, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position, type TextEdit } from 'vscode-languageserver';
 import { directives, roles } from './mystmd/parse.ts';
 import { authorYear, readBibliography, type BibEntry } from './cite.ts';
@@ -37,7 +38,7 @@ function hint(t: Target) {
  */
 export const semanticTokensLegend = {
   tokenTypes: ['label'],
-  tokenModifiers: ['heading', 'figure', 'table', 'equation', 'code', 'blockquote', 'image', 'list', 'paragraph', 'proof', 'exercise', 'admonition', 'page', 'citation'],
+  tokenModifiers: ['heading', 'figure', 'table', 'equation', 'code', 'blockquote', 'image', 'list', 'paragraph', 'proof', 'exercise', 'admonition', 'page', 'citation', 'term'],
 };
 
 const rangeOf = (ref: Pick<Ref, 'line' | 'start' | 'end'>) => ({ start: { line: ref.line, character: ref.start }, end: { line: ref.line, character: ref.end } });
@@ -120,9 +121,11 @@ export function createService(root: string | undefined, project: ReturnType<type
     // mystmd reads `@key` and `{cite}` keys as citations first, and only falls back to labels when there's no such citation.
     const entry = ref.kind === 'cite' ? citations.get(ref.target) : undefined;
     if (entry) return { kind: 'citation', entry };
-    const target = targets.get(ref.target.trim().toLowerCase());
+    // Like mystmd, a `{term}` points at the glossary term's label, `term-` and its normalized text.
+    const target = targets.get(ref.kind === 'term' ? `term-${normalizeLabel(ref.target)?.identifier}` : ref.target.trim().toLowerCase());
     if (target) return { kind: 'label', target };
     if (!project.loaded) return { kind: 'missing' };
+    if (ref.kind === 'term') return { kind: 'missing', problem: `Unknown glossary term \`${ref.target}\`` };
     if (ref.kind !== 'cite') return { kind: 'missing', problem: `Unknown reference target \`${ref.target}\`` };
     // Citation keys are only checked when every .bib file was read, and DOIs (`@10.1234/x`) resolve without one.
     return { kind: 'missing', problem: bib.complete && !/^10\.\d+\//.test(ref.target) ? `Unknown citation or reference target \`${ref.target}\`` : undefined };
@@ -257,6 +260,11 @@ export function createService(root: string | undefined, project: ReturnType<type
             .targets()
             .filter((t) => (ctx.trigger === 'numref' ? t.enumerator : ctx.trigger === 'eq' ? t.kind === 'equation' : true))
             .map(labelItem);
+        case 'term':
+          return project
+            .targets()
+            .filter((t) => t.kind === 'term')
+            .map((t) => item(t.text, kindIcon(t.kind), { detail: t.file, documentation: t.doc }));
         case 'doc':
         case 'link-path':
         case 'path': {
@@ -293,7 +301,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       const value =
         r.kind === 'xref' ? `**${r.entry.title || r.entry.name || r.entry.page || r.entry.url}** · ${r.entry.kind}\n\n${r.entry.url}`
         : r.kind === 'citation' ? `**${authorYear(r.entry) || r.entry.key}** · ${relative(root ?? '', r.entry.file)}\n\n${r.entry.title ?? ''}`
-        : r.kind === 'label' ? `**${title(r.target)}** · ${r.target.file}\n\n${r.target.text}`
+        : r.kind === 'label' ? `**${title(r.target)}** · ${r.target.file}\n\n${r.target.doc ?? r.target.text}`
         : undefined;
       return value ? { contents: { kind: 'markdown' as const, value } } : null;
     },
@@ -333,8 +341,8 @@ export function createService(root: string | undefined, project: ReturnType<type
       const targets = lookup();
       return refs(textDocument.uri).flatMap((ref) => {
         const r = resolveRef(ref, textDocument.uri, targets);
-        // An xref link without text renders with the remote title, so show that.
-        const label = r.kind === 'label' ? hint(r.target) : r.kind === 'xref' && !ref.text && r.entry.title;
+        // An xref link without text renders with the remote title, so show that. A `{term}` already shows its term.
+        const label = r.kind === 'label' ? r.target.kind !== 'term' && hint(r.target) : r.kind === 'xref' && !ref.text && r.entry.title;
         return label ? [{ position: { line: ref.line, character: ref.after }, label, paddingLeft: true }] : [];
       });
     },

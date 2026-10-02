@@ -60,3 +60,21 @@ Here is a line to edit: {ref}`fig-logo`
 Cmd+Shift+O shows this page's outline, with the figure, table and equation under their section.
 Cmd+T searches every label in the project.
 :::
+
+## Glossary terms
+
+:::{glossary}
+Language server
+: A program that gives editors completion, hover and warnings for a language.
+
+Inlay hint
+: Grey text the editor shows after a reference, saying what it points to.
+:::
+
+A {term}`language server` adds {term}`hints <Inlay hint>` to your editor.
+
+:::{tip} Try this: glossary terms
+- Hover over `language server` above to see its definition.
+- Inside `` {term}` `` you get completion of the glossary's terms.
+- Change a term to one that isn't in the glossary to get a warning.
+:::

@@ -7,6 +7,7 @@ const mystIcons: Record<string, CompletionItemKind> = {
   equation: CompletionItemKind.Operator,
   heading: CompletionItemKind.Module,
   code: CompletionItemKind.Snippet,
+  term: CompletionItemKind.Text,
 };
 
 // Keyed by a Sphinx object's role, the part after the colon in `py:function`.
