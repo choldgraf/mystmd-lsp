@@ -28,8 +28,11 @@ To see the server working before installing anything, run it from a clone of thi
 1. Run `npm ci` in the repository root.
 2. Open the repository root in VS Code.
 3. Press F5 and pick "Demo extension on demo/".
-   This builds the server and extension, then opens a second VS Code window on the [demo project](demo/index.md) with both loaded.
+   This builds the server and extension, copies the [demo project](demo/index.md) to `/tmp/mystmd-lsp-demo`, and opens a second VS Code window on the copy with both loaded.
 4. In the new window, open `index.md` and follow its "Try this" steps.
+
+The demos work on a copy, so `demo/` isn't edited.
+Each start resets the copy to match `demo/`, including Cmd+Shift+F5 and the JupyterLab demo below.
 
 The first run is slower because mystmd downloads its theme, and the external references need network access.
 Wait for "Loading project" to finish before expecting warnings.
@@ -41,12 +44,12 @@ This needs [mystmd](https://mystmd.org/guide/quickstart) installed.
 ## Try it locally in JupyterLab
 
 From the repository root, run `npm ci`, then `npm run demo:lab`.
-This builds the server and opens JupyterLab on the demo project, in a throwaway [uv](https://docs.astral.sh/uv/) environment with jupyterlab-lsp and this repository's Python package.
+This builds the server, copies the demo project to `/tmp/mystmd-lsp-demo`, and opens JupyterLab on the copy, in a throwaway [uv](https://docs.astral.sh/uv/) environment with jupyterlab-lsp and this repository's Python package.
 Add Jupyter options after `--`, e.g. `npm run demo:lab -- --debug`.
 
 Open `index.md` and follow its steps.
-To see the rendered site beside it, run `npm run demo:live` in another terminal.
-The server's log is in the terminal running Jupyter.
+To see the rendered site beside it, run `npm run demo:live` in another terminal before you start editing, since it resets the copy too.
+The server's log is in the browser's developer console.
 After changing the code, run `npm run build` and restart the language server from the status bar, no need to restart Jupyter.
 
 ## What you get

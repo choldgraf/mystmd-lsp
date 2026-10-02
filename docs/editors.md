@@ -81,4 +81,4 @@ If you can't start Jupyter in the project folder, also add `"--root=/path/to/pro
 To see how references render, open the built site beside your editor.
 It rebuilds when you save.
 In VS Code, run {gui}`MyST: Start preview`.
-In JupyterLab, the server's log, in the terminal running Jupyter, prints the site's address; open it in a browser window.
+In JupyterLab, the server's log goes to the browser's developer console; find the `[myst] ... started on port` line and open that address in a browser window.

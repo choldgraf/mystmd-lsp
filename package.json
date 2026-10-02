@@ -8,8 +8,9 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "docs": "cd docs && myst build --html",
     "docs:live": "cd docs && myst start",
-    "demo:live": "cd demo && myst start",
-    "demo:lab": "npm run build -w mystmd-lsp && cd demo && uvx --from jupyterlab --with jupyterlab-lsp --with-editable ../packages/jupyterlab jupyter lab",
+    "demo:copy": "rsync -a --delete --exclude _build --exclude .ipynb_checkpoints demo/ /tmp/mystmd-lsp-demo/",
+    "demo:live": "npm run demo:copy && cd /tmp/mystmd-lsp-demo && myst start",
+    "demo:lab": "npm run build -w mystmd-lsp && npm run demo:copy && uvx --from jupyterlab --with jupyterlab-lsp --with-editable packages/jupyterlab jupyter lab --ServerApp.root_dir=/tmp/mystmd-lsp-demo",
     "install:vscode": "curl -fsSL -o \"${TMPDIR:-/tmp}/mystmd-vscode.vsix\" https://github.com/choldgraf/mystmd-lsp/releases/download/latest/mystmd-vscode.vsix && code --install-extension \"${TMPDIR:-/tmp}/mystmd-vscode.vsix\" --force",
     "install:jupyterlab": "npm install -g https://github.com/choldgraf/mystmd-lsp/releases/download/latest/mystmd-lsp.tgz && pip install --force-reinstall --no-deps \"git+https://github.com/choldgraf/mystmd-lsp@latest#subdirectory=packages/jupyterlab\"",
     "install:all": "npm run install:vscode && npm run install:jupyterlab"

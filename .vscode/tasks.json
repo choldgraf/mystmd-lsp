@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // Builds, then refreshes the copy of demo/ that the demo window opens, so demo/ isn't edited.
+      "label": "demo: build and copy",
+      "dependsOn": ["npm: build", "npm: demo:copy"],
+      "dependsOrder": "sequence"
+    }
+  ]
+}
