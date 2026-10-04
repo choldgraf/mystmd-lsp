@@ -6,6 +6,9 @@ import { pathToFileURL } from 'node:url';
 import { tmpWorkspace } from './test-helpers.ts';
 import { CompletionItemKind, createProtocolConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-languageserver/node';
 
+// The bundle users run, which `npm test` builds first.
+const server = new URL('../dist/server.cjs', import.meta.url).pathname;
+
 const text = `(fig-a)=
 # Heading
 
@@ -25,7 +28,7 @@ test('server completes, hints and diagnoses over stdio', async (t) => {
   const root = tmpWorkspace(t, { 'a.png': '' });
   const uri = pathToFileURL(join(root, 'index.md')).href;
 
-  const child = spawn(process.execPath, [new URL('server.ts', import.meta.url).pathname, '--stdio']);
+  const child = spawn(process.execPath, [server, '--stdio']);
   const conn = createProtocolConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
   t.after(() => (conn.dispose(), child.kill()));
   const diagnostics = new Promise<any>((resolve) => conn.onNotification('textDocument/publishDiagnostics', resolve));
@@ -55,7 +58,7 @@ test('with real mystmd: the project loads, and the user is warned when mystmd di
     'index.md': '# Title\n\n(sec-a)=\n## Section\n',
   });
 
-  const child = spawn(process.execPath, [new URL('server.ts', import.meta.url).pathname, '--stdio']);
+  const child = spawn(process.execPath, [server, '--stdio']);
   const conn = createProtocolConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
   t.after(() => (conn.dispose(), child.kill()));
   const warning = new Promise<any>((resolve) => conn.onRequest('window/showMessageRequest', resolve));
@@ -77,7 +80,7 @@ test('with real mystmd: stopping the server with SIGTERM stops its mystmd', { sk
     'myst.yml': 'version: 1\nproject:\n  id: test\nsite:\n  template: book-theme\n',
     'index.md': '# Title\n\n(sec-a)=\n## Section\n',
   });
-  const child = spawn(process.execPath, [new URL('server.ts', import.meta.url).pathname, '--stdio']);
+  const child = spawn(process.execPath, [server, '--stdio']);
   const conn = createProtocolConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
   t.after(() => (conn.dispose(), child.kill()));
   conn.listen();

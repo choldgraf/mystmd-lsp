@@ -14,7 +14,8 @@ The editor extensions for VS Code and JupyterLab live in [MyST Author](https://g
 
 ## Set up
 
-You need Node 22 or newer.
+You need Node 22.18 or newer, since the tests run the TypeScript source directly.
+The bundled server runs on Node 22.
 From the repository root:
 
 ```sh

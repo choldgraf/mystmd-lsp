@@ -13,8 +13,8 @@ jobs:
           node-version: 24
       - run: npm ci
       - run: npm run typecheck
-      - run: npm test
       - run: npm run build
+      - run: npm test
   # Moves the `latest` tag to this commit and replaces the server tarball on the `latest` pre-release.
   latest:
     if: github.event_name == 'push'

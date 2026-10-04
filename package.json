@@ -14,6 +14,7 @@
   ],
   "scripts": {
     "build": "node build.mjs",
+    "pretest": "npm run build",
     "test": "node --test 'src/**/*.test.ts'",
     "typecheck": "tsc",
     "prepack": "npm run build",
