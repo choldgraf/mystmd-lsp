@@ -34,5 +34,5 @@ export function marks(marked: string) {
 /** A project that has finished loading, with fixed targets. `opened` records the files the service asked it to parse. */
 export function stubProject(targets: Target[]) {
   const opened: string[] = [];
-  return { opened, loaded: true, targets: () => targets, setOpen: (file: string) => opened.push(file), close() {} };
+  return { opened, loaded: true, targets: () => targets, setOpen: (file: string) => opened.push(file), close() {}, messages: () => [] };
 }

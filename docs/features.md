@@ -48,6 +48,9 @@ The server warns about references to unknown targets, and labels defined more th
 These are only reported with a content server, once the project has loaded; see [](troubleshooting.md) if you don't see them.
 Like mystmd, headings without an explicit label can share a name.
 
+Open pages also get mystmd's own warnings from parsing them, such as unknown directives, roles and directive options.
+If `myst.yml` lists plugins, unknown directives and roles aren't reported, since the server's parser doesn't load plugins.
+
 ## Inlay hints and semantic tokens
 
 - **Inlay hints** show the resolved text after each reference, e.g. `Figure 1` or `(1)`.

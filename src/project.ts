@@ -9,7 +9,7 @@ import { targetsFromTree, type Target } from './index-targets.ts';
  */
 export function createProject(server: { pages(): Promise<BuiltPage[]>; watch(onReload: () => void): void } | undefined, onChange: () => void) {
   let built = new Map<string, Target[]>();
-  const open = new Map<string, { file: string; targets: Target[] }>();
+  const open = new Map<string, { file: string; targets: Target[]; messages: ReturnType<typeof parseMyst>['messages'] }>();
   // Without a content server we only know the open documents, so we never claim a target is missing.
   let loaded = false;
 
@@ -33,8 +33,13 @@ export function createProject(server: { pages(): Promise<BuiltPage[]>; watch(onR
       return [...[...built].filter(([f]) => !openFiles.has(f)).flatMap(([, t]) => t), ...docs.flatMap((d) => d.targets)];
     },
     setOpen(file: string, text: string, uri: string) {
-      open.set(uri, { file, targets: targetsFromTree(parseMyst(text).tree, file).map((t) => ({ ...t, uri })) });
+      const { tree, messages } = parseMyst(text);
+      open.set(uri, { file, targets: targetsFromTree(tree, file).map((t) => ({ ...t, uri })), messages });
       onChange();
+    },
+    /** mystmd's warnings from an open document's last parse. */
+    messages(uri: string) {
+      return open.get(uri)?.messages ?? [];
     },
     close(uri: string) {
       open.delete(uri);

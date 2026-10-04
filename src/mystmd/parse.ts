@@ -73,5 +73,5 @@ export function parseMyst(md: string) {
     .use(keysPlugin)
     .runSync(tree as any, vfile);
 
-  return { tree };
+  return { tree, messages: vfile.messages };
 }

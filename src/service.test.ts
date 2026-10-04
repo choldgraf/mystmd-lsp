@@ -2,7 +2,7 @@ import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { CompletionItemKind } from 'vscode-languageserver';
+import { CompletionItemKind, DiagnosticSeverity } from 'vscode-languageserver';
 import { parseMyst } from './mystmd/parse.ts';
 import { createProject } from './project.ts';
 import { createService, semanticTokensLegend } from './service.ts';
@@ -266,4 +266,22 @@ test('notebook cells are documents in their notebook file', (t) => {
   assert.deepEqual(service.definition({ textDocument: { uri: `${nb}#b` }, position: at[0] })?.uri, `${nb}#a`);
   assert.deepEqual(service.documentSymbols({ textDocument: { uri: `${nb}#b` } }), []);
   assert.deepEqual((service.completion({ textDocument: { uri: `${nb}#b` }, position: at[1] }) as any[]).map((i) => i.label), ['plot.png']);
+});
+
+test('mystmd\'s own warnings are diagnostics, minus ones about references and plugins\' directives', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const text = '(a)=\nA\n\n(a)=\n:::{nope}\n:::\n```{figure} x.png\n:badopt: 1\n```\nSee {ref}`missing` and @key.\n';
+  const warnings = (myst: string) => {
+    const dir = tmpWorkspace(t, { 'myst.yml': myst, 'x.png': '' });
+    const service = createService(dir, createProject(undefined, () => {}));
+    const doc = pathToFileURL(join(dir, 'index.md')).href;
+    service.update(doc, text);
+    t.mock.timers.tick(150);
+    return service.diagnostics(doc).map((d) => [d.message, d.severity, d.range.start.line, d.range.end.character]);
+  };
+  assert.deepEqual(warnings('version: 1\n'), [
+    ['unknown directive: nope', DiagnosticSeverity.Error, 4, 9],
+    ['unexpected option "badopt" provided (in figure)', DiagnosticSeverity.Warning, 7, 10],
+  ]);
+  assert.deepEqual(warnings('project:\n  plugins: [plugin.mjs]\n').map((w) => w[0]), ['unexpected option "badopt" provided (in figure)']);
 });

@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { load } from 'js-yaml';
 import { normalizeLabel } from 'myst-common';
 import { CompletionItemKind, DiagnosticSeverity, ErrorCodes, ResponseError, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position, type TextEdit } from 'vscode-languageserver';
 import { directives, roles } from './mystmd/parse.ts';
@@ -74,9 +75,14 @@ export function createService(root: string | undefined, project: ReturnType<type
   // Citations from the project's .bib files, read on startup and again on `reloadBibliography()`.
   let bib = { entries: [] as BibEntry[], complete: false };
   let citations = new Map<string, BibEntry>();
+  // Whether myst.yml lists plugins, whose directives and roles our parser doesn't know.
+  let plugins = false;
   const reloadBibliography = () => {
     bib = root && existsSync(root) ? readBibliography(root, workspaceFiles(root, /\.bib$/)) : { entries: [], complete: false };
     citations = new Map(bib.entries.map((e) => [e.key, e]));
+    try {
+      plugins = !!(load(readFileSync(join(root!, 'myst.yml'), 'utf8')) as any)?.project?.plugins?.length;
+    } catch {}
   };
   const bibLocation = (e: BibEntry) => ({ uri: pathToFileURL(e.file).href, range: { start: { line: e.line, character: 0 }, end: { line: e.line, character: 0 } } });
 
@@ -422,7 +428,15 @@ export function createService(root: string | undefined, project: ReturnType<type
         const message = `Duplicate label \`${t.identifier}\`, also defined in ${[...new Set(others.map((o) => o.file))].join(', ')}`;
         return [{ severity: DiagnosticSeverity.Warning, range, message, source: 'myst' }];
       });
-      return [...problems, ...duplicates];
+      // mystmd's own warnings from parsing this page, except the ones we check project-wide above: references (including the citations parse.ts can't link) and duplicate labels.
+      const skip = ['reference-target-resolves', 'identifier-is-unique', ...(plugins ? ['directive-known', 'role-known'] : [])];
+      const lines = splitLines(texts.get(uri) ?? '');
+      const mystmd = project.messages(uri).filter((m) => !skip.includes(String(m.ruleId))).map((m) => {
+        const line = (m.line ?? 1) - 1;
+        const range = { start: { line, character: (m.column ?? 1) - 1 }, end: { line, character: lines[line]?.length ?? 0 } };
+        return { severity: m.fatal ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning, range, message: m.reason, source: 'myst' };
+      });
+      return [...problems, ...duplicates, ...mystmd];
     },
   };
 }
