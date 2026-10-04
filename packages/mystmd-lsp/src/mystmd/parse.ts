@@ -28,7 +28,7 @@ import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
 import { VFile } from 'vfile';
 
-// ponytail: MyST Author's preview (myst-author `packages/mystmd/src/parse.ts`) parses the same way; keep the two in step. A parse exported by mystmd would replace both.
+// ponytail: MyST Author (myst-author `packages/mystmd/src/parse.ts`) has a copy of this parse; keep the two in step. A parse exported by mystmd would replace both (myst-author's upstream proposal U8).
 // The extensions mystmd enables by default, so the parse matches `myst build`.
 const extDirectives = [cardDirective, ...gridDirectives, ...tabDirectives, proofDirective, ...exerciseDirectives];
 const extRoles = [buttonRole];

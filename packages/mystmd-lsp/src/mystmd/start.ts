@@ -2,6 +2,8 @@ import { spawn } from 'node:child_process';
 import { createServer, type AddressInfo } from 'node:net';
 import { createInterface } from 'node:readline';
 
+// ponytail: MyST Author (myst-author `packages/mystmd/src/start.ts`) has a copy of this that can also serve the site; port fixes between the two. A launcher exported by mystmd would replace both.
+
 /** Why `ready` rejects when mystmd isn't installed. */
 export const mystmdMissing = 'mystmd not found';
 

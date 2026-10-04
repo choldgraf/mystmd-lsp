@@ -1,6 +1,6 @@
 import type { GenericParent } from 'myst-common';
 
-// ponytail: a small client for the content server; one in mystmd itself would replace it.
+// ponytail: a small client for the content server. MyST Author (myst-author `packages/mystmd/src/built.ts`) has a larger copy; port fixes between the two. One in mystmd itself would replace both.
 
 /** The parts of a `myst start` page JSON (`/content/{slug}.json`) that we use. */
 export type BuiltPage = { location: string; mdast: GenericParent };

@@ -24,7 +24,7 @@ export function parseInventory(data: Buffer, base: string): XrefEntry[] {
     });
 }
 
-/** Entries of a MyST site's `myst.xref.json`. `title` is read if present (proposed upstream, see upstream/U1). */
+/** Entries of a MyST site's `myst.xref.json`. `title` is read if present (proposed upstream: https://github.com/choldgraf/myst-author/blob/main/upstream/U1-richer-xref-entries.md). */
 export function mystEntries(json: { references: any[] }, base: string): XrefEntry[] {
   return json.references.map((r) => ({
     name: r.identifier ?? '',
