@@ -14,6 +14,13 @@ mystmd-lsp --stdio [--root=path/to/project] [--content-server=http://127.0.0.1:3
 - `--no-myst`: don't start mystmd.
   Only open documents are indexed, and unknown targets aren't reported.
 
+## Starting mystmd
+
+When the project has a `myst.yml` and you pass neither `--content-server` nor `--no-myst`, the server runs `myst start --headless` in the project folder.
+Like any `myst start`, that runs the project's plugins, which can run any code, and writes `_build/`.
+If you already run `myst start` for the project, pass `--content-server=http://127.0.0.1:3100` (its content server) so the project isn't built twice.
+To run a `myst` that isn't on your `PATH`, set the `MYST_BIN` environment variable to its path.
+
 ## Finding the project
 
 The project is the nearest `myst.yml` at or above the workspace folder.
