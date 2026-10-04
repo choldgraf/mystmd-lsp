@@ -24,11 +24,13 @@ let loading = false;
 let progress: WorkDoneProgressServerReporter | undefined;
 let reloadConfig = () => {};
 let canWatchFiles = false;
+let content: ReturnType<typeof contentServer> | undefined;
 const args = parseArgs({ strict: false, options: { 'content-server': { type: 'string' }, root: { type: 'string' }, 'no-myst': { type: 'boolean' } } }).values as { 'content-server'?: string; root?: string; 'no-myst'?: boolean };
 
 // mystmd couldn't start or stopped: tell the user, and carry on with open documents only.
 const fail = (message: string) => {
   loading = false;
+  content?.stop();
   progress?.done();
   connection.window.showWarningMessage(`MyST: ${message}. Project-wide features are off; see the server log.`);
 };
@@ -53,11 +55,12 @@ connection.onInitialize(async (params) => {
   let url = args['content-server'];
   if (!url && !args['no-myst'] && root && existsSync(join(root, 'myst.yml'))) {
     const myst = await startMyst(root);
-    myst.ready.then(() => myst.exited).catch((e) => fail(e.message));
+    myst.exited.catch((e) => fail(e.message));
     url = myst.url;
   }
   loading = !!url;
-  const project = createProject(url ? contentServer(url) : undefined, refresh);
+  content = url ? contentServer(url) : undefined;
+  const project = createProject(content, refresh);
   // External projects from myst.yml `project.references`, refreshed as their inventories load.
   const xrefs: Record<string, XrefProject> = {};
   const readXrefs = () => syncXrefs(xrefs, root ? readReferences(root) : {}, refresh);
