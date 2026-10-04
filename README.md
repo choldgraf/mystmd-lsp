@@ -24,7 +24,7 @@ See [editor setup](docs/editors.md) for examples, and [troubleshooting](docs/tro
 ## Try it locally
 
 The [demo project](demo/index.md) walks through each feature.
-To try your own build of the server on it, run `npm ci`, `npm run build` and `npm run demo:copy`, then open `/tmp/mystmd-lsp-demo` in an editor that uses `packages/mystmd-lsp/dist/server.cjs`.
+To try your own build of the server on it, run `npm ci`, `npm run build` and `npm run demo:copy`, then open `/tmp/mystmd-lsp-demo` in an editor that uses `dist/server.cjs`.
 In VS Code, that's MyST Author's extension with `mystAuthor.serverPath` set; see [contributing](docs/contributing.md).
 The demo works on a copy, so `demo/` isn't edited.
 

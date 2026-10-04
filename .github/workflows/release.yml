@@ -25,8 +25,8 @@ jobs:
       - run: npm install -g npm@latest # trusted publishing needs npm 11.5.1 or newer
       - run: npm ci
       - run: npm test
-      - run: npm version "$VERSION" --no-git-tag-version --allow-same-version -w packages/mystmd-lsp
-      - run: npm publish -w packages/mystmd-lsp
+      - run: npm version "$VERSION" --no-git-tag-version --allow-same-version
+      - run: npm publish
   github-release:
     needs: [npm]
     runs-on: ubuntu-latest

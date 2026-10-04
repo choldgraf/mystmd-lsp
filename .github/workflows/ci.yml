@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
-      - run: npm pack -w packages/mystmd-lsp && mv mystmd-lsp-*.tgz mystmd-lsp.tgz
+      - run: npm pack && mv mystmd-lsp-*.tgz mystmd-lsp.tgz
       - run: git push -f origin HEAD:refs/tags/latest
       - run: |
           gh release create latest --prerelease --title latest --notes "$NOTES" || gh release edit latest --notes "$NOTES"

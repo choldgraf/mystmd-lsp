@@ -6,7 +6,7 @@ This page covers how to work on the server and the docs.
 
 ## Layout
 
-- `packages/mystmd-lsp`: the server, published to npm.
+- `src`: the server, which `npm run build` bundles into `dist/server.cjs` for npm.
 - `demo`: a MyST project that walks through each feature.
 - `docs`: this site.
 
@@ -26,27 +26,27 @@ npm run build
 
 CI runs the same commands.
 
-The server's `build` bundles it into `dist/server.cjs` with esbuild (`packages/mystmd-lsp/build.mjs`), which starts faster than the source.
+The server's `build` bundles it into `dist/server.cjs` with esbuild (`build.mjs`), which starts faster than the source.
 
-To try your build in VS Code, install MyST Author's extension, set `mystAuthor.serverPath` to the full path of `packages/mystmd-lsp/dist/server.cjs`, and reload the window after each build.
+To try your build in VS Code, install MyST Author's extension, set `mystAuthor.serverPath` to the full path of `dist/server.cjs`, and reload the window after each build.
 
 ## Code map
 
-- `packages/mystmd-lsp/src/syntax.ts`: finds reference syntax in text.
-- `packages/mystmd-lsp/src/index-targets.ts`: collects reference targets from an mdast tree.
-- `packages/mystmd-lsp/src/project.ts`: the project index (content server pages plus open documents).
-- `packages/mystmd-lsp/src/root.ts`: finds the project folder.
-- `packages/mystmd-lsp/src/xref.ts`: external project inventories and `xref:` resolution.
-- `packages/mystmd-lsp/src/cite.ts`: reads the project's `.bib` files.
-- `packages/mystmd-lsp/src/service.ts`: the features (completion, hover, diagnostics, ...) without an LSP connection, so tests can call them directly.
-- `packages/mystmd-lsp/src/server.ts`: the LSP wiring.
-- `packages/mystmd-lsp/src/mystmd/`: mystmd's parser with its default extensions (`parse.ts`), a client for the `myst start` content server, and a launcher for `myst start`.
+- `src/syntax.ts`: finds reference syntax in text.
+- `src/index-targets.ts`: collects reference targets from an mdast tree.
+- `src/project.ts`: the project index (content server pages plus open documents).
+- `src/root.ts`: finds the project folder.
+- `src/xref.ts`: external project inventories and `xref:` resolution.
+- `src/cite.ts`: reads the project's `.bib` files.
+- `src/service.ts`: the features (completion, hover, diagnostics, ...) without an LSP connection, so tests can call them directly.
+- `src/server.ts`: the LSP wiring.
+- `src/mystmd/`: mystmd's parser with its default extensions (`parse.ts`), a client for the `myst start` content server, and a launcher for `myst start`.
 
 Tests sit next to the code they cover, as `*.test.ts`.
 To add a feature, such as a new diagnostic:
 
-1. Put the logic in `packages/mystmd-lsp/src/service.ts`, and add a test to `service.test.ts` beside it.
-   To run one file, use `node --test src/service.test.ts` in `packages/mystmd-lsp`.
+1. Put the logic in `src/service.ts`, and add a test to `service.test.ts` beside it.
+   To run one file, use `node --test src/service.test.ts`.
 2. Wire it up in `server.ts`.
 3. Document it in [](features.md), and add a line to the README's "What you get" only if it's a new kind of feature.
 
