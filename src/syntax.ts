@@ -49,7 +49,7 @@ export function optionAt(lines: string[], line: number, character: number) {
   const directive = lines[i]?.match(/^\s*(?:`{3,}|:{3,})\{([\w:-]+)\}/)?.[1];
   if (!directive) return null;
   const rest = lines[line].slice(character).match(/^[\w-]*/)![0];
-  return { directive, used, prefix: m[1], start: character - m[1].length, end: character + rest.length };
+  return { directive, used, start: character - m[1].length, end: character + rest.length };
 }
 
 /** The directive name, directive option, or role name under the cursor, for hover docs. `directive` is an option's directive. */

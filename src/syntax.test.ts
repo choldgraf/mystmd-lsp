@@ -65,7 +65,7 @@ test('links to local files are doc references, but not URLs or labels', () => {
 
 test('optionAt finds the enclosing directive and options already used', () => {
   const lines = ['```{figure} a.png', ':label: fig', ':wi', '```'];
-  assert.deepEqual(optionAt(lines, 2, 3), { directive: 'figure', used: ['label'], prefix: 'wi', start: 1, end: 3 });
+  assert.deepEqual(optionAt(lines, 2, 3), { directive: 'figure', used: ['label'], start: 1, end: 3 });
   assert.equal(optionAt([':::{note}', 'body', ':x'], 2, 2), null); // options must come right after the fence
   assert.equal(optionAt(['plain', ':'], 1, 1), null);
 });
