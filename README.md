@@ -6,6 +6,8 @@ It speaks the [Language Server Protocol](https://microsoft.github.io/language-se
 It runs a headless `myst` server and rebuilds your documents as you edit, so it knows which labels, citations and other objects you can reference.
 For VS Code and JupyterLab, [MyST Author](https://github.com/choldgraf/myst-author) runs it for you, along with a live preview.
 
+**Warning**: This is experimental and evolving rapidly! See "Project Status" below.
+
 ## Install
 
 ```sh
