@@ -239,7 +239,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       const item = (label: string, kind: CompletionItemKind, extra: Partial<CompletionItem> = {}): CompletionItem => ({
         label,
         kind,
-        textEdit: { range, newText: label },
+        textEdit: { range, newText: label + (ctx.close ?? '') },
         ...extra,
       });
 

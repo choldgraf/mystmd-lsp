@@ -38,7 +38,7 @@ test('`{term}` completes, resolves and flags glossary terms', () => {
   assert.deepEqual(service.diagnostics(uri).map((d) => d.message), ['Unknown glossary term `nope`']);
   assert.deepEqual(service.inlayHints({ textDocument: { uri } }), []);
   assert.equal((service.hover({ textDocument: { uri }, position: at[0] }) as any).contents.value, '**Term** · glossary.md\n\nA markup language.');
-  assert.deepEqual((service.completion({ textDocument: { uri }, position: at[1] }) as any[]).map((i) => i.textEdit.newText), ['MyST Markdown']);
+  assert.deepEqual((service.completion({ textDocument: { uri }, position: at[1] }) as any[]).map((i) => i.textEdit.newText), ['MyST Markdown`']);
 });
 
 test('labels match by text', () => {

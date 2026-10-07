@@ -18,6 +18,14 @@ test('refAt recognizes each trigger', () => {
   assert.equal(at('plain text|'), null);
 });
 
+test('refAt gives the text that closes an unclosed reference', () => {
+  assert.equal(at('See {ref}`tour|')?.close, '`');
+  assert.equal(at('{ref}`Title <sec|')?.close, '>`');
+  assert.equal(at('see [](#fi|')?.close, ')');
+  assert.equal(at('<#fig|')?.close, '>');
+  assert.equal(at('See {numref}`fig-|x` here')?.close, undefined);
+});
+
 test('refsInText skips code but not directive bodies', () => {
   const text = [
     'Use ``{ref}`a` `` or `[](#b)` in text, but {ref}`c` counts.', // inline code masked, role kept

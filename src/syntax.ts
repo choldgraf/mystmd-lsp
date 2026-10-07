@@ -5,8 +5,9 @@ export type Trigger = 'ref' | 'numref' | 'eq' | 'doc' | 'term' | 'link-hash' | '
 /**
  * What the cursor is inside: `prefix` is the text typed so far, `start`/`end` the span a completion replaces.
  * For `xref-target`, `key` is the text between `xref:` and `#` (e.g. `spec/tables`).
+ * `close` is the text that would close an unclosed label reference, like the backtick of `` {ref}`label ``.
  */
-export type RefContext = { trigger: Trigger; prefix: string; start: number; end: number; key?: string };
+export type RefContext = { trigger: Trigger; prefix: string; start: number; end: number; key?: string; close?: string };
 
 /**
  * A reference in the text. `start`/`end` span the target; `after` is just past the closing delimiter.
@@ -73,6 +74,9 @@ export function refAt(lineText: string, character: number): RefContext | null {
     const prefix = m[m.length - 1];
     const rest = lineText.slice(character).match(/^[^`<>)}\]\s,;]*/)![0];
     const ctx: RefContext = { trigger: trigger ?? (m[1] as Trigger), prefix, start: character - prefix.length, end: character + rest.length };
+    // A label target is the last thing in its role or link, so a completion can close it.
+    const closer = trigger === null ? (m[0].includes('<') ? '>`' : '`') : trigger === 'link-hash' ? (m[0].startsWith('<') ? '>' : ')') : '';
+    if (closer && !lineText.startsWith(closer, ctx.end)) ctx.close = closer;
     return trigger === 'xref-target' ? { ...ctx, key: m[1] } : ctx;
   }
   return null;
