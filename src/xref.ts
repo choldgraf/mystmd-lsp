@@ -55,7 +55,7 @@ export function resolveXref(project: XrefProject, page: string, hash: string): X
   return entries.find((e) => e.kind === 'page' && e.page === (page || '/'));
 }
 
-/** `project.references` from the workspace's `myst.yml` (key → url), or {} if there is none. */
+/** `project.references` from the project's `myst.yml` (key → url), or {} if there is none. */
 export function readReferences(root: string): Record<string, string> {
   try {
     const refs = (load(readFileSync(join(root, 'myst.yml'), 'utf8')) as any)?.project?.references ?? {};

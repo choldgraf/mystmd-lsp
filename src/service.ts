@@ -56,7 +56,7 @@ type Resolved =
 
 /**
  * The language server's features, without an LSP connection.
- * `root` is the workspace folder path; `project` indexes the built pages and open files.
+ * `root` is the project folder: --root, else the nearest myst.yml folder, else the workspace folder. `project` indexes the built pages and open files.
  * `xrefs` are the external projects from myst.yml `project.references`, by key; they're read on each request, so they can load later.
  * Each method takes and returns the LSP request's params and result.
  */
@@ -67,7 +67,7 @@ export function createService(root: string | undefined, project: ReturnType<type
   // A document's path. Notebook cells are documents with the notebook's path and a fragment for the cell:
   // `file:///nb.ipynb#<cell id>` from JupyterLab, `vscode-notebook-cell:/nb.ipynb#...` from VS Code.
   const pathOf = (uri: string) => fileURLToPath('file:' + uri.slice(uri.indexOf(':') + 1));
-  // Files are project-relative when inside the workspace (matching the content server's `location`), else absolute paths.
+  // Files are project-relative when inside `root` (matching the content server's `location`), else absolute paths.
   const toFile = (uri: string) => {
     const path = pathOf(uri);
     return root && !relative(root, path).startsWith('..') ? relative(root, path) : path;
@@ -174,7 +174,7 @@ export function createService(root: string | undefined, project: ReturnType<type
     return d && { uri, range: rangeOf(d) };
   }
 
-  /** Every reference to a label in the workspace's Markdown files and open documents. */
+  /** Every reference to a label in the project's Markdown files and open documents. */
   function labelRefs(identifier: string) {
     const files = root && existsSync(root) ? workspaceFiles(root, /\.md$/) : [];
     const uris = new Set([...files.map((f) => pathToFileURL(f).href), ...texts.keys()]);
@@ -376,7 +376,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       });
     },
 
-    // Labels as workspace symbols, matched by label or text, exact matches first (hosts resolve preview `#id` links with this).
+    // Labels as workspace symbols, matched by label or text, exact matches first (clients find a label's definition with this).
     workspaceSymbols({ query }: { query: string }) {
       const q = query.toLowerCase();
       const matches = project.targets().filter((t) => `${t.identifier} ${t.text}`.toLowerCase().includes(q));

@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { createServer, type AddressInfo } from 'node:net';
 import { createInterface } from 'node:readline';
 
-// ponytail: MyST Author (myst-author `packages/mystmd/src/start.ts`) has a copy of this that can also serve the site; port fixes between the two. A launcher exported by mystmd would replace both.
+// MyST Author (myst-author `packages/mystmd/src/start.ts`) has a copy of this; port fixes between the two. A launcher exported by mystmd would replace both.
 
 /** Why `exited` rejects when mystmd isn't installed. */
 export const mystmdMissing = 'mystmd not found (install it, or set MYST_BIN)';
@@ -18,7 +18,7 @@ function freePort(): Promise<number> {
 }
 
 /**
- * Run `myst start --headless` in `root`: the content server the language server reads from, without the site.
+ * Run `myst start --headless` in `root`, which serves the content server without the site.
  * We pick the port, so `url` is known before the first build.
  * `exited` rejects if mystmd dies, with the message `mystmdMissing` if it isn't installed.
  * mystmd's output goes to the server log, a line at a time.

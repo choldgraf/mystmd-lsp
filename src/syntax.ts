@@ -15,7 +15,7 @@ export type RefContext = { trigger: Trigger; prefix: string; start: number; end:
  * `cite` is a `{cite}` key or an `@key`, which may be a citation or a label.
  * `doc` is a `{doc}` target or a Markdown link to a local file.
  * `term` is a `{term}` role's glossary term, as written.
- * `path` is the file argument of a `figure`, `image`, `include` or `literalinclude` directive (not URLs, `#cell` ids, or `.*` wildcards).
+ * `path` is the file argument of a `figure`, `image`, `include` or `literalinclude` directive (not URLs, `#cell` ids, or paths with `*`).
  */
 export type Ref = { kind: 'ref' | 'numref' | 'eq' | 'doc' | 'term' | 'link' | 'xref' | 'cite' | 'path'; target: string; line: number; start: number; end: number; after: number; text?: string };
 
@@ -111,7 +111,7 @@ export function refsInText(text: string): Ref[] {
     const top = fences.at(-1);
     if (f && top && f[1][0] === top.fence[0] && f[1].length >= top.fence.length && !f[2]) return void fences.pop();
     if (top?.code) return;
-    // A directive's file argument; mystmd also accepts URLs, notebook cells (`#id`) and `.*` wildcards, which aren't files.
+    // A directive's file argument; mystmd also accepts URLs, notebook cells (`#id`) and `*` wildcards, which aren't files.
     const p = raw.match(new RegExp(fileDirective.source + /(.*\S)/.source));
     if (p && !/^(\w+:|#)|\*/.test(p[2])) {
       const end = p[1].length + p[2].length;

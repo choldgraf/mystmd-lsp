@@ -48,7 +48,7 @@ connection.onInitialize(async (params) => {
     if (workspace?.inlayHint?.refreshSupport) connection.languages.inlayHint.refresh();
     if (workspace?.semanticTokens?.refreshSupport) connection.languages.semanticTokens.refresh();
   };
-  // The project is the nearest myst.yml at or above the workspace folder (see findProjectRoot), unless --root says where it is.
+  // The project folder: --root, else the nearest myst.yml at or above the workspace folder (see findProjectRoot), else the workspace folder.
   const workspaceFolder = folder ? fileURLToPath(folder) : undefined;
   const root = args.root ?? (workspaceFolder && (findProjectRoot(workspaceFolder) ?? workspaceFolder));
   // Unless told otherwise, the server runs mystmd itself when the project has a myst.yml, so clients needn't start it.
@@ -86,7 +86,7 @@ connection.onInitialize(async (params) => {
 });
 
 // Show "Loading project" while mystmd builds. Clients without progress support get a no-op reporter.
-// ponytail: if the content server never answers, this stays up, which is true: there's no project yet. Add a timeout if that confuses people.
+// There's no timeout: if the content server never answers, there's no project yet, so the progress stays up.
 connection.onInitialized(async () => {
   // Re-read the bibliography and external references when they change, so edits don't need a restart.
   if (canWatchFiles) connection.client.register(DidChangeWatchedFilesNotification.type, { watchers: [{ globPattern: '**/*.bib' }, { globPattern: '**/myst.yml' }] });

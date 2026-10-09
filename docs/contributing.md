@@ -10,7 +10,8 @@ This page covers how to work on the server and the docs.
 - `demo`: a MyST project that walks through each feature.
 - `docs`: this site.
 
-The editor extensions for VS Code and JupyterLab live in [MyST Author](https://github.com/choldgraf/myst-author).
+[MyST Author](https://chrisholdgraf.com/myst-author/) is one client of this server.
+See [how the repositories fit together](https://chrisholdgraf.com/myst-author/develop/repositories) for what lives where.
 
 ## Set up
 
@@ -27,18 +28,21 @@ npm run build
 
 CI runs the same commands.
 
-The server's `build` bundles it into `dist/server.cjs` with esbuild (`build.mjs`), which starts faster than the source.
+## Try your build
 
-To try your build in VS Code, install MyST Author's extension, set `mystAuthor.serverPath` to the full path of `dist/server.cjs`, and reload the window after each build.
+Run `npm run demo:copy`, then open `/tmp/mystmd-lsp-demo` in an editor set up to run your `dist/server.cjs` (see [](editors.md)).
+The demo walks through each feature, and works on a copy so `demo/` isn't edited.
+In VS Code, MyST Author's extension can run your build; see its [VS Code page](https://chrisholdgraf.com/myst-author/guide/vscode).
 
 ## Code map
 
 - `src/syntax.ts`: finds reference syntax in text.
 - `src/index-targets.ts`: collects reference targets from an mdast tree.
-- `src/project.ts`: the project index (content server pages plus open documents).
+- `src/project.ts`: the project index, from the content server's pages and the open documents.
 - `src/root.ts`: finds the project folder.
 - `src/xref.ts`: external project inventories and `xref:` resolution.
 - `src/cite.ts`: reads the project's `.bib` files.
+- `src/kinds.ts`: the completion icon for each kind of target.
 - `src/service.ts`: the features (completion, hover, diagnostics, ...) without an LSP connection, so tests can call them directly.
 - `src/server.ts`: the LSP wiring.
 - `src/mystmd/`: mystmd's parser with its default extensions (`parse.ts`), a client for the `myst start` content server, and a launcher for `myst start`.
@@ -50,6 +54,22 @@ To add a feature, such as a new diagnostic:
    To run one file, use `node --test src/service.test.ts`.
 2. Wire it up in `server.ts`.
 3. Document it in [](features.md), and add a line to the README's "What you get" only if it's a new kind of feature.
+
+## Replacing the reference regexes
+
+Open documents are parsed twice.
+mystmd's parser (`src/mystmd/parse.ts`) finds targets and warnings.
+Regexes (`src/syntax.ts`) find the position of each reference.
+A parser such as [myst-parser-unified](https://chrisholdgraf.com/myst-parser-unified/) could replace the reference regexes if it provides:
+
+- Pre-transform myst-spec mdast, so myst-transforms still run on it.
+  mystmd's transforms use older majors of unified and vfile, so the parser's trees must still work with them.
+- Positions for the parts inside nodes, such as the target in `` {ref}`text <target>` ``, the label in `(x)=`, and directive arguments and options.
+- Tolerance of half-typed input, since most documents are mid-edit.
+- Speed enough to parse every page in the project for find references.
+
+The swap point is `refsInText` and `labelDefinition` in `src/syntax.ts`, not `parse.ts`.
+`refAt` and `optionAt` read the cursor's context in half-typed text, so they stay regex-based.
 
 ## Docs
 
@@ -76,4 +96,4 @@ It publishes the package at that version, then tags the commit `mystmd-lsp-v<ver
 Edit the release afterwards to replace the notes with ones from `github-activity`.
 The version in `package.json` isn't used for releases.
 Publishing needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`.
-MyST Author picks up a new release through its dependency on `mystmd-lsp`.
+MyST Author picks up a new release when its `mystmd-lsp` dependency is bumped.

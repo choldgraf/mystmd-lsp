@@ -3,7 +3,7 @@ title: Features
 ---
 
 What the server does for your MyST files.
-It uses mystmd's own parser and directive specs, so what it completes and warns about matches what `myst build` does.
+It uses mystmd's own parser and directive specs, so it knows the same directives, roles and options as mystmd, except ones that plugins add.
 
 ## Completion
 
@@ -33,19 +33,19 @@ See [](configuration.md#what-it-reads-from-myst-yml) for when they're re-read.
 
 The file arguments of `figure`, `image`, `include`, and `literalinclude` get document links, go to definition, and a warning when the file doesn't exist.
 Like mystmd, paths are relative to the current file, or to the project root when they start with `/`.
-URLs, notebook cells (`#id`), and `.*` wildcards aren't checked.
+URLs, notebook cells (`#id`), and paths with a `*` wildcard aren't checked.
 
 ## Find references and rename
 
 Both work on labels, from a reference or from the label's definition (`(label)=`, `:label:`, `$$ (label)`).
 They search the project's `.md` files on disk, using unsaved text for open documents.
 Rename edits every reference and the definition.
-It isn't offered for citations, external references, notebooks, or headings without an explicit label.
+It isn't offered for citations, external references, labels in closed notebooks, or headings without an explicit label.
 
 ## Diagnostics
 
 The server warns about references to unknown targets, and labels defined more than once in the project.
-These are only reported with a content server, once the project has loaded; see [](troubleshooting.md) if you don't see them.
+These are only reported with a [content server](how-it-works.md), once the project has loaded; see [](troubleshooting.md) if you don't see them.
 Like mystmd, headings without an explicit label can share a name.
 
 Open pages also get mystmd's own warnings from parsing them, such as unknown directives, roles and directive options.
@@ -54,7 +54,8 @@ If `myst.yml` lists plugins, unknown directives and roles aren't reported, since
 ## Inlay hints and semantic tokens
 
 - **Inlay hints** show the resolved text after each reference, e.g. `Figure 1` or `(1)`.
-- **Semantic tokens** make each reference a `label` token, with its target's kind as a modifier (`label.figure`, `label.table`, `label.equation`, `label.heading`, ...), or `label.citation` for citations.
+- **Semantic tokens** make each reference a `label` token, with its target's kind as a modifier, such as `label.figure`.
+  Citations are `label.citation`.
   See [](configuration.md#semantic-token-colours) to colour them.
 
 ## Glossary terms
@@ -72,8 +73,8 @@ Unknown keys are only reported when every bibliography file is local, so project
 
 ## Symbols
 
-- **Workspace symbols**: every label, searchable by label or text, so clients can jump to them.
-  Each symbol is named by its lowercased label, which hosts rely on to find a label's definition.
+- **Workspace symbols**: every label, searchable by its label or text.
+  Symbols are named by label identifier, lowercased, with exact matches first, since clients rely on that to find a label's definition.
 - **Document symbols**: the page outline, with headings nested by level and each section's labeled figures, tables, equations, ... under it.
 
 ## External references
@@ -81,12 +82,13 @@ Unknown keys are only reported when every bibliography file is local, so project
 This covers `[](xref:key#target)` and `<xref:key/page#target>`.
 You get completion of keys, pages and targets, hover with the resolved URL, inlay hints with the remote title, diagnostics, and document links.
 Keys come from `project.references` in `myst.yml`.
-Each project's `myst.xref.json` (MyST) or `objects.inv` (Sphinx) is fetched on `initialize`.
+Each project's `myst.xref.json` (MyST) or `objects.inv` (Sphinx) is fetched when the server starts.
 
 ## Notebooks
 
 Each Markdown cell is a document in its notebook's file, with all the features above.
-VS Code's notebook sync sends cells as they are.
+Clients can send cells through LSP notebook sync, as VS Code does.
+Other clients can open each cell as a document whose URI is the notebook's, with the cell id as the fragment.
 Find references and rename search open cells, not notebooks on disk.
 
 ## Limits
