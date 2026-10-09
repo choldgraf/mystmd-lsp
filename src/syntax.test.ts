@@ -95,3 +95,13 @@ test('directive file arguments, and names to hover', () => {
   assert.deepEqual(nameAt(lines, 2, 6), { kind: 'role', name: 'numref' });
   assert.equal(nameAt(lines, 2, 14), undefined);
 });
+
+test('role and directive names can use `.` and `+`, like mystmd', () => {
+  for (const name of ['note', 'a.b', 'a+b', 'a:b', 'a-b', 'a_b']) {
+    assert.deepEqual(nameAt([`{${name}}\`x\``], 0, 1), { kind: 'role', name });
+    assert.deepEqual(nameAt([`\`\`\`{${name}}`], 0, 4), { kind: 'directive', name });
+    assert.deepEqual(nameAt([`:::{${name}}`], 0, 4), { kind: 'directive', name });
+    assert.deepEqual([at(`{${name}|`)?.trigger, at(`{${name}|`)?.prefix], ['role', name]);
+    assert.deepEqual([at(`:::{${name}|`)?.trigger, at(`:::{${name}|`)?.prefix], ['directive', name]);
+  }
+});

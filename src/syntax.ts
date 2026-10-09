@@ -19,6 +19,9 @@ export type RefContext = { trigger: Trigger; prefix: string; start: number; end:
  */
 export type Ref = { kind: 'ref' | 'numref' | 'eq' | 'doc' | 'term' | 'link' | 'xref' | 'cite' | 'path'; target: string; line: number; start: number; end: number; after: number; text?: string };
 
+// Fills in NAME, the characters of a role or directive name. mystmd accepts any character but `}`.
+const withName = (re: RegExp) => new RegExp(re.source.replaceAll('NAME', String.raw`[\w:.+-]`), re.flags);
+
 // The start of a directive whose argument is a file path.
 const fileDirective = /^(\s*(?:`{3,}|:{3,})\{(?:figure|image|include|literalinclude)\}\s+)/;
 
@@ -33,8 +36,8 @@ const contexts: [RegExp, Trigger | null][] = [
   [/<#([^>\s]*)$/, 'link-hash'],
   [/\]\(([^)\s#]*)$/, 'link-path'],
   [new RegExp(fileDirective.source + /(\S*)$/.source), 'path'],
-  [/^\s*(?:`{3,}|:{3,})\{([\w:-]*)$/, 'directive'],
-  [/\{([\w:-]*)$/, 'role'],
+  [withName(/^\s*(?:`{3,}|:{3,})\{(NAME*)$/), 'directive'],
+  [withName(/\{(NAME*)$/), 'role'],
 ];
 
 /**
@@ -47,7 +50,7 @@ export function optionAt(lines: string[], line: number, character: number) {
   const used: string[] = [];
   let i = line - 1;
   for (let o; i >= 0 && (o = lines[i].match(/^\s*:([\w-]+):/)); i--) used.push(o[1]);
-  const directive = lines[i]?.match(/^\s*(?:`{3,}|:{3,})\{([\w:-]+)\}/)?.[1];
+  const directive = lines[i]?.match(withName(/^\s*(?:`{3,}|:{3,})\{(NAME+)\}/))?.[1];
   if (!directive) return null;
   const rest = lines[line].slice(character).match(/^[\w-]*/)![0];
   return { directive, used, start: character - m[1].length, end: character + rest.length };
@@ -56,12 +59,12 @@ export function optionAt(lines: string[], line: number, character: number) {
 /** The directive name, directive option, or role name under the cursor, for hover docs. `directive` is an option's directive. */
 export function nameAt(lines: string[], line: number, character: number) {
   const text = lines[line] ?? '';
-  const d = text.match(/^(\s*(?:`{3,}|:{3,})\{)([\w:-]+)\}/);
+  const d = text.match(withName(/^(\s*(?:`{3,}|:{3,})\{)(NAME+)\}/));
   if (d && d[1].length <= character && character <= d[0].length - 1) return { kind: 'directive' as const, name: d[2] };
   const o = text.match(/^(\s*:)([\w-]+):/);
   const opt = o && character >= o[1].length && character <= o[0].length - 1 && optionAt(lines, line, o[1].length);
   if (opt) return { kind: 'option' as const, name: o[2], directive: opt.directive };
-  for (const m of text.matchAll(/\{([\w:-]+)\}`/g)) {
+  for (const m of text.matchAll(withName(/\{(NAME+)\}`/g))) {
     if (m.index < character && character <= m.index + m[1].length + 1) return { kind: 'role' as const, name: m[1] };
   }
 }
