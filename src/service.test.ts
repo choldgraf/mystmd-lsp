@@ -168,6 +168,7 @@ test('rename a label from its definition, and not citations or unknown labels', 
   const { service, uri, spans } = labelWorkspace(t);
   const at = { textDocument: { uri: uri('a.md') }, position: { line: 4, character: 10 } };
   assert.deepEqual(service.prepareRename(at), { start: { line: 4, character: 8 }, end: { line: 4, character: 15 } });
+  assert.throws(() => service.rename({ ...at, newName: 'fig#2' }), /isn't a valid label/);
   const { changes } = service.rename({ ...at, newName: 'fig-plot' })!;
   assert.deepEqual(spans(Object.entries(changes).flatMap(([u, edits]) => edits.map((e) => ({ uri: u, ...e })))), ['a.md:4:8', 'b.md:0:26', 'b.md:0:5', 'c.md:0:6']);
   service.update(uri('b.md'), '{doc}`a.md` @nope');

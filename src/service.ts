@@ -12,12 +12,9 @@ import { labelDefinition, nameAt, optionAt, refAt, refsInText, splitLines, type 
 import type { Target } from './index-targets.ts';
 import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
 
-// The same directives and roles as mystmd's parser (`./mystmd/parse.ts`).
-const names = (specs: { name: string; alias?: string[] }[]) => specs.flatMap((s) => [s.name, ...(s.alias ?? [])]);
-const byName = <T extends { name: string; alias?: string[] }>(specs: T[]) => new Map(specs.flatMap((s) => names([s]).map((n) => [n, s])));
-const directiveNames = names(directives);
+// The same directives and roles as mystmd's parser (`./mystmd/parse.ts`), by name and alias.
+const byName = <T extends { name: string; alias?: string[] }>(specs: T[]) => new Map(specs.flatMap((s) => [s.name, ...(s.alias ?? [])].map((n) => [n, s] as const)));
 const directiveSpecs = byName(directives);
-const roleNames = names(roles);
 const roleSpecs = byName(roles);
 
 /** "Figure 1", "Equation (1)", "Section" */
@@ -56,7 +53,7 @@ type Resolved =
 
 /**
  * The language server's features, without an LSP connection.
- * `root` is the project folder: --root, else the nearest myst.yml folder, else the workspace folder. `project` indexes the built pages and open files.
+ * `root` is the project folder. `project` indexes the built pages and open files.
  * `xrefs` are the external projects from myst.yml `project.references`, by key; they're read on each request, so they can load later.
  * Each method takes and returns the LSP request's params and result.
  */
@@ -84,7 +81,6 @@ export function createService(root: string | undefined, project: ReturnType<type
       plugins = !!(load(readFileSync(join(root!, 'myst.yml'), 'utf8')) as any)?.project?.plugins?.length;
     } catch {}
   };
-  const bibLocation = (e: BibEntry) => ({ uri: pathToFileURL(e.file).href, range: { start: { line: e.line, character: 0 }, end: { line: e.line, character: 0 } } });
 
   const toUri = (file: string) => pathToFileURL(root ? resolve(root, file) : file).href;
   // mystmd resolves file paths relative to the current file, or to the project root when they start with `/`.
@@ -96,7 +92,7 @@ export function createService(root: string | undefined, project: ReturnType<type
   // Targets in an open document: its own live parse, or its file's built targets until that's ready.
   const inDocument = (t: Target, uri: string) => (t.uri ? t.uri === uri : t.file === toFile(uri));
 
-  function workspaceFiles(dir = root, pattern = /\.(md|ipynb)$/): string[] {
+  function workspaceFiles(dir: string | undefined, pattern = /\.(md|ipynb)$/): string[] {
     if (!dir) return [];
     return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
       if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '_build') return [];
@@ -176,7 +172,9 @@ export function createService(root: string | undefined, project: ReturnType<type
 
   /** Every reference to a label in the project's Markdown files and open documents. */
   function labelRefs(identifier: string) {
-    const files = root && existsSync(root) ? workspaceFiles(root, /\.md$/) : [];
+    // Skip files that are open: the client's URI for them can be encoded differently from ours.
+    const open = new Set([...texts.keys()].map(pathOf));
+    const files = root && existsSync(root) ? workspaceFiles(root, /\.md$/).filter((f) => !open.has(f)) : [];
     const uris = new Set([...files.map((f) => pathToFileURL(f).href), ...texts.keys()]);
     const targets = lookup();
     const isRef = (r: Resolved) => r.kind === 'label' && r.target.identifier === identifier;
@@ -295,9 +293,9 @@ export function createService(root: string | undefined, project: ReturnType<type
           return { isIncomplete: matches.length > 200, items };
         }
         case 'directive':
-          return directiveNames.map((n) => item(n, CompletionItemKind.Keyword));
+          return [...directiveSpecs.keys()].map((n) => item(n, CompletionItemKind.Keyword));
         case 'role':
-          return roleNames.map((n) => item(n, CompletionItemKind.Function));
+          return [...roleSpecs.keys()].map((n) => item(n, CompletionItemKind.Function));
       }
     },
 
@@ -317,7 +315,10 @@ export function createService(root: string | undefined, project: ReturnType<type
       const ref = refAtCursor(at);
       const r = ref && resolveRef(ref, at.textDocument.uri);
       if (r?.kind === 'file') return { uri: pathToFileURL(r.path).href, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } };
-      if (r?.kind === 'citation') return bibLocation(r.entry);
+      if (r?.kind === 'citation') {
+        const start = { line: r.entry.line, character: 0 };
+        return { uri: pathToFileURL(r.entry.file).href, range: { start, end: start } };
+      }
       return r?.kind === 'label' ? locationOf(r.target) : null;
     },
 
@@ -338,7 +339,8 @@ export function createService(root: string | undefined, project: ReturnType<type
       const hit = labelAtCursor(at);
       const def = hit && definitionOf(hit.target);
       if (!def) return null;
-      if (!/^[^\s()<>`{}[\]]+$/.test(at.newName)) throw new ResponseError(ErrorCodes.InvalidParams, `\`${at.newName}\` isn't a valid label`);
+      // mystmd's label characters (TARGET_PATTERN in markdown-it-myst), except `<>`, which would end a `{ref}`text <label>`` early.
+      if (!/^[a-zA-Z0-9|@*./_\-+:]+$/.test(at.newName)) throw new ResponseError(ErrorCodes.InvalidParams, `\`${at.newName}\` isn't a valid label`);
       const changes: Record<string, TextEdit[]> = {};
       for (const { uri, range } of [def, ...labelRefs(hit.target.identifier)]) (changes[uri] ??= []).push({ range, newText: at.newName });
       return { changes };

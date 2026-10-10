@@ -25,7 +25,7 @@ export function parseInventory(data: Buffer, base: string): XrefEntry[] {
 }
 
 /** Entries of a MyST site's `myst.xref.json`. `title` is read if present (proposed upstream: https://github.com/choldgraf/myst-author/blob/main/upstream/U1-richer-xref-entries.md). */
-export function mystEntries(json: { references: any[] }, base: string): XrefEntry[] {
+function mystEntries(json: { references: any[] }, base: string): XrefEntry[] {
   return json.references.map((r) => ({
     name: r.identifier ?? '',
     kind: r.kind,
@@ -76,7 +76,7 @@ export function syncXrefs(xrefs: Record<string, XrefProject>, refs: Record<strin
 }
 
 /** Fetch a project's inventory: `myst.xref.json` first, then Sphinx `objects.inv`. Leaves `entries` undefined if both fail. */
-export async function loadProject(project: XrefProject) {
+async function loadProject(project: XrefProject) {
   const base = project.url.replace(/\/?$/, '/');
   const json = await fetch(new URL('myst.xref.json', base)).then((r) => (r.ok ? r.json() : null)).catch(() => null);
   if (json?.references) {

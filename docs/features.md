@@ -19,7 +19,6 @@ It uses mystmd's own parser and directive specs, so it knows the same directives
 | `{` | role names |
 | `:` on a line inside a directive's options | that directive's options, skipping ones already set |
 
-Directive options come from mystmd's directive specs.
 Citation keys come from `project.bibliography` in `myst.yml`, or every `.bib` file in the project, as in mystmd.
 See [](configuration.md#what-it-reads-from-myst-yml) for when they're re-read.
 
@@ -45,7 +44,8 @@ It isn't offered for citations, external references, labels in closed notebooks,
 ## Diagnostics
 
 The server warns about references to unknown targets, and labels defined more than once in the project.
-These are only reported with a [content server](how-it-works.md), once the project has loaded; see [](troubleshooting.md) if you don't see them.
+Missing files and external references are checked right away.
+The rest needs a [content server](how-it-works.md) and waits until the project has loaded; see [](troubleshooting.md) if you don't see them.
 Like mystmd, headings without an explicit label can share a name.
 
 Open pages also get mystmd's own warnings from parsing them, such as unknown directives, roles and directive options.

@@ -53,7 +53,7 @@ connection.onInitialize(async (params) => {
     if (workspace?.inlayHint?.refreshSupport) connection.languages.inlayHint.refresh();
     if (workspace?.semanticTokens?.refreshSupport) connection.languages.semanticTokens.refresh();
   };
-  // The project folder: --root, else the nearest myst.yml at or above the workspace folder (see findProjectRoot), else the workspace folder.
+  // The project folder: --root, else see findProjectRoot.
   const workspaceFolder = folder ? fileURLToPath(folder) : undefined;
   const root = args.root ?? (workspaceFolder && (findProjectRoot(workspaceFolder) ?? workspaceFolder));
   // Unless told otherwise, the server runs mystmd itself when the project has a myst.yml, so clients needn't start it.

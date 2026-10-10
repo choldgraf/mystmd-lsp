@@ -34,4 +34,5 @@ args = ["--stdio"]
 [[language]]
 name = "markdown"
 language-servers = ["mystmd-lsp"]
+roots = ["myst.yml"]
 ```

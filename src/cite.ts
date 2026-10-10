@@ -6,7 +6,7 @@ import { load } from 'js-yaml';
 export type BibEntry = { key: string; file: string; line: number; author?: string; year?: string; title?: string };
 
 // A regex reader, not a full BibTeX parser: field values may nest braces one level deep, and `@string` macros aren't expanded.
-export function parseBib(text: string, file: string): BibEntry[] {
+function parseBib(text: string, file: string): BibEntry[] {
   const entries = [...text.matchAll(/^[ \t]*@(\w+)\s*\{\s*([^,\s]+)\s*,/gm)];
   return entries.flatMap((m, i) => {
     if (/^(comment|string|preamble)$/i.test(m[1])) return [];

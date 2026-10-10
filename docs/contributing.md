@@ -21,9 +21,8 @@ From the repository root:
 
 ```sh
 npm ci
-npm test
+npm test # builds first
 npm run typecheck
-npm run build
 ```
 
 CI runs the same commands.

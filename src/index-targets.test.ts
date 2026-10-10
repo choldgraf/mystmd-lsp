@@ -38,3 +38,8 @@ test('targetsFromTree finds glossary terms with their definitions', () => {
   const targets = targetsFromTree(parseMyst(':::{glossary}\nMyST Markdown\n: A markup language.\n:::\n').tree, 'index.md');
   assert.deepEqual(targets.map((t) => [t.identifier, t.kind, t.text, t.doc, t.line]), [['term-myst markdown', 'term', 'MyST Markdown', 'A markup language.', 2]]);
 });
+
+test('targets in included content are filed under the included file', () => {
+  const tree = { type: 'root', children: [{ type: 'include', file: '../README.md', children: [{ type: 'heading', identifier: 'usage', depth: 2, children: [{ type: 'text', value: 'Usage' }], position: { start: { line: 9 } } }] }] };
+  assert.deepEqual(targetsFromTree(tree as any, 'docs/index.md').map((t) => [t.file, t.line]), [['README.md', 9]]);
+});

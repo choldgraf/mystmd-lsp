@@ -1,3 +1,4 @@
+import { dirname, join } from 'node:path';
 import type { GenericNode } from 'myst-common';
 
 /**
@@ -13,12 +14,16 @@ const kinds: Record<string, string> = { math: 'equation', definitionTerm: 'term'
 export function targetsFromTree(tree: GenericNode, file: string): Target[] {
   const targets: Target[] = [];
   // `next` is the following sibling: a glossary term's definition.
-  const walk = (node: GenericNode, next?: GenericNode) => {
+  // Included Markdown keeps the included file's lines, so it's filed under that file. A literal include's label is on this page.
+  const walk = (node: GenericNode, file: string, next?: GenericNode) => {
+    if (node.type === 'include' && !node.literal) file = node.file.startsWith('/') ? node.file.slice(1) : join(dirname(file), node.file);
     if (node.identifier && targetTypes.has(node.type)) {
+      const text = textOf(node.type === 'container' ? node.children?.find((c) => c.type === 'caption') : node);
       targets.push({
         identifier: node.identifier,
         kind: node.type === 'container' ? node.kind ?? node.type : kinds[node.type] ?? node.type,
-        text: textOf(node.type === 'container' ? node.children?.find((c) => c.type === 'caption') : node).slice(0, 60),
+        // Completion inserts a glossary term's text, so it's kept whole.
+        text: node.type === 'definitionTerm' ? text : text.slice(0, 60),
         enumerator: node.enumerator,
         file,
         line: lineOf(node) ?? 1,
@@ -27,9 +32,9 @@ export function targetsFromTree(tree: GenericNode, file: string): Target[] {
         doc: next?.type === 'definitionDescription' ? textOf(next) : undefined,
       });
     }
-    node.children?.forEach((c, i, all) => walk(c, all[i + 1]));
+    node.children?.forEach((c, i, all) => walk(c, file, all[i + 1]));
   };
-  walk(tree);
+  walk(tree, file);
   return targets;
 }
 

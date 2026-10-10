@@ -1,13 +1,13 @@
 // Pure, line-based recognition of MyST reference syntax. Character offsets are 0-based.
 
-export type Trigger = 'ref' | 'numref' | 'eq' | 'doc' | 'term' | 'link-hash' | 'link-path' | 'xref-key' | 'xref-target' | 'directive' | 'role' | 'cite' | 'at' | 'path';
+type Trigger = 'ref' | 'numref' | 'eq' | 'doc' | 'term' | 'link-hash' | 'link-path' | 'xref-key' | 'xref-target' | 'directive' | 'role' | 'cite' | 'at' | 'path';
 
 /**
  * What the cursor is inside: `prefix` is the text typed so far, `start`/`end` the span a completion replaces.
  * For `xref-target`, `key` is the text between `xref:` and `#` (e.g. `spec/tables`).
  * `close` is the text that would close an unclosed label reference, like the backtick of `` {ref}`label ``.
  */
-export type RefContext = { trigger: Trigger; prefix: string; start: number; end: number; key?: string; close?: string };
+type RefContext = { trigger: Trigger; prefix: string; start: number; end: number; key?: string; close?: string };
 
 /**
  * A reference in the text. `start`/`end` span the target; `after` is just past the closing delimiter.
