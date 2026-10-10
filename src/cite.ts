@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { load } from 'js-yaml';
+import { resolve } from 'node:path';
+import { readProjectConfig } from './root.ts';
 
 /** A BibTeX entry. `file` is an absolute path; `line` is 0-based. */
 export type BibEntry = { key: string; file: string; line: number; author?: string; year?: string; title?: string };
@@ -32,10 +32,7 @@ export function authorYear(e: BibEntry) {
  * `complete` is false when there's no bibliography or part of it is remote, so unknown keys can't be flagged.
  */
 export function readBibliography(root: string, found: string[]) {
-  let files = found;
-  try {
-    files = [(load(readFileSync(join(root, 'myst.yml'), 'utf8')) as any)?.project?.bibliography ?? found].flat();
-  } catch {}
+  const files: string[] = [readProjectConfig(root).bibliography ?? found].flat();
   const local = files.filter((f) => !/^https?:/.test(f)).map((f) => resolve(root, f));
   const entries = local.flatMap((f) => {
     try {

@@ -1,7 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { inflateSync } from 'node:zlib';
-import { load } from 'js-yaml';
+import { readProjectConfig } from './root.ts';
 
 /** One target in an external project. `page` is set for MyST projects (e.g. `/tables`); `url` is absolute. */
 export type XrefEntry = { name: string; kind: string; title?: string; url: string; page?: string; implicit?: boolean };
@@ -57,12 +55,8 @@ export function resolveXref(project: XrefProject, page: string, hash: string): X
 
 /** `project.references` from the project's `myst.yml` (key → url), or {} if there is none. */
 export function readReferences(root: string): Record<string, string> {
-  try {
-    const refs = (load(readFileSync(join(root, 'myst.yml'), 'utf8')) as any)?.project?.references ?? {};
-    return Object.fromEntries(Object.entries(refs).map(([k, v]: [string, any]) => [k, typeof v === 'string' ? v : v.url]));
-  } catch {
-    return {};
-  }
+  const refs = readProjectConfig(root).references ?? {};
+  return Object.fromEntries(Object.entries(refs).map(([k, v]: [string, any]) => [k, typeof v === 'string' ? v : v?.url]));
 }
 
 /** Keep `xrefs` in step with `refs` (key → url): drop projects that went away or moved, and load new ones, calling `onLoad` as each arrives. */

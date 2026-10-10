@@ -1,13 +1,13 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { load } from 'js-yaml';
 import { normalizeLabel } from 'myst-common';
 import { CompletionItemKind, DiagnosticSeverity, ErrorCodes, ResponseError, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position, type TextEdit } from 'vscode-languageserver';
 import { directives, roles } from './mystmd/parse.ts';
 import { authorYear, readBibliography, type BibEntry } from './cite.ts';
 import { kindIcon } from './kinds.ts';
 import type { createProject } from './project.ts';
+import { readProjectConfig } from './root.ts';
 import { labelDefinition, nameAt, optionAt, refAt, refsInText, splitLines, type Ref } from './syntax.ts';
 import type { Target } from './index-targets.ts';
 import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
@@ -77,18 +77,15 @@ export function createService(root: string | undefined, project: ReturnType<type
   const reloadBibliography = () => {
     bib = root && existsSync(root) ? readBibliography(root, workspaceFiles(root, /\.bib$/)) : { entries: [], complete: false };
     citations = new Map(bib.entries.map((e) => [e.key, e]));
-    try {
-      plugins = !!(load(readFileSync(join(root!, 'myst.yml'), 'utf8')) as any)?.project?.plugins?.length;
-    } catch {}
+    plugins = !!root && !!readProjectConfig(root).plugins?.length;
   };
 
   const toUri = (file: string) => pathToFileURL(root ? resolve(root, file) : file).href;
   // mystmd resolves file paths relative to the current file, or to the project root when they start with `/`.
   const fileOf = (uri: string, path: string) => (path.startsWith('/') && root ? join(root, path) : join(dirname(pathOf(uri)), path));
-  const locationOf = (t: Target) => {
-    const start = { line: t.line - 1, character: 0 };
-    return { uri: t.uri ?? toUri(t.file), range: { start, end: start } };
-  };
+  // A location at the start of a line (0-based).
+  const point = (uri: string, line: number) => ({ uri, range: { start: { line, character: 0 }, end: { line, character: 0 } } });
+  const locationOf = (t: Target) => point(t.uri ?? toUri(t.file), t.line - 1);
   // Targets in an open document: its own live parse, or its file's built targets until that's ready.
   const inDocument = (t: Target, uri: string) => (t.uri ? t.uri === uri : t.file === toFile(uri));
 
@@ -175,10 +172,10 @@ export function createService(root: string | undefined, project: ReturnType<type
     // Skip files that are open: the client's URI for them can be encoded differently from ours.
     const open = new Set([...texts.keys()].map(pathOf));
     const files = root && existsSync(root) ? workspaceFiles(root, /\.md$/).filter((f) => !open.has(f)) : [];
-    const uris = new Set([...files.map((f) => pathToFileURL(f).href), ...texts.keys()]);
+    const uris = [...files.map((f) => pathToFileURL(f).href), ...texts.keys()];
     const targets = lookup();
     const isRef = (r: Resolved) => r.kind === 'label' && r.target.identifier === identifier;
-    return [...uris].flatMap((uri) => refsInText(source(uri)).filter((r) => isRef(resolveRef(r, uri, targets))).map((r) => ({ uri, range: rangeOf(r) })));
+    return uris.flatMap((uri) => refsInText(source(uri)).filter((r) => isRef(resolveRef(r, uri, targets))).map((r) => ({ uri, range: rangeOf(r) })));
   }
 
   /** mystmd's docs for the directive, directive option, or role name under the cursor. */
@@ -314,11 +311,8 @@ export function createService(root: string | undefined, project: ReturnType<type
     definition(at: At) {
       const ref = refAtCursor(at);
       const r = ref && resolveRef(ref, at.textDocument.uri);
-      if (r?.kind === 'file') return { uri: pathToFileURL(r.path).href, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } };
-      if (r?.kind === 'citation') {
-        const start = { line: r.entry.line, character: 0 };
-        return { uri: pathToFileURL(r.entry.file).href, range: { start, end: start } };
-      }
+      if (r?.kind === 'file') return point(pathToFileURL(r.path).href, 0);
+      if (r?.kind === 'citation') return point(pathToFileURL(r.entry.file).href, r.entry.line);
       return r?.kind === 'label' ? locationOf(r.target) : null;
     },
 
@@ -421,18 +415,18 @@ export function createService(root: string | undefined, project: ReturnType<type
         const r = resolveRef(ref, uri, targets);
         return r.kind === 'missing' && r.problem ? [{ severity: DiagnosticSeverity.Warning, range: rangeOf(ref), message: r.problem, source: 'myst' }] : [];
       });
+      const lines = splitLines(texts.get(uri) ?? '');
       // Labels in this file that are defined more than once in the project. Like mystmd, not implicit heading labels.
       const explicit = project.loaded ? project.targets().filter((t) => !t.implicit) : [];
       const duplicates = explicit.filter((t) => inDocument(t, uri)).flatMap((t) => {
         const others = explicit.filter((o) => o !== t && o.identifier === t.identifier);
         if (!others.length) return [];
-        const range = definitionOf(t, uri)?.range ?? rangeOf({ line: t.line - 1, start: 0, end: (splitLines(texts.get(uri) ?? '')[t.line - 1] ?? '').length });
+        const range = definitionOf(t, uri)?.range ?? rangeOf({ line: t.line - 1, start: 0, end: (lines[t.line - 1] ?? '').length });
         const message = `Duplicate label \`${t.identifier}\`, also defined in ${[...new Set(others.map((o) => o.file))].join(', ')}`;
         return [{ severity: DiagnosticSeverity.Warning, range, message, source: 'myst' }];
       });
       // mystmd's own warnings from parsing this page, except the ones we check project-wide above: references (including the citations parse.ts can't link) and duplicate labels.
       const skip = ['reference-target-resolves', 'identifier-is-unique', ...(plugins ? ['directive-known', 'role-known'] : [])];
-      const lines = splitLines(texts.get(uri) ?? '');
       const mystmd = project.messages(uri).filter((m) => !skip.includes(String(m.ruleId))).map((m) => {
         const line = (m.line ?? 1) - 1;
         const range = { start: { line, character: (m.column ?? 1) - 1 }, end: { line, character: lines[line]?.length ?? 0 } };
