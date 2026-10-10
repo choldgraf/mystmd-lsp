@@ -25,8 +25,9 @@ function freePort(): Promise<number> {
  */
 export async function startMyst(root: string) {
   const port = await freePort();
-  // Pin HOST so it doesn't bind IPv6-only `localhost`, which proxies like code-server's miss.
-  const env = { ...process.env, HOST: '127.0.0.1' };
+  // myst reads PORT as its own theme-server port. Pin HOST so it doesn't bind IPv6-only `localhost`, which proxies like code-server's miss.
+  const { PORT, ...rest } = process.env;
+  const env = { ...rest, HOST: '127.0.0.1' };
   const args = ['start', '--headless', '--server-port', String(port)];
   const child = spawn(process.env.MYST_BIN ?? 'myst', args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
   process.on('exit', () => child.kill());
