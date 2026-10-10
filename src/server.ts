@@ -12,6 +12,12 @@ import { findProjectRoot } from './root.ts';
 import { createService, semanticTokensLegend } from './service.ts';
 import { readReferences, syncXrefs, type XrefProject } from './xref.ts';
 
+const args = parseArgs({ strict: false, options: { 'content-server': { type: 'string' }, root: { type: 'string' }, 'no-myst': { type: 'boolean' }, help: { type: 'boolean', short: 'h' } } }).values as { 'content-server'?: string; root?: string; 'no-myst'?: boolean; help?: boolean };
+if (args.help) {
+  console.log('Usage: mystmd-lsp --stdio [--root=path/to/project] [--content-server=URL] [--no-myst]\nSee https://chrisholdgraf.com/mystmd-lsp/configuration');
+  process.exit(0);
+}
+
 // The LSP wiring: features live in service.ts.
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
@@ -25,7 +31,6 @@ let progress: WorkDoneProgressServerReporter | undefined;
 let reloadConfig = () => {};
 let canWatchFiles = false;
 let content: ReturnType<typeof contentServer> | undefined;
-const args = parseArgs({ strict: false, options: { 'content-server': { type: 'string' }, root: { type: 'string' }, 'no-myst': { type: 'boolean' } } }).values as { 'content-server'?: string; root?: string; 'no-myst'?: boolean };
 
 // mystmd couldn't start or stopped: tell the user, and carry on with open documents only.
 const fail = (message: string) => {
