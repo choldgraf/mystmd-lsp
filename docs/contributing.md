@@ -2,8 +2,6 @@
 title: Contributing
 ---
 
-This page covers how to work on the server and the docs.
-
 ## Layout
 
 - `src`: the server, which `npm run build` bundles into `dist/server.cjs` for npm.
@@ -84,10 +82,9 @@ The site deploys to GitHub Pages when `main` changes.
 
 ## Releasing
 
-To release:
-
-1. Run `npm version <version> --no-git-tag-version`, which updates `package.json` and `package-lock.json`. Commit and push to `main`.
-2. Run the Release workflow (`.github/workflows/release.yml`) from the Actions tab (Release → Run workflow), or run `gh workflow run release.yml`.
+1. Run `npm version <version> --no-git-tag-version`, which updates `package.json` and `package-lock.json`.
+   Commit and push to `main`.
+2. Run the Release workflow (`.github/workflows/release.yml`) from the Actions tab, or with `gh workflow run release.yml`.
 
 It publishes the package at the version in `package.json`, then tags the commit `mystmd-lsp-v<version>` and creates a GitHub release with generated notes.
 Edit the release afterwards to replace the notes with ones from `github-activity`.

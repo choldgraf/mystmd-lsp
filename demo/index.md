@@ -10,7 +10,7 @@ Each page has **Try this** boxes: do what they say, and check that you get what 
   Warnings and project-wide completion only appear after that.
 - References are coloured by kind (figure, table, equation, heading, citation) and followed by grey text saying what they point to.
   Those are semantic tokens and inlay hints, and this folder's settings turn them on.
-- If something doesn't work, open the Output panel and pick "MyST" to see the server log.
+- If something doesn't work, check the server log (in VS Code, the Output panel's "MyST" channel).
 :::
 
 ## The tour
@@ -22,4 +22,4 @@ Each page has **Try this** boxes: do what they say, and check that you get what 
 5. [](5-warnings.md): the warnings, each one on purpose.
 6. `notebook.ipynb`: everything above, in a notebook's Markdown cells.
 
-Also try the outline (Cmd+Shift+O) and workspace symbols (Cmd+T) on any page.
+Also try the outline and workspace symbols on any page (Cmd+Shift+O and Cmd+T in VS Code).

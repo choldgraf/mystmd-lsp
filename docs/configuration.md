@@ -17,7 +17,8 @@ mystmd-lsp --stdio [--root=path/to/project] [--content-server=URL] [--no-myst]
 When the project has a `myst.yml`, the server runs `myst start --headless` in the project folder, unless you pass `--content-server` or `--no-myst`.
 Like any `myst start`, that runs the project's plugins, which can run any code, and writes `_build/`.
 If you already run `myst start --headless` for the project, pass the address it prints with `--content-server`, so the project isn't built twice.
-`myst start` listens on `localhost`, which can be IPv6 only, so to pass `http://127.0.0.1:<port>`, start it with `HOST=127.0.0.1 myst start --headless`.
+`myst start` listens on `localhost`, which can resolve to IPv6 only.
+To pass an `http://127.0.0.1:<port>` address, start it with `HOST=127.0.0.1 myst start --headless`.
 To run a `myst` that isn't on your `PATH`, set the `MYST_BIN` environment variable to its path.
 See [](how-it-works.md) for what the server uses mystmd for.
 
@@ -30,8 +31,8 @@ If mystmd isn't installed or fails to start, the server shows a warning and carr
 
 ## What it reads from `myst.yml`
 
-The project folder is used to list files for path completion, and to read `myst.yml` for the bibliography and external references.
-Both are re-read when `myst.yml` or a `.bib` file changes, in clients that support file watching.
+The server reads the bibliography and external references from `myst.yml`.
+It re-reads them when `myst.yml` or a `.bib` file changes, if your editor supports file watching.
 
 - `project.bibliography`: the `.bib` files for citations.
   Without it, every `.bib` file in the project is used, as in mystmd.
