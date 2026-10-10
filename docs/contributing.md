@@ -85,15 +85,12 @@ The site deploys to GitHub Pages when `main` changes.
 
 ## Releasing
 
-The Release workflow (`.github/workflows/release.yml`) publishes the server to npm.
-Run it from the Actions tab (Release → Run workflow) and type the version, or run:
+To release:
 
-```sh
-gh workflow run release.yml -f version=0.1.0
-```
+1. Run `npm version <version> --no-git-tag-version`, which updates `package.json` and `package-lock.json`. Commit and push to `main`.
+2. Run the Release workflow (`.github/workflows/release.yml`) from the Actions tab (Release → Run workflow), or run `gh workflow run release.yml`.
 
-It publishes the package at that version, then tags the commit `mystmd-lsp-v<version>` and creates a GitHub release with generated notes.
+It publishes the package at the version in `package.json`, then tags the commit `mystmd-lsp-v<version>` and creates a GitHub release with generated notes.
 Edit the release afterwards to replace the notes with ones from `github-activity`.
-The version in `package.json` isn't used for releases.
 Publishing needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`.
 MyST Author picks up a new release when its `mystmd-lsp` dependency is bumped.

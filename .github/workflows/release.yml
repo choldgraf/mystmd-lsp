@@ -1,21 +1,16 @@
-# Publishes mystmd-lsp to npm at the version you choose, then tags the commit mystmd-lsp-v<version> and creates a GitHub release.
-# Run it from the Actions tab (Release → Run workflow), or: gh workflow run release.yml -f version=0.1.0
+# Publishes mystmd-lsp to npm at the version in package.json, then tags the commit mystmd-lsp-v<version> and creates a GitHub release.
+# Run it from the Actions tab (Release → Run workflow), or: gh workflow run release.yml
 # See docs/contributing.md.
 name: Release
-on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: Version, e.g. 0.1.0
-        required: true
-env:
-  VERSION: ${{ inputs.version }}
+on: workflow_dispatch
 jobs:
   npm:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write # npm trusted publishing
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,7 +20,8 @@ jobs:
       - run: npm install -g npm@latest # trusted publishing needs npm 11.5.1 or newer
       - run: npm ci
       - run: npm test
-      - run: npm version "$VERSION" --no-git-tag-version --allow-same-version
+      - id: version
+        run: echo "version=$(node -p 'require("./package.json").version')" >> "$GITHUB_OUTPUT"
       - run: npm publish
   github-release:
     needs: [npm]
@@ -36,4 +32,4 @@ jobs:
       - run: gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$TAG" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: mystmd-lsp-v${{ inputs.version }}
+          TAG: mystmd-lsp-v${{ needs.npm.outputs.version }}
