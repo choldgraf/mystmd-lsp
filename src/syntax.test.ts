@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { nameAt, optionAt, refAt, refsInText } from './syntax.ts';
+import { labelDefinition, nameAt, optionAt, refAt, refsInText } from './syntax.ts';
 
 const at = (line: string) => refAt(line.replace('|', ''), line.indexOf('|'));
 
@@ -104,4 +104,9 @@ test('role and directive names can use `.` and `+`, like mystmd', () => {
     assert.deepEqual([at(`{${name}|`)?.trigger, at(`{${name}|`)?.prefix], ['role', name]);
     assert.deepEqual([at(`:::{${name}|`)?.trigger, at(`:::{${name}|`)?.prefix], ['directive', name]);
   }
+});
+
+test('`(id)=` labels take the characters mystmd accepts', () => {
+  assert.deepEqual(labelDefinition('  (fig.1|a)='), { target: 'fig.1|a', start: 3, end: 10 });
+  assert.equal(labelDefinition('(a b)='), undefined);
 });
