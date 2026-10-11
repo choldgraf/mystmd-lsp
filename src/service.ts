@@ -8,7 +8,7 @@ import { authorYear, readBibliography, type BibEntry } from './cite.ts';
 import { kindIcon } from './kinds.ts';
 import type { createProject } from './project.ts';
 import { readProjectConfig } from './root.ts';
-import { labelDefinition, nameAt, optionAt, refAt, refsInText, splitLines, type Ref } from './syntax.ts';
+import { labelChars, labelDefinition, nameAt, optionAt, refAt, refsInText, splitLines, type Ref } from './syntax.ts';
 import type { Target } from './index-targets.ts';
 import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
 
@@ -345,8 +345,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       const hit = labelAtCursor(at);
       const def = hit && definitionOf(hit.target);
       if (!def) return null;
-      // mystmd's label characters (TARGET_PATTERN in markdown-it-myst), except `<>`, which would end a `{ref}`text <label>`` early.
-      if (!/^[a-zA-Z0-9|@*./_\-+:]+$/.test(at.newName)) throw new ResponseError(ErrorCodes.InvalidParams, `\`${at.newName}\` isn't a valid label`);
+      if (!new RegExp(`^[${labelChars}]+$`).test(at.newName)) throw new ResponseError(ErrorCodes.InvalidParams, `\`${at.newName}\` isn't a valid label`);
       const changes: Record<string, TextEdit[]> = {};
       for (const { uri, range } of [def, ...labelRefs(hit.target.identifier)]) (changes[uri] ??= []).push({ range, newText: at.newName });
       return { changes };

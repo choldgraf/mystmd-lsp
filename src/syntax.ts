@@ -137,9 +137,11 @@ export function refsInText(text: string): Ref[] {
   return refs.sort((a, b) => a.line - b.line || a.start - b.start);
 }
 
+/** mystmd's label characters (TARGET_PATTERN in markdown-it-myst) except `<>`, which rename leaves out because they would end a {ref}`text <label>` early. */
+export const labelChars = String.raw`a-zA-Z0-9|@*./_\-+:`;
+
 // Where a label is defined: `(id)=`, `:label: id` / `:name: id` (or without colons in a directive's YAML options), and `$$ (id)` after display math.
-// `(id)=` label characters follow mystmd's TARGET_PATTERN (markdown-it-myst).
-const labelPatterns = [/^\s*\(([a-zA-Z0-9|@<>*./_\-+:]+)\)=\s*$/, /^\s*:?(?:label|name):\s*(\S+)\s*$/, /\$\$\s*\(([^()\s]+)\)\s*$/];
+const labelPatterns = [new RegExp(String.raw`^\s*\(([${labelChars}<>]+)\)=\s*$`), /^\s*:?(?:label|name):\s*(\S+)\s*$/, /\$\$\s*\(([^()\s]+)\)\s*$/];
 
 /** The label defined on a line, if any, with the span of its name. */
 export function labelDefinition(line: string) {
