@@ -28,7 +28,7 @@ import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
 import { VFile } from 'vfile';
 
-// MyST Author (myst-author `packages/mystmd/src/parse.ts`) has a copy of this parse; keep the two in step. A parse exported by mystmd would replace both (myst-author's upstream proposal U8).
+// MyST Author (myst-author `packages/mystmd/src/parse.ts`) has a copy of this parse; port fixes between the two. Its copy also lifts the page title like mystmd, which this one doesn't, so the outline and labels keep a leading `# Title`. A parse exported by mystmd would replace both (myst-author's upstream proposal U8).
 // The extensions mystmd enables by default, so the parse matches `myst build`.
 const extDirectives = [cardDirective, ...gridDirectives, ...tabDirectives, proofDirective, ...exerciseDirectives];
 const extRoles = [buttonRole];
