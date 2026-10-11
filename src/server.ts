@@ -71,7 +71,7 @@ connection.onInitialize(async (params) => {
   const readXrefs = () => syncXrefs(xrefs, root ? readReferences(root) : {}, refresh);
   readXrefs();
   service = createService(root, project, xrefs);
-  reloadConfig = () => (service.reloadBibliography(), readXrefs(), refresh());
+  reloadConfig = () => (service.reloadConfig(), readXrefs(), refresh());
   return {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,

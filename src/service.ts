@@ -69,12 +69,12 @@ export function createService(root: string | undefined, project: ReturnType<type
     const path = pathOf(uri);
     return root && !relative(root, path).startsWith('..') ? relative(root, path) : path;
   };
-  // Citations from the project's .bib files, read on startup and again on `reloadBibliography()`.
+  // Citations from the project's .bib files, read on startup and again on `reloadConfig()`.
   let bib = { entries: [] as BibEntry[], complete: false };
   let citations = new Map<string, BibEntry>();
   // Whether myst.yml lists plugins, whose directives and roles our parser doesn't know.
   let plugins = false;
-  const reloadBibliography = () => {
+  const reloadConfig = () => {
     bib = root && existsSync(root) ? readBibliography(root, workspaceFiles(root, /\.bib$/)) : { entries: [], complete: false };
     citations = new Map(bib.entries.map((e) => [e.key, e]));
     plugins = !!root && !!readProjectConfig(root).plugins?.length;
@@ -99,7 +99,7 @@ export function createService(root: string | undefined, project: ReturnType<type
   }
 
   const lookup = () => new Map(project.targets().map((t) => [t.identifier, t]));
-  reloadBibliography();
+  reloadConfig();
 
   /** What a reference in document `uri` points to. Callers resolving many references pass `targets` from one `lookup()`. */
   function resolveRef(ref: Ref, uri: string, targets = lookup()): Resolved {
@@ -194,7 +194,7 @@ export function createService(root: string | undefined, project: ReturnType<type
   /** Options of the enclosing directive (from its mystmd spec), minus ones already set. */
   function optionItems(opt: NonNullable<ReturnType<typeof optionAt>>, line: number): CompletionItem[] {
     const options = directiveSpecs.get(opt.directive)?.options ?? {};
-    const range = { start: { line, character: opt.start }, end: { line, character: opt.end } };
+    const range = rangeOf({ line, ...opt });
     return Object.entries(options)
       .filter(([key, o]) => ![key, ...(o.alias ?? [])].some((k) => opt.used.includes(k)))
       .map(([key, o]) => ({
@@ -207,7 +207,7 @@ export function createService(root: string | undefined, project: ReturnType<type
   }
 
   return {
-    reloadBibliography,
+    reloadConfig,
 
     /** Set an open document's text; the project re-parses it shortly after typing stops, then calls its `onChange`. */
     update(uri: string, text: string) {
@@ -230,7 +230,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       if (opt) return optionItems(opt, position.line);
       const ctx = refAt(lines[position.line] ?? '', position.character);
       if (!ctx) return [];
-      const range = { start: { line: position.line, character: ctx.start }, end: { line: position.line, character: ctx.end } };
+      const range = rangeOf({ line: position.line, ...ctx });
       const item = (label: string, kind: CompletionItemKind, extra: Partial<CompletionItem> = {}): CompletionItem => ({
         label,
         kind,
