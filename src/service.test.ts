@@ -6,7 +6,7 @@ import { CompletionItemKind, DiagnosticSeverity } from 'vscode-languageserver';
 import { parseMyst } from './mystmd/parse.ts';
 import { createProject } from './project.ts';
 import { createService, semanticTokensLegend } from './service.ts';
-import { marks, stubProject as stubTargets, tmpWorkspace } from './test-helpers.ts';
+import { marks, stubProject, tmpWorkspace } from './test-helpers.ts';
 
 const root = '/book';
 const uri = 'file:///book/index.md';
@@ -14,10 +14,10 @@ const text = 'See {numref}`Fig-Built` and {ref}`missing`.\n{ref}`notes`\n';
 const built = { identifier: 'fig-built', kind: 'figure', text: 'A plot', enumerator: '2', file: 'chapter/plots.md', line: 5 };
 const outside = { identifier: 'notes', kind: 'heading', text: 'Notes', file: '/elsewhere/notes.md', line: 1 };
 
-const stubProject = () => stubTargets([built, outside]);
+const stub = () => stubProject([built, outside]);
 
 test('a loaded project resolves built targets and flags unknown ones', () => {
-  const service = createService(root, stubProject());
+  const service = createService(root, stub());
   service.update(uri, text);
 
   assert.deepEqual(service.diagnostics(uri).map((d) => d.message), ['Unknown reference target `missing`']);
@@ -32,7 +32,7 @@ test('a loaded project resolves built targets and flags unknown ones', () => {
 
 test('`{term}` completes, resolves and flags glossary terms', () => {
   const term = { identifier: 'term-myst markdown', kind: 'term', text: 'MyST Markdown', doc: 'A markup language.', file: 'glossary.md', line: 3 };
-  const service = createService(root, stubTargets([term]));
+  const service = createService(root, stubProject([term]));
   const { text, at } = marks('{term}`MyST| markdown` and {term}`markup <MyST Markdown>`, {term}`nope`.\n{term}`|');
   service.update(uri, text);
   assert.deepEqual(service.diagnostics(uri).map((d) => d.message), ['Unknown glossary term `nope`']);
@@ -42,7 +42,7 @@ test('`{term}` completes, resolves and flags glossary terms', () => {
 });
 
 test('labels match by text', () => {
-  const service = createService(root, stubProject());
+  const service = createService(root, stub());
   assert.deepEqual(service.workspaceSymbols({ query: 'plot' }).map((s) => s.name), ['fig-built']);
 });
 
@@ -54,14 +54,14 @@ test('the outline nests sections by level, with numbered blocks under their sect
     at('fig-a', 5, { kind: 'figure', enumerator: '1' }),
     at('results', 7, { kind: 'heading', depth: 2 }),
   ];
-  const service = createService(root, stubTargets(targets));
+  const service = createService(root, stubProject(targets));
   service.update(uri, '# intro\n\n## methods\n\n:::{figure}\n:::\n## results\nlast line');
   const tree = (symbols: any[]): any[] => symbols.map((s) => [s.name, s.range.end.line, ...tree(s.children)]);
   assert.deepEqual(tree(service.documentSymbols({ textDocument: { uri } })), [['intro', 7, ['methods', 5, ['Figure 1 · fig-a', 4]], ['results', 7]]]);
 });
 
 test('references are label tokens with their target kind as a modifier', () => {
-  const service = createService(root, stubProject());
+  const service = createService(root, stub());
   service.update(uri, text);
   const mod = (kind: string) => 1 << semanticTokensLegend.tokenModifiers.indexOf(kind);
   // Delta-encoded [line, start, length, type, modifiers]: `Fig-Built` (a figure), `missing` (unknown), `notes` (a heading).
@@ -70,7 +70,7 @@ test('references are label tokens with their target kind as a modifier', () => {
 
 test('edits reach the project once typing stops, as project-relative files', (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
-  const project = stubProject();
+  const project = stub();
   const service = createService(root, project);
   service.update(uri, 'a');
   service.update(uri, 'ab');
@@ -82,7 +82,7 @@ test('edits reach the project once typing stops, as project-relative files', (t)
 
 test('`@key` and `{cite}` resolve to citations first, then labels', (t) => {
   const dir = tmpWorkspace(t, { 'refs.bib': '@article{nelson1977,\n  author = {Nelson, Ted and Smith, J.},\n  title = {{Computer} Lib},\n  year = 1977\n}\n' });
-  const service = createService(dir, stubProject());
+  const service = createService(dir, stub());
   const doc = pathToFileURL(join(dir, 'index.md')).href;
   const { text, at } = marks('See @fig-built and [@nel|son1977], {cite}`nelson1977, nope`.\n@|');
   service.update(doc, text);
@@ -98,7 +98,7 @@ test('`@key` and `{cite}` resolve to citations first, then labels', (t) => {
 
 test('a key that is both a citation and a label is a citation to `@`, and a label to `{ref}`', (t) => {
   const dir = tmpWorkspace(t, { 'refs.bib': '@misc{fig-built,\n  title = {Shadow}\n}\n' });
-  const service = createService(dir, stubProject());
+  const service = createService(dir, stub());
   const doc = pathToFileURL(join(dir, 'index.md')).href;
   service.update(doc, '@fig-built {ref}`fig-built`\n');
   const at = (character: number) => ({ textDocument: { uri: doc }, position: { line: 0, character } });
@@ -113,7 +113,7 @@ test('a key that is both a citation and a label is a citation to `@`, and a labe
 test('xrefs resolve against loaded inventories, and only loaded ones are checked', () => {
   const entry = { name: 'intro', kind: 'heading', title: 'Introduction', url: 'https://docs.example.org/guide#intro', page: '/guide' };
   const xrefs = { docs: { url: 'https://docs.example.org', kind: 'myst' as const, entries: [entry] }, offline: { url: 'https://offline.example.org' } };
-  const service = createService(root, stubProject(), xrefs);
+  const service = createService(root, stub(), xrefs);
   const { text, at } = marks('[](xref:d|ocs/guide#intro) [](xref:docs/guide#nope) [](xref:nokey#x) [](xref:offline#x)\n');
   service.update(uri, text);
   assert.match(service.hover({ textDocument: { uri }, position: at[0] })!.contents.value, /^\*\*Introduction\*\* · heading\n\nhttps:\/\/docs\.example\.org\/guide#intro/);
@@ -130,7 +130,7 @@ test('external completion shows each target\'s kind, from MyST sites and Sphinx 
     docs: { url: 'https://docs.example.org', kind: 'myst' as const, entries: [{ name: 'fig-a', kind: 'figure', title: 'A plot', url: 'https://docs.example.org/guide#fig-a', page: '/guide' }] },
     py: { url: 'https://py.example.org', kind: 'sphinx' as const, entries: [{ name: 'os.join', kind: 'py:function', title: 'os.join', url: 'https://py.example.org/os#os.join' }] },
   };
-  const service = createService(root, stubProject(), xrefs);
+  const service = createService(root, stub(), xrefs);
   const { text, at } = marks('[](xref:docs#|) [](xref:py#|)\n');
   service.update(uri, text);
   const items = at.map((position) => (service.completion({ textDocument: { uri }, position }) as any).items[0]);
@@ -149,7 +149,7 @@ function labelWorkspace(t: TestContext) {
     { identifier: 'sec', kind: 'heading', text: 'Section', file: 'a.md', line: 2 },
     { identifier: 'fig-one', kind: 'figure', text: 'The caption', enumerator: '1', file: 'a.md', line: 7 },
   ];
-  const service = createService(dir, stubTargets(targets));
+  const service = createService(dir, stubProject(targets));
   const uri = (f: string) => pathToFileURL(join(dir, f)).href;
   service.update(uri('a.md'), a);
   service.update(uri('b.md'), 'See @FIG-ONE and {numref}`fig-one`.\n');
@@ -177,7 +177,7 @@ test('rename a label from its definition, and not citations or unknown labels', 
 });
 
 test('hover shows mystmd docs for directives, options and roles, but references come first', () => {
-  const service = createService(root, stubProject());
+  const service = createService(root, stub());
   const { text, at } = marks('```{i|nclude} x.md\n:la|nguage: python\n```\n{k|bd}`Ctrl` {numref}`fig-|built`\n');
   service.update(uri, text);
   const hover = (i: number) => service.hover({ textDocument: { uri }, position: at[i] })?.contents.value;
@@ -188,7 +188,7 @@ test('hover shows mystmd docs for directives, options and roles, but references 
 });
 
 test('directive option completion offers the directive\'s options, minus ones already set', () => {
-  const service = createService(root, stubProject());
+  const service = createService(root, stub());
   const { text, at } = marks('```{figure} a.png\n:name: x\n:|\n```\n');
   service.update(uri, text);
   const items = service.completion({ textDocument: { uri }, position: at[0] }) as any[];
@@ -198,7 +198,7 @@ test('directive option completion offers the directive\'s options, minus ones al
 });
 
 test('`/` offers directive templates at the start of a line, and role templates anywhere', () => {
-  const service = createService(root, stubProject());
+  const service = createService(root, stub());
   const { text, at } = marks('/no|\ntext /k|\n');
   service.update(uri, text);
   const items = (i: number) => service.completion({ textDocument: { uri }, position: at[i] }) as any[];
@@ -212,7 +212,7 @@ test('`/` offers directive templates at the start of a line, and role templates 
 
 test('directive file arguments: links, completion, and a warning when missing', (t) => {
   const dir = tmpWorkspace(t, { 'img/plot.png': '' });
-  const service = createService(dir, stubProject());
+  const service = createService(dir, stub());
   const doc = pathToFileURL(join(dir, 'index.md')).href;
   const { text, at } = marks('```{figure} img/plot.png\n```\n```{image} /img/plot.png\n```\n```{include} missing.md\n```\n```{figure} |');
   service.update(doc, text);
@@ -224,7 +224,7 @@ test('directive file arguments: links, completion, and a warning when missing', 
 
 test('Markdown links to local files get links and go to definition, but no warning when missing', (t) => {
   const dir = tmpWorkspace(t, { 'ch/one.md': '' });
-  const service = createService(dir, stubProject());
+  const service = createService(dir, stub());
   const doc = pathToFileURL(join(dir, 'index.md')).href;
   service.update(doc, '[](ch/one.md#intro) [](missing.md)');
   const one = pathToFileURL(join(dir, 'ch', 'one.md')).href;
@@ -236,7 +236,7 @@ test('Markdown links to local files get links and go to definition, but no warni
 test('duplicate labels are flagged, but not implicit heading labels', () => {
   const heading = (file: string, line: number) => ({ identifier: 'examples', kind: 'heading', text: 'Examples', file, line, implicit: true });
   const targets = [{ ...built, file: 'index.md', line: 2 }, built, heading('index.md', 4), heading('other.md', 1)];
-  const service = createService(root, stubTargets(targets));
+  const service = createService(root, stubProject(targets));
   service.update(uri, '(fig-built)=\n# Built\n\n## Examples\n');
   assert.deepEqual(service.diagnostics(uri).map((d) => [d.message, d.range.start.line, d.range.start.character]), [['Duplicate label `fig-built`, also defined in chapter/plots.md', 0, 1]]);
 });
