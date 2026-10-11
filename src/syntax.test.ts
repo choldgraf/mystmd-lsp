@@ -36,6 +36,7 @@ test('refsInText skips code but not directive bodies', () => {
     'Use ``{ref}`a` `` or `[](#b)` in text, but {ref}`c` counts.', // inline code masked, role kept
     '```python', '{ref}`d`', '```',                              // plain code fence
     '```{code-block} md', '[](#e)', '```',                        // code directive
+    '```{sourcecode}', '{ref}`k`', '```',                         // code directive alias
     '````{note}', '{ref}`f`', '```', '{ref}`g`', '```', '{ref}`h`', '````', // nested plain fence inside a note
     '::::{tab-set}', ':::{code-block} md', '{ref}`i`', ':::', ':::{tab-item} T', '{ref}`j`', ':::', '::::', // colon fences
   ].join('\n');

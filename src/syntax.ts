@@ -123,7 +123,8 @@ export function refsInText(text: string): Ref[] {
       const end = p[1].length + p[2].length;
       refs.push({ kind: 'path', target: p[2], line, start: p[1].length, end, after: end });
     }
-    if (f) return void fences.push({ fence: f[1], code: /^\{(code|code-block|code-cell)\}/.test(f[2]) || (f[1][0] !== ':' && !f[2].startsWith('{')) });
+    // `code` with its aliases in myst-directives, and `code-cell`.
+    if (f) return void fences.push({ fence: f[1], code: /^\{(code|code-block|sourcecode|code-cell)\}/.test(f[2]) || (f[1][0] !== ':' && !f[2].startsWith('{')) });
     const lineText = maskInlineCode(raw);
     for (const [re, kind] of refPatterns) {
       for (const m of lineText.matchAll(re)) {
