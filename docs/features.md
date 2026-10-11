@@ -17,6 +17,7 @@ It uses mystmd's own parser and directive specs, so it knows the same directives
 | ```` ```{figure} ````, `{image}`, `{include}`, `{literalinclude}` argument | any file, relative to the current file |
 | ```` ```{ ````, `:::{` | directive names |
 | `{` | role names |
+| `/` at the start of a line, or after a space | a directive (start of a line only) or role, inserted as a template you can tab through |
 | `:` on a line inside a directive's options | that directive's options, skipping ones already set |
 
 Citation keys come from `project.bibliography` in `myst.yml`, or every `.bib` file in the project, as in mystmd.

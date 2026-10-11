@@ -15,6 +15,11 @@ test('refAt recognizes each trigger', () => {
   assert.deepEqual(at('```{fig|'), { trigger: 'directive', prefix: 'fig', start: 4, end: 7 });
   assert.equal(at(':::{no|')?.trigger, 'directive');
   assert.equal(at('text {ab|')?.trigger, 'role');
+  assert.deepEqual(at('/no|'), { trigger: 'slash', prefix: '/no', start: 0, end: 3 });
+  assert.equal(at('/|')?.trigger, 'slash');
+  assert.equal(at('text /k|')?.trigger, 'slash');
+  assert.equal(at('and /|'), null);
+  assert.equal(at('and/o|'), null);
   assert.equal(at('plain text|'), null);
 });
 

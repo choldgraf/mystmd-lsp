@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { normalizeLabel } from 'myst-common';
-import { CompletionItemKind, DiagnosticSeverity, ErrorCodes, ResponseError, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position, type TextEdit } from 'vscode-languageserver';
+import { CompletionItemKind, DiagnosticSeverity, ErrorCodes, InsertTextFormat, ResponseError, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position, type TextEdit } from 'vscode-languageserver';
 import { directives, roles } from './mystmd/parse.ts';
 import { authorYear, readBibliography, type BibEntry } from './cite.ts';
 import { kindIcon } from './kinds.ts';
@@ -16,6 +16,8 @@ import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref
 const byName = <T extends { name: string; alias?: string[] }>(specs: T[]) => new Map(specs.flatMap((s) => [s.name, ...(s.alias ?? [])].map((n) => [n, s] as const)));
 const directiveSpecs = byName(directives);
 const roleSpecs = byName(roles);
+// Directives and roles listed first in the `/` menu.
+const common = new Set(['note', 'warning', 'tip', 'figure', 'code-block', 'math', 'table', 'dropdown', 'tab-set', 'ref', 'doc', 'cite', 'term', 'kbd']);
 
 /** "Figure 1", "Equation (1)", "Section" */
 function title(t: Target) {
@@ -293,6 +295,14 @@ export function createService(root: string | undefined, project: ReturnType<type
           return [...directiveSpecs.keys()].map((n) => item(n, CompletionItemKind.Keyword));
         case 'role':
           return [...roleSpecs.keys()].map((n) => item(n, CompletionItemKind.Function));
+        case 'slash': {
+          // Templates for every directive (at the start of a line) and role, with common ones listed first.
+          const template = (name: string, kind: CompletionItemKind, newText: string, doc?: string) =>
+            item(name, kind, { detail: kind === CompletionItemKind.Keyword ? 'directive' : 'role', filterText: `/${name}`, sortText: `${common.has(name) ? 0 : 1}${name}`, insertTextFormat: InsertTextFormat.Snippet, textEdit: { range, newText }, documentation: doc && { kind: 'markdown', value: doc } });
+          const atLineStart = !lines[position.line].slice(0, ctx.start).trim();
+          const blocks = atLineStart ? [...directiveSpecs].map(([n, d]) => template(n, CompletionItemKind.Keyword, `:::{${n}}${d.arg ? ' $1' : ''}\n${d.body ? '$0\n' : ''}:::`, d.doc)) : [];
+          return [...blocks, ...[...roleSpecs].map(([n, r]) => template(n, CompletionItemKind.Function, `{${n}}\`$0\``, r.doc))];
+        }
       }
     },
 

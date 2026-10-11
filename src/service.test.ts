@@ -197,6 +197,19 @@ test('directive option completion offers the directive\'s options, minus ones al
   assert.equal(items.find((i) => i.label === 'width').textEdit.newText, 'width: ');
 });
 
+test('`/` offers directive templates at the start of a line, and role templates anywhere', () => {
+  const service = createService(root, stubProject());
+  const { text, at } = marks('/no|\ntext /k|\n');
+  service.update(uri, text);
+  const items = (i: number) => service.completion({ textDocument: { uri }, position: at[i] }) as any[];
+  const note = items(0).find((i) => i.label === 'note');
+  assert.deepEqual(note.textEdit, { range: { start: { line: 0, character: 0 }, end: { line: 0, character: 3 } }, newText: ':::{note} $1\n$0\n:::' });
+  assert.equal(note.filterText, '/note');
+  assert.ok(note.sortText < items(0).find((i) => i.label === 'admonition').sortText, 'common ones first');
+  assert.equal(items(1).find((i) => i.label === 'kbd').textEdit.newText, '{kbd}`$0`');
+  assert.ok(!items(1).some((i) => i.label === 'note'), 'no directives mid-line');
+});
+
 test('directive file arguments: links, completion, and a warning when missing', (t) => {
   const dir = tmpWorkspace(t, { 'img/plot.png': '' });
   const service = createService(dir, stubProject());

@@ -1,6 +1,6 @@
 // Pure, line-based recognition of MyST reference syntax. Character offsets are 0-based.
 
-type Trigger = 'ref' | 'numref' | 'eq' | 'doc' | 'term' | 'link-hash' | 'link-path' | 'xref-key' | 'xref-target' | 'directive' | 'role' | 'cite' | 'at' | 'path';
+type Trigger = 'ref' | 'numref' | 'eq' | 'doc' | 'term' | 'link-hash' | 'link-path' | 'xref-key' | 'xref-target' | 'directive' | 'role' | 'cite' | 'at' | 'path' | 'slash';
 
 /**
  * What the cursor is inside: `prefix` is the text typed so far, `start`/`end` the span a completion replaces.
@@ -38,6 +38,9 @@ const contexts: [RegExp, Trigger | null][] = [
   [new RegExp(fileDirective.source + /(\S*)$/.source), 'path'],
   [withName(/^\s*(?:`{3,}|:{3,})\{(NAME*)$/), 'directive'],
   [withName(/\{(NAME*)$/), 'role'],
+  // The prefix includes the `/`, so a completion replaces it. Mid-line, a name must follow, so `and / or` doesn't open it.
+  [withName(/^\s*(\/NAME*)$/), 'slash'],
+  [withName(/\s(\/NAME+)$/), 'slash'],
 ];
 
 /**
