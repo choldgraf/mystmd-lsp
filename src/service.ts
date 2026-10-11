@@ -101,6 +101,8 @@ export function createService(root: string | undefined, project: ReturnType<type
   }
 
   const lookup = () => new Map(project.targets().map((t) => [t.identifier, t]));
+  // How mystmd turns the text of a label into the identifier that targets have.
+  const labelId = (text: string) => normalizeLabel(text)?.identifier ?? '';
   reloadConfig();
 
   /** What a reference in document `uri` points to. Callers resolving many references pass `targets` from one `lookup()`. */
@@ -123,7 +125,7 @@ export function createService(root: string | undefined, project: ReturnType<type
     const entry = ref.kind === 'cite' ? citations.get(ref.target) : undefined;
     if (entry) return { kind: 'citation', entry };
     // Like mystmd, a `{term}` points at the glossary term's label, `term-` and its normalized text.
-    const target = targets.get(ref.kind === 'term' ? `term-${normalizeLabel(ref.target)?.identifier}` : ref.target.trim().toLowerCase());
+    const target = targets.get(ref.kind === 'term' ? `term-${labelId(ref.target)}` : labelId(ref.target));
     if (target) return { kind: 'label', target };
     if (!project.loaded) return { kind: 'missing' };
     if (ref.kind === 'term') return { kind: 'missing', problem: `Unknown glossary term \`${ref.target}\`` };
@@ -155,7 +157,7 @@ export function createService(root: string | undefined, project: ReturnType<type
     }
     const def = labelDefinition(splitLines(texts.get(at.textDocument.uri) ?? '')[line] ?? '');
     if (!def || character < def.start || def.end < character) return;
-    const target = lookup().get(def.target.toLowerCase());
+    const target = lookup().get(labelId(def.target));
     return target && { target, range: rangeOf({ ...def, line }) };
   }
 
@@ -163,7 +165,7 @@ export function createService(root: string | undefined, project: ReturnType<type
   function definitionOf(t: Target, uri = t.uri ?? toUri(t.file)) {
     const defs = splitLines(source(uri)).flatMap((text, line) => {
       const d = labelDefinition(text);
-      return d?.target.toLowerCase() === t.identifier ? [{ ...d, line }] : [];
+      return d && labelId(d.target) === t.identifier ? [{ ...d, line }] : [];
     });
     const d = defs.sort((a, b) => Math.abs(a.line - t.line + 1) - Math.abs(b.line - t.line + 1))[0];
     return d && { uri, range: rangeOf(d) };
