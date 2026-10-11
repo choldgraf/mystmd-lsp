@@ -3,21 +3,19 @@ import { parseMyst } from './mystmd/parse.ts';
 import { targetsFromTree, type Target } from './index-targets.ts';
 
 /**
- * The project's reference targets, keyed by file (project-relative path, e.g. `chapter.md`).
- * Built pages come from `server` (the `myst start` content server); open documents override their file with a live parse.
+ * The project's reference targets, each with its file (project-relative path, e.g. `chapter.md`).
+ * Built pages come from `server` (the `myst start` content server); open documents replace their file's targets with a live parse.
  * Open documents are keyed by URI, since a notebook's Markdown cells are separate documents in one file.
  */
 export function createProject(server: { pages(): Promise<BuiltPage[]>; watch(onReload: () => void): void } | undefined, onChange: () => void) {
-  let built = new Map<string, Target[]>();
+  let built: Target[] = [];
   const open = new Map<string, { file: string; targets: Target[]; messages: ReturnType<typeof parseMyst>['messages'] }>();
   // Without a content server we only know the open documents, so we never claim a target is missing.
   let loaded = false;
 
   async function load() {
-    built = new Map((await server!.pages()).map((page) => {
-      const file = page.location.replace(/^\//, '');
-      return [file, targetsFromTree(page.mdast, file)];
-    }));
+    // A page's targets include those of the files it includes, filed under those files.
+    built = (await server!.pages()).flatMap((page) => targetsFromTree(page.mdast, page.location.replace(/^\//, '')));
     loaded = true;
     onChange();
   }
@@ -30,7 +28,7 @@ export function createProject(server: { pages(): Promise<BuiltPage[]>; watch(onR
     targets(): Target[] {
       const docs = [...open.values()];
       const openFiles = new Set(docs.map((d) => d.file));
-      return [...[...built].filter(([f]) => !openFiles.has(f)).flatMap(([, t]) => t), ...docs.flatMap((d) => d.targets)];
+      return [...built.filter((t) => !openFiles.has(t.file)), ...docs.flatMap((d) => d.targets)];
     },
     setOpen(file: string, text: string, uri: string) {
       const { tree, messages } = parseMyst(text);

@@ -251,6 +251,16 @@ test('an open document replaces its built page once mystmd has built the project
   assert.deepEqual(project.targets().filter((t) => t.identifier === 'dup').map((t) => t.file), ['index.md', 'chapter.md']);
 });
 
+test('an open page keeps the built labels of the files it includes', async () => {
+  const include = { type: 'include', file: 'part.md', children: parseMyst('(sec-inc)=\n# Inc\n').tree.children };
+  let reload = () => {};
+  const project = createProject({ pages: async () => [{ location: '/index.md', mdast: { type: 'root', children: [include] } }], watch: (cb) => void (reload = cb) }, () => {});
+  reload();
+  await new Promise(setImmediate);
+  project.setOpen('index.md', '```{include} part.md\n```\n', uri);
+  assert.deepEqual(project.targets().map((t) => [t.identifier, t.file]), [['sec-inc', 'part.md']]);
+});
+
 test('notebook cells are documents in their notebook file', (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   const dir = tmpWorkspace(t, { 'nb/plot.png': '' });
