@@ -4,6 +4,7 @@ import {
   basicTransformationsPlugin,
   enumerateTargetsPlugin,
   footnotesPlugin,
+  getFrontmatter,
   glossaryPlugin,
   headingDepthPlugin,
   htmlPlugin,
@@ -23,12 +24,11 @@ import { gridDirectives } from 'myst-ext-grid';
 import { proofDirective } from 'myst-ext-proof';
 import { tabDirectives } from 'myst-ext-tabs';
 import type { GenericNode, GenericParent } from 'myst-common';
-import { load } from 'js-yaml';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
 import { VFile } from 'vfile';
 
-// MyST Author (myst-author `packages/mystmd/src/parse.ts`) has a copy of this parse; port fixes between the two. Its copy also lifts the page title like mystmd, which this one doesn't, so the outline and labels keep a leading `# Title`. A parse exported by mystmd would replace both (myst-author's upstream proposal U8).
+// MyST Author (myst-author `packages/mystmd/src/parse.ts`) has a copy of this parse; port fixes between the two. Its copy removes a leading `# Title` like mystmd, which this one keeps (`keepTitleNode`) for the outline and labels. A parse exported by mystmd would replace both (myst-author's upstream proposal U8).
 // The extensions mystmd enables by default, so the parse matches `myst build`.
 const extDirectives = [cardDirective, ...gridDirectives, ...tabDirectives, proofDirective, ...exerciseDirectives];
 const extRoles = [buttonRole];
@@ -42,21 +42,17 @@ export function parseMyst(md: string) {
   const parse = (s: string) => mystParse(s, { markdownit: { linkify: true }, directives: extDirectives, roles: extRoles, vfile });
   const tree = parse(md) as GenericParent;
 
-  let frontmatter: Record<string, any> = {};
-  const first = tree.children[0];
-  if (first?.type === 'code' && first.lang === 'yaml' && md.startsWith('---')) {
-    tree.children.shift();
-    try {
-      frontmatter = (load(first.value ?? '') as object) ?? {};
-    } catch {} // half-typed YAML is normal while editing
-  }
-
   // Directive transforms replace the directive node with children that have no position; keep the directive's lines.
   visit(tree, 'mystDirective', (d: GenericNode) => d.children?.forEach((c) => (c.position ??= d.position)));
+
+  // Like mystmd, this reads the YAML frontmatter and makes the first heading the title if there isn't one, but keeps a leading `# Title`.
+  // Half-typed YAML adds a `frontmatter-is-yaml` message, which service.ts doesn't show.
+  const { frontmatter } = getFrontmatter(vfile, tree, { propagateTargets: true, keepTitleNode: true }) as { frontmatter: Record<string, any> };
+
   // Without the project's bibliography, no citation is found, so mystmd's fallback turns `@label` into a reference to a label on this page, as a build does.
   visit(tree, 'cite', (c: GenericNode) => void (c.error = true));
 
-  const state = new ReferenceState('', { vfile });
+  const state = new ReferenceState('', { frontmatter, vfile });
   unified()
     .use(reconstructHtmlPlugin)
     .use(htmlPlugin)

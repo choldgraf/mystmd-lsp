@@ -436,7 +436,8 @@ export function createService(root: string | undefined, project: ReturnType<type
         return [{ severity: DiagnosticSeverity.Warning, range, message, source: 'myst' }];
       });
       // mystmd's own warnings from parsing this page, except the ones we check project-wide above: references (including the citations parse.ts can't link) and duplicate labels.
-      const skip = ['reference-target-resolves', 'identifier-is-unique', ...(plugins ? ['directive-known', 'role-known'] : [])];
+      // Invalid frontmatter is skipped too, since half-typed YAML is normal while editing.
+      const skip = ['reference-target-resolves', 'identifier-is-unique', 'frontmatter-is-yaml', ...(plugins ? ['directive-known', 'role-known'] : [])];
       const mystmd = project.messages(uri).filter((m) => !skip.includes(String(m.ruleId))).map((m) => {
         const line = (m.line ?? 1) - 1;
         const range = { start: { line, character: (m.column ?? 1) - 1 }, end: { line, character: lines[line]?.length ?? 0 } };

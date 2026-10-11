@@ -29,6 +29,11 @@ test('targetsFromTree finds headings, figures and equations', () => {
   );
 });
 
+test('page frontmatter numbers targets, and a leading heading stays a target', () => {
+  const targets = targetsFromTree(parseMyst('---\nnumbering:\n  figure:\n    start: 5\n---\n' + doc).tree, 'index.md');
+  assert.deepEqual(targets.map((t) => [t.identifier, t.enumerator]), [['intro', undefined], ['fig-logo', '5'], ['euler', '1']]);
+});
+
 test('targetsFromTree finds labelled images', () => {
   const targets = targetsFromTree(parseMyst('(logo)=\n![x](a.png)\n').tree, 'index.md');
   assert.deepEqual(targets.map((t) => [t.identifier, t.kind]), [['logo', 'image']]);
