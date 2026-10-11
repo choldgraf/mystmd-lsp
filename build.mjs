@@ -10,6 +10,5 @@ await build({
   platform: 'node',
   format: 'cjs',
   target: 'node22',
-  sourcemap: true,
   logLevel: 'warning',
 });
