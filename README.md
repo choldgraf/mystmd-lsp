@@ -3,7 +3,7 @@
 A language server for [MyST](https://mystmd.org) projects, built on the mystmd engine.
 It speaks the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) (LSP), so it works in any editor with an LSP client.
 
-It reads your whole project through mystmd, so it knows which labels, citations and other targets you can reference.
+It completes and checks `{ref}` targets, citations, files and directives across your whole project, because it reads the project through mystmd.
 For VS Code and JupyterLab, [MyST Author](https://chrisholdgraf.com/myst-author/) runs it for you, along with a live preview.
 
 **Warning**: This is experimental and evolving rapidly! See "Project status" below.
@@ -46,3 +46,5 @@ So treat it as part "alpha product", part "prototype for experimentation", and p
 If the Jupyter Book team ever wants to use `mystmd-lsp` for its npm package I'm happy to donate this repository and/or the `mystmd-lsp` npm name to the project!
 
 Note: This is being developed with a fair amount of Claude support, though with a lot of heavy loops of review and design work w/ a human.
+
+To contribute, see [Contributing](docs/contributing.md).

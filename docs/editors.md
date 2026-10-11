@@ -12,6 +12,7 @@ Use [MyST Author](https://chrisholdgraf.com/myst-author/), whose VS Code and Jup
 ## Other editors
 
 Install the server (see [Install](index.md#install)), then point your editor's LSP client at `mystmd-lsp --stdio` for Markdown files.
+In a project with a `myst.yml`, the server starts mystmd, so project-wide completion and warnings appear once its first build finishes.
 
 Neovim 0.11 or newer:
 
@@ -36,3 +37,5 @@ name = "markdown"
 language-servers = ["mystmd-lsp"]
 roots = ["myst.yml"]
 ```
+
+`language-servers` replaces Helix's default Markdown servers, so list them too if you use one.
