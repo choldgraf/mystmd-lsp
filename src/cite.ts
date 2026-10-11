@@ -13,10 +13,10 @@ function parseBib(text: string, file: string): BibEntry[] {
     const body = text.slice(m.index, entries[i + 1]?.index);
     const field = (name: string) => {
       const f = body.match(new RegExp(`\\b${name}\\s*=\\s*(?:\\{((?:[^{}]|\\{[^{}]*\\})*)\\}|"([^"]*)"|(\\w+))`, 'i'));
-      return f && (f[1] ?? f[2] ?? f[3]).replace(/[{}]/g, '').replace(/\s+/g, ' ').trim();
+      return f ? (f[1] ?? f[2] ?? f[3]).replace(/[{}]/g, '').replace(/\s+/g, ' ').trim() : undefined;
     };
     const line = text.slice(0, m.index).split('\n').length - 1;
-    return [{ key: m[2], file, line, author: field('author') ?? undefined, year: field('year') ?? undefined, title: field('title') ?? undefined }];
+    return [{ key: m[2], file, line, author: field('author'), year: field('year'), title: field('title') }];
   });
 }
 
