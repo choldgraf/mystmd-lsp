@@ -1,13 +1,30 @@
-import { test } from 'node:test';
+import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { tmpWorkspace } from './test-helpers.ts';
-import { CompletionItemKind, createProtocolConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-languageserver/node';
+import { CompletionItemKind, createProtocolConnection, StreamMessageReader, StreamMessageWriter, type ProtocolConnection } from 'vscode-languageserver/node';
 
 // The bundle users run, which `npm test` builds first.
 const server = new URL('../dist/server.cjs', import.meta.url).pathname;
+
+/** Start the bundle on a temp workspace holding `files`, and initialize it. */
+async function startServer(t: TestContext, files: Record<string, string>) {
+  const root = tmpWorkspace(t, files);
+  const child = spawn(process.execPath, [server, '--stdio']);
+  const conn = createProtocolConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
+  t.after(() => (conn.dispose(), child.kill()));
+  conn.listen();
+  await conn.sendRequest('initialize', { processId: null, rootUri: pathToFileURL(root).href, capabilities: {} });
+  conn.sendNotification('initialized', {});
+  return { root, child, conn };
+}
+
+/** Poll workspace symbols until mystmd's first build is indexed. */
+async function waitForBuild(conn: ProtocolConnection) {
+  while (((await conn.sendRequest('workspace/symbol', { query: '' })) as any[]).length === 0) await new Promise((r) => setTimeout(r, 500));
+}
 
 const text = `(fig-a)=
 # Heading
@@ -25,17 +42,9 @@ See {numref}\`fig-logo\` and {ref}\`missing\`.
 
 // Each feature is tested through `createService` in service.test.ts; this checks that the server wires a few of them to LSP requests.
 test('server completes, hints and diagnoses over stdio', async (t) => {
-  const root = tmpWorkspace(t, { 'a.png': '' });
+  const { root, conn } = await startServer(t, { 'a.png': '' });
   const uri = pathToFileURL(join(root, 'index.md')).href;
-
-  const child = spawn(process.execPath, [server, '--stdio']);
-  const conn = createProtocolConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
-  t.after(() => (conn.dispose(), child.kill()));
   const diagnostics = new Promise<any>((resolve) => conn.onNotification('textDocument/publishDiagnostics', resolve));
-  conn.listen();
-
-  await conn.sendRequest('initialize', { processId: null, rootUri: pathToFileURL(root).href, capabilities: {} });
-  conn.sendNotification('initialized', {});
   conn.sendNotification('textDocument/didOpen', { textDocument: { uri, languageId: 'markdown', version: 1, text } });
 
   // Without a content server, unknown targets aren't flagged (they may live in files that aren't open).
@@ -51,45 +60,24 @@ test('server completes, hints and diagnoses over stdio', async (t) => {
 });
 
 const hasMyst = spawnSync('myst', ['--version']).status === 0;
+const mystProject = {
+  'myst.yml': 'version: 1\nproject:\n  id: test\nsite:\n  template: book-theme\n',
+  'index.md': '# Title\n\n(sec-a)=\n## Section\n',
+};
 
 test('with real mystmd: the project loads, and the user is warned when mystmd dies', { skip: !hasMyst, timeout: 90_000 }, async (t) => {
-  const root = tmpWorkspace(t, {
-    'myst.yml': 'version: 1\nproject:\n  id: test\nsite:\n  template: book-theme\n',
-    'index.md': '# Title\n\n(sec-a)=\n## Section\n',
-  });
-
-  const child = spawn(process.execPath, [server, '--stdio']);
-  const conn = createProtocolConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
-  t.after(() => (conn.dispose(), child.kill()));
+  const { child, conn } = await startServer(t, mystProject);
   const warning = new Promise<any>((resolve) => conn.onRequest('window/showMessageRequest', resolve));
-  conn.listen();
-  await conn.sendRequest('initialize', { processId: null, rootUri: pathToFileURL(root).href, capabilities: {} });
-  conn.sendNotification('initialized', {});
-
-  // Wait for mystmd's first build to be indexed.
-  for (let found = false; !found; await new Promise((r) => setTimeout(r, 500))) {
-    found = ((await conn.sendRequest('workspace/symbol', { query: '' })) as any[]).length > 0;
-  }
+  await waitForBuild(conn);
 
   spawnSync('pkill', ['-P', String(child.pid)]); // mystmd is the server's only child
   assert.match((await warning).message, /myst exited/);
 });
 
 test('with real mystmd: stopping the server with SIGTERM stops its mystmd', { skip: !hasMyst, timeout: 90_000 }, async (t) => {
-  const root = tmpWorkspace(t, {
-    'myst.yml': 'version: 1\nproject:\n  id: test\nsite:\n  template: book-theme\n',
-    'index.md': '# Title\n\n(sec-a)=\n## Section\n',
-  });
-  const child = spawn(process.execPath, [server, '--stdio']);
-  const conn = createProtocolConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
-  t.after(() => (conn.dispose(), child.kill()));
-  conn.listen();
-  await conn.sendRequest('initialize', { processId: null, rootUri: pathToFileURL(root).href, capabilities: {} });
-  conn.sendNotification('initialized', {});
+  const { child, conn } = await startServer(t, mystProject);
   // mystmd outlives its parent once it's built and idle, so wait for the first build.
-  for (let found = false; !found; await new Promise((r) => setTimeout(r, 500))) {
-    found = ((await conn.sendRequest('workspace/symbol', { query: '' })) as any[]).length > 0;
-  }
+  await waitForBuild(conn);
 
   const myst = Number(spawnSync('pgrep', ['-P', String(child.pid)]).stdout.toString().trim());
   assert.ok(myst, 'the server started mystmd');
