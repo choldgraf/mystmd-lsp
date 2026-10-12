@@ -26,8 +26,7 @@ See [](how-it-works.md) for what the server uses mystmd for.
 
 The project is the nearest `myst.yml` at or above the workspace folder.
 The search stops at a git repository's root, and doesn't look in your home folder or above it, so a `myst.yml` far above an unrelated folder isn't picked up.
-Without a `myst.yml`, the server uses the workspace folder and only knows the open documents.
-If mystmd isn't installed or fails to start, the server shows a warning and carries on with the open documents.
+Without a `myst.yml`, the server uses the workspace folder and doesn't start mystmd; see [](how-it-works.md) for what that limits.
 
 ## What it reads from `myst.yml`
 
@@ -41,5 +40,5 @@ It re-reads them when `myst.yml` or a `.bib` file changes, if your editor suppor
 ## Semantic token colours
 
 References are semantic tokens, so you can colour them by kind.
-The kinds are listed in `semanticTokensLegend` in `src/service.ts`.
+The kinds are listed in `semanticTokensLegend` in [`src/service.ts`](https://github.com/choldgraf/mystmd-lsp/blob/main/src/service.ts).
 To colour references to figures in VS Code, set `"editor.semanticTokenColorCustomizations": { "rules": { "label.figure": "#2a9d8f" } }`.

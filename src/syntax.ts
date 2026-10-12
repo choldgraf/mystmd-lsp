@@ -110,7 +110,7 @@ export const splitLines = (text: string) => text.split(/\r?\n/);
 
 export function refsInText(text: string): Ref[] {
   const refs: Ref[] = [];
-  // Open fences (``` ~~~ :::). Code fences (plain ``` / ~~~, or a {code}/{code-block}/{code-cell} directive) hide everything until they close.
+  // Open fences (``` ~~~ :::). Code fences hide everything until they close.
   const fences: { fence: string; code: boolean }[] = [];
   splitLines(text).forEach((raw, line) => {
     const f = raw.match(/^\s*(`{3,}|~{3,}|:{3,})\s*(.*)$/);

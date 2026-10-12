@@ -15,7 +15,6 @@ npm install -g mystmd-lsp
 ```
 
 This needs Node 22 or newer, and [mystmd](https://mystmd.org/guide/quickstart) for project-wide features.
-MyST Author's extensions include the server, so they don't need this step.
 
 ## Run
 
@@ -28,7 +27,7 @@ The [demo project](demo/index.md) walks through each feature.
 - Completion for references, citations, files, directives, roles and directive options.
 - Links to labels and objects in external projects, through `xref`.
 - Hover, go to definition, find references, and rename for labels.
-- Warnings for unknown references, missing files, and duplicate labels.
+- Warnings for unknown references, missing figure and include files, and duplicate labels.
 - Inline hints about what a reference points to, plus outline and workspace symbols.
 - Markdown cells in notebooks, such as JupyterLab or VS Code notebooks.
 

@@ -28,7 +28,8 @@ import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
 import { VFile } from 'vfile';
 
-// MyST Author (myst-author `packages/mystmd/src/parse.ts`) has a copy of this parse; port fixes between the two. Its copy removes a leading `# Title` like mystmd, which this one keeps (`keepTitleNode`) for the outline and labels. A parse exported by mystmd would replace both (myst-author's upstream proposal U8).
+// MyST Author (myst-author `packages/mystmd/src/parse.ts`) has a copy of this parse; port fixes between the two.
+// A parse exported by mystmd would replace both (myst-author's upstream proposal U8).
 // The extensions mystmd enables by default, so the parse matches `myst build`.
 const extDirectives = [cardDirective, ...gridDirectives, ...tabDirectives, proofDirective, ...exerciseDirectives];
 const extRoles = [buttonRole];
@@ -45,7 +46,8 @@ export function parseMyst(md: string) {
   // Directive transforms replace the directive node with children that have no position; keep the directive's lines.
   visit(tree, 'mystDirective', (d: GenericNode) => d.children?.forEach((c) => (c.position ??= d.position)));
 
-  // Like mystmd, this reads the YAML frontmatter and makes the first heading the title if there isn't one, but keeps a leading `# Title`.
+  // Like mystmd, read the YAML frontmatter and use the first heading as the title if there isn't one.
+  // Unlike mystmd and MyST Author's copy, keep a leading `# Title` for the outline and labels.
   // Half-typed YAML adds a `frontmatter-is-yaml` message, which service.ts doesn't show.
   const { frontmatter } = getFrontmatter(vfile, tree, { propagateTargets: true, keepTitleNode: true }) as { frontmatter: Record<string, any> };
 
@@ -57,7 +59,7 @@ export function parseMyst(md: string) {
     .use(reconstructHtmlPlugin)
     .use(htmlPlugin)
     .use(basicTransformationsPlugin, { parser: parse })
-    // Like mystmd: the page title is the h1, so content headings start at h2.
+    // Like mystmd: content headings start at h2, under the page title, unless the title was taken from the content's first heading.
     .use(headingDepthPlugin, { firstDepth: frontmatter.content_includes_title ? 1 : 2 })
     .use(mathPlugin, { macros: {} })
     .use(glossaryPlugin)

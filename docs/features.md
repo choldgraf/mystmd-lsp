@@ -13,15 +13,14 @@ It uses mystmd's own parser and directive specs, so it knows the same directives
 | `@`, `[@` | citation keys and reference targets |
 | `` {cite}` `` | citation keys |
 | `` {term}` `` | glossary terms |
-| `` {doc}` ``, `[](` | files, relative to the current file |
+| `` {doc}` ``, `[](` | Markdown and notebook files, relative to the current file |
 | ```` ```{figure} ````, `{image}`, `{include}`, `{literalinclude}` argument | any file, relative to the current file |
 | ```` ```{ ````, `:::{` | directive names |
 | `{` | role names |
-| `/` at the start of a line, or after a space | a directive (start of a line only) or role, inserted as a template you can tab through |
+| `/` at the start of a line, or `/name` after a space | a directive (start of a line only) or role, inserted as a template you can tab through |
 | `:` on a line inside a directive's options | that directive's options, skipping ones already set |
 
-Citation keys come from `project.bibliography` in `myst.yml`, or every `.bib` file in the project, as in mystmd.
-See [](configuration.md#what-it-reads-from-myst-yml) for when they're re-read.
+See [](configuration.md#what-it-reads-from-myst-yml) for where citation keys come from.
 
 ## Hover and go to definition
 
@@ -45,8 +44,9 @@ It isn't offered for citations, external references, labels in closed notebooks,
 ## Diagnostics
 
 The server warns about references to unknown targets, and labels defined more than once in the project.
-Missing files and external references are checked right away.
-The rest needs a [content server](how-it-works.md) and waits until the project has loaded; see [](troubleshooting.md) if you don't see them.
+Directive arguments that point to missing files, such as a `{figure}`'s image, and broken external references are reported right away.
+`{doc}` references and `[](file.md)` links to missing files aren't reported.
+Unknown targets and duplicate labels need a [content server](how-it-works.md), so they wait until the project has loaded; see [](troubleshooting.md) if you don't see them.
 Like mystmd, headings without an explicit label can share a name.
 
 Open pages also get mystmd's own warnings from parsing them, such as unknown directives, roles and directive options.
@@ -75,7 +75,8 @@ Unknown keys are only reported when every bibliography file is local, so project
 ## Symbols
 
 - **Workspace symbols**: every label, searchable by its label or text.
-  Symbols are named by label identifier, lowercased, with exact matches first, since clients rely on that to find a label's definition.
+  Each symbol is named by its label's identifier, which mystmd lowercases.
+  Exact matches come first, since clients use them to find a label's definition.
 - **Document symbols**: the page outline, with headings nested by level and each section's labeled figures, tables, equations, ... under it.
 
 ## External references
@@ -94,4 +95,4 @@ Find references and rename search open cells, not notebooks on disk.
 
 ## Limits
 
-References inside code (fenced blocks, `{code-block}`, inline code) get no diagnostics, hover, or inlay hints.
+References in code fences, code directives such as `{code-block}`, and inline code are ignored by every feature except completion.
