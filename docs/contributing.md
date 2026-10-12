@@ -82,9 +82,9 @@ The site deploys to GitHub Pages when `main` changes.
 
 ## Releasing
 
-1. Run `npm version <version> --no-git-tag-version`, which updates `package.json` and `package-lock.json`.
-   Commit and push to `main`.
-2. Run the Release workflow (`.github/workflows/release.yml`) from the Actions tab, or with `gh workflow run release.yml`.
+1. Run `npm version <version> --no-git-tag-version`.
+2. Commit the changes to `package.json` and `package-lock.json`. Push to main.
+3. Run the Release workflow (`.github/workflows/release.yml`) from the Actions tab, or with `gh workflow run release.yml`.
 
 It publishes the package at the version in `package.json`, then tags the commit `mystmd-lsp-v<version>` and creates a GitHub release with generated notes.
 Edit the release afterwards to replace the notes with ones from `github-activity`.
