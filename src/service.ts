@@ -135,6 +135,9 @@ export function createService(root: string | undefined, project: ReturnType<type
   }
 
   const refs = (uri: string) => refsInText(texts.get(uri) ?? '');
+  const linesOf = (uri: string) => splitLines(texts.get(uri) ?? '');
+  /** Each reference in an open document, with what it points to. */
+  const resolvedRefs = (uri: string, targets = lookup()) => refs(uri).map((ref) => [ref, resolveRef(ref, uri, targets)] as const);
   const refAtCursor = ({ textDocument, position: { line, character } }: At) =>
     refs(textDocument.uri).find((r) => r.line === line && r.start <= character && character <= r.end);
 
@@ -155,7 +158,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       const r = resolveRef(ref, at.textDocument.uri);
       return r.kind === 'label' ? { target: r.target, range: rangeOf(ref) } : undefined;
     }
-    const def = labelDefinition(splitLines(texts.get(at.textDocument.uri) ?? '')[line] ?? '');
+    const def = labelDefinition(linesOf(at.textDocument.uri)[line] ?? '');
     if (!def || character < def.start || def.end < character) return;
     const target = lookup().get(labelId(def.target));
     return target && { target, range: rangeOf({ ...def, line }) };
@@ -184,7 +187,7 @@ export function createService(root: string | undefined, project: ReturnType<type
 
   /** mystmd's docs for the directive, directive option, or role name under the cursor. */
   function specHover({ textDocument, position }: At) {
-    const n = nameAt(splitLines(texts.get(textDocument.uri) ?? ''), position.line, position.character);
+    const n = nameAt(linesOf(textDocument.uri), position.line, position.character);
     if (!n) return null;
     const spec: { doc?: string; arg?: { doc?: string } } | undefined =
       n.kind === 'option'
@@ -352,9 +355,7 @@ export function createService(root: string | undefined, project: ReturnType<type
     },
 
     inlayHints({ textDocument }: { textDocument: { uri: string } }) {
-      const targets = lookup();
-      return refs(textDocument.uri).flatMap((ref) => {
-        const r = resolveRef(ref, textDocument.uri, targets);
+      return resolvedRefs(textDocument.uri).flatMap(([ref, r]) => {
         // An xref link without text renders with the remote title, so show that. A `{term}` already shows its term.
         const label = r.kind === 'label' ? r.target.kind !== 'term' && hint(r.target) : r.kind === 'xref' && !ref.text && r.entry.title;
         return label ? [{ position: { line: ref.line, character: ref.after }, label, paddingLeft: true }] : [];
@@ -362,11 +363,9 @@ export function createService(root: string | undefined, project: ReturnType<type
     },
 
     semanticTokens({ textDocument }: { textDocument: { uri: string } }) {
-      const targets = lookup();
       const builder = new SemanticTokensBuilder();
-      for (const ref of refs(textDocument.uri)) {
+      for (const [ref, r] of resolvedRefs(textDocument.uri)) {
         if (ref.kind === 'doc' || ref.kind === 'path') continue; // a file path, not a label
-        const r = resolveRef(ref, textDocument.uri, targets);
         const kind = r.kind === 'label' ? r.target.kind : r.kind === 'xref' ? r.entry.kind : r.kind === 'citation' ? 'citation' : '';
         const i = semanticTokensLegend.tokenModifiers.indexOf(kind);
         builder.push(ref.line, ref.start, ref.end - ref.start, 0, i < 0 ? 0 : 1 << i);
@@ -375,9 +374,7 @@ export function createService(root: string | undefined, project: ReturnType<type
     },
 
     documentLinks({ textDocument }: { textDocument: { uri: string } }) {
-      const targets = lookup();
-      return refs(textDocument.uri).flatMap((ref) => {
-        const r = resolveRef(ref, textDocument.uri, targets);
+      return resolvedRefs(textDocument.uri).flatMap(([ref, r]) => {
         const target = r.kind === 'file' ? pathToFileURL(r.path).href : r.kind === 'xref' ? r.entry.url : undefined;
         return target ? [{ range: rangeOf(ref), target }] : [];
       });
@@ -421,12 +418,8 @@ export function createService(root: string | undefined, project: ReturnType<type
     },
 
     diagnostics(uri: string): Diagnostic[] {
-      const targets = lookup();
-      const problems = refs(uri).flatMap((ref) => {
-        const r = resolveRef(ref, uri, targets);
-        return r.kind === 'missing' && r.problem ? [{ severity: DiagnosticSeverity.Warning, range: rangeOf(ref), message: r.problem, source: 'myst' }] : [];
-      });
-      const lines = splitLines(texts.get(uri) ?? '');
+      const problems = resolvedRefs(uri).flatMap(([ref, r]) => (r.kind === 'missing' && r.problem ? [{ severity: DiagnosticSeverity.Warning, range: rangeOf(ref), message: r.problem, source: 'myst' }] : []));
+      const lines = linesOf(uri);
       // Labels in this file that are defined more than once in the project. Like mystmd, not implicit heading labels.
       const explicit = project.loaded ? project.targets().filter((t) => !t.implicit) : [];
       const duplicates = explicit.filter((t) => inDocument(t, uri)).flatMap((t) => {
