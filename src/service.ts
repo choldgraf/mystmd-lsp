@@ -146,7 +146,7 @@ export function createService(root: string | undefined, project: ReturnType<type
   // Open documents' unsaved text, else the file on disk.
   const source = (uri: string) => {
     try {
-      return texts.get(uri) ?? readFileSync(fileURLToPath(uri), 'utf8');
+      return texts.get(uri) ?? readFileSync(pathOf(uri), 'utf8');
     } catch {
       return '';
     }
