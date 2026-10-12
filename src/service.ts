@@ -53,6 +53,15 @@ type Resolved =
   | { kind: 'file'; path: string }
   | { kind: 'missing'; problem?: string };
 
+function workspaceFiles(dir: string | undefined, pattern = /\.(md|ipynb)$/): string[] {
+  if (!dir) return [];
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '_build') return [];
+    const path = join(dir, e.name);
+    return e.isDirectory() ? workspaceFiles(path, pattern) : pattern.test(e.name) ? [path] : [];
+  });
+}
+
 /**
  * The language server's features, without an LSP connection.
  * `root` is the project folder. `project` indexes the built pages and open files.
@@ -92,15 +101,6 @@ export function createService(root: string | undefined, project: ReturnType<type
   const locationOf = (t: Target) => point(t.uri ?? toUri(t.file), t.line - 1);
   // Targets in an open document: its own live parse, or its file's built targets until that's ready.
   const inDocument = (t: Target, uri: string) => (t.uri ? t.uri === uri : t.file === toFile(uri));
-
-  function workspaceFiles(dir: string | undefined, pattern = /\.(md|ipynb)$/): string[] {
-    if (!dir) return [];
-    return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-      if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '_build') return [];
-      const path = join(dir, e.name);
-      return e.isDirectory() ? workspaceFiles(path, pattern) : pattern.test(e.name) ? [path] : [];
-    });
-  }
 
   const lookup = () => new Map(project.targets().map((t) => [t.identifier, t]));
   // How mystmd turns the text of a label into the identifier that targets have.
