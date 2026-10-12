@@ -14,13 +14,11 @@ mystmd-lsp --stdio [--root=path/to/project] [--content-server=URL] [--no-myst]
 
 ## Starting mystmd
 
-When the project has a `myst.yml`, the server runs `myst start --headless` in the project folder, unless you pass `--content-server` or `--no-myst`.
+See [](how-it-works.md) for when the server starts mystmd.
 Like any `myst start`, that runs the project's plugins, which can run any code, and writes `_build/`.
-If you already run `myst start --headless` for the project, pass the address it prints with `--content-server`, so the project isn't built twice.
 `myst start` listens on `localhost`, which can resolve to IPv6 only.
 To pass an `http://127.0.0.1:<port>` address, start it with `HOST=127.0.0.1 myst start --headless`.
 To run a `myst` that isn't on your `PATH`, set the `MYST_BIN` environment variable to its path.
-See [](how-it-works.md) for what the server uses mystmd for.
 
 ## Finding the project
 
