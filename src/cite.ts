@@ -27,7 +27,7 @@ export function authorYear(e: BibEntry) {
 }
 
 /**
- * Entries from `files`, which the caller sets to `project.bibliography` in myst.yml, else every `.bib` in the project, as mystmd does.
+ * Entries from `files`, each a path relative to `root` or a URL.
  * `complete` is false when there's no bibliography or part of it is remote, so unknown keys can't be flagged.
  */
 export function readBibliography(root: string, files: string[]) {

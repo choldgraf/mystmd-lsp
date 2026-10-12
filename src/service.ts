@@ -87,7 +87,8 @@ export function createService(root: string | undefined, project: ReturnType<type
   let plugins = false;
   const reloadConfig = () => {
     const config = root ? readProjectConfig(root) : {};
-    const files: string[] = [config.bibliography ?? (root && existsSync(root) ? workspaceFiles(root, /\.bib$/) : [])].flat();
+    // Like mystmd: `project.bibliography` from myst.yml, else every `.bib` in the project.
+    const files: string[] =[config.bibliography ?? (root && existsSync(root) ? workspaceFiles(root, /\.bib$/) : [])].flat();
     bib = readBibliography(root ?? '', files);
     citations = new Map(bib.entries.map((e) => [e.key, e]));
     plugins = !!config.plugins?.length;
