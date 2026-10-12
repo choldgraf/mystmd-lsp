@@ -15,6 +15,7 @@ const built = { identifier: 'fig-built', kind: 'figure', text: 'A plot', enumera
 const outside = { identifier: 'notes', kind: 'heading', text: 'Notes', file: '/elsewhere/notes.md', line: 1 };
 
 const stub = () => stubProject([built, outside]);
+const mod = (kind: string) => 1 << semanticTokensLegend.tokenModifiers.indexOf(kind);
 
 test('a loaded project resolves built targets and flags unknown ones', () => {
   const service = createService(root, stub());
@@ -63,7 +64,6 @@ test('the outline nests sections by level, with numbered blocks under their sect
 test('references are label tokens with their target kind as a modifier', () => {
   const service = createService(root, stub());
   service.update(uri, text);
-  const mod = (kind: string) => 1 << semanticTokensLegend.tokenModifiers.indexOf(kind);
   // Delta-encoded [line, start, length, type, modifiers]: `Fig-Built` (a figure), `missing` (unknown), `notes` (a heading).
   assert.deepEqual(service.semanticTokens({ textDocument: { uri } }).data, [0, 13, 9, 0, mod('figure'), 0, 21, 7, 0, 0, 1, 6, 5, 0, mod('heading')]);
 });
@@ -102,7 +102,6 @@ test('a key that is both a citation and a label is a citation to `@`, and a labe
   const doc = pathToFileURL(join(dir, 'index.md')).href;
   service.update(doc, '@fig-built {ref}`fig-built`\n');
   const at = (character: number) => ({ textDocument: { uri: doc }, position: { line: 0, character } });
-  const mod = (kind: string) => 1 << semanticTokensLegend.tokenModifiers.indexOf(kind);
   assert.match(service.hover(at(3))!.contents.value, /^\*\*fig-built\*\* · refs\.bib\n\nShadow/);
   assert.deepEqual(service.semanticTokens({ textDocument: { uri: doc } }).data, [0, 1, 9, 0, mod('citation'), 0, 16, 9, 0, mod('figure')]);
   assert.deepEqual(service.inlayHints({ textDocument: { uri: doc } }).map((h) => h.label), ['Figure 2']);
