@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { readProjectConfig } from './root.ts';
 
 /** A BibTeX entry. `file` is an absolute path; `line` is 0-based. */
 export type BibEntry = { key: string; file: string; line: number; author?: string; year?: string; title?: string };
@@ -28,11 +27,10 @@ export function authorYear(e: BibEntry) {
 }
 
 /**
- * Entries from `project.bibliography` in myst.yml, else from `found` (every `.bib` in the project), as mystmd does.
+ * Entries from `files`, which the caller sets to `project.bibliography` in myst.yml, else every `.bib` in the project, as mystmd does.
  * `complete` is false when there's no bibliography or part of it is remote, so unknown keys can't be flagged.
  */
-export function readBibliography(root: string, found: string[]) {
-  const files: string[] = [readProjectConfig(root).bibliography ?? found].flat();
+export function readBibliography(root: string, files: string[]) {
   const local = files.filter((f) => !/^https?:/.test(f)).map((f) => resolve(root, f));
   const entries = local.flatMap((f) => {
     try {

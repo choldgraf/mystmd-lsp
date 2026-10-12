@@ -77,9 +77,11 @@ export function createService(root: string | undefined, project: ReturnType<type
   // Whether myst.yml lists plugins, whose directives and roles our parser doesn't know.
   let plugins = false;
   const reloadConfig = () => {
-    bib = root && existsSync(root) ? readBibliography(root, workspaceFiles(root, /\.bib$/)) : { entries: [], complete: false };
+    const config = root ? readProjectConfig(root) : {};
+    const files: string[] = [config.bibliography ?? (root && existsSync(root) ? workspaceFiles(root, /\.bib$/) : [])].flat();
+    bib = readBibliography(root ?? '', files);
     citations = new Map(bib.entries.map((e) => [e.key, e]));
-    plugins = !!root && !!readProjectConfig(root).plugins?.length;
+    plugins = !!config.plugins?.length;
   };
 
   const toUri = (file: string) => pathToFileURL(root ? resolve(root, file) : file).href;
