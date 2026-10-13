@@ -37,11 +37,13 @@ const extRoles = [buttonRole];
 export const directives = [...defaultDirectives, ...extDirectives];
 export const roles = [...defaultRoles, ...extRoles];
 
+/** Parse MyST without transforms; myst-parser adds its default directives and roles to the extensions. */
+export const parse = (s: string, vfile?: VFile) => mystParse(s, { markdownit: { linkify: true }, directives: extDirectives, roles: extRoles, vfile });
+
 /** Parse and transform a single MyST page, without the rest of the project. */
 export function parseMyst(md: string) {
   const vfile = new VFile();
-  const parse = (s: string) => mystParse(s, { markdownit: { linkify: true }, directives: extDirectives, roles: extRoles, vfile });
-  const tree = parse(md) as GenericParent;
+  const tree = parse(md, vfile) as GenericParent;
 
   // Directive transforms replace the directive node with children that have no position; keep the directive's lines.
   visit(tree, 'mystDirective', (d: GenericNode) => d.children?.forEach((c) => (c.position ??= d.position)));
@@ -58,7 +60,7 @@ export function parseMyst(md: string) {
   unified()
     .use(reconstructHtmlPlugin)
     .use(htmlPlugin)
-    .use(basicTransformationsPlugin, { parser: parse })
+    .use(basicTransformationsPlugin, { parser: (s: string) => parse(s, vfile) })
     // Like mystmd: content headings start at h2, under the page title, unless the title was taken from the content's first heading.
     .use(headingDepthPlugin, { firstDepth: frontmatter.content_includes_title ? 1 : 2 })
     .use(mathPlugin, { macros: {} })

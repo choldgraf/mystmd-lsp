@@ -2,8 +2,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { load } from 'js-yaml';
-import { mystParse } from 'myst-parser';
-import { directives, roles } from '../src/mystmd/parse.ts';
+import { parse } from '../src/mystmd/parse.ts';
 import { labelDefinition, refsInText, splitLines } from '../src/syntax.ts';
 
 type Case = { id: string; src: string };
@@ -62,7 +61,7 @@ function mystmd(src: string) {
     if (node.type === 'math' && node.label && parent?.type !== 'mystDirective') found.push(`label definition ${node.label}`);
     node.children?.forEach((c: any) => walk(c, node));
   };
-  walk(mystParse(src, { markdownit: { linkify: true }, directives, roles }));
+  walk(parse(src));
   return found;
 }
 
