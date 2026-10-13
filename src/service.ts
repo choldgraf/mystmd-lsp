@@ -54,7 +54,7 @@ type Resolved =
   | { kind: 'missing'; problem?: string };
 
 /** The Markdown cells of the notebook `json` at `uri`: each one's URI as JupyterLab sends it (with the cell id as the fragment), and its text. */
-function markdownCells(uri: string, json: string): (readonly [string, string])[] {
+export function markdownCells(uri: string, json: string): (readonly [string, string])[] {
   try {
     const { cells = [] } = JSON.parse(json);
     return cells.filter((c: any) => c.cell_type === 'markdown' && c.id).map((c: any) => [`${uri}#${c.id}`, [c.source].flat().join('')] as const);
@@ -63,7 +63,7 @@ function markdownCells(uri: string, json: string): (readonly [string, string])[]
   }
 }
 
-function workspaceFiles(dir: string | undefined, pattern = /\.(md|ipynb)$/): string[] {
+export function workspaceFiles(dir: string | undefined, pattern = /\.(md|ipynb)$/): string[] {
   if (!dir) return [];
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '_build') return [];

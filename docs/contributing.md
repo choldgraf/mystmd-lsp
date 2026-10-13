@@ -89,7 +89,7 @@ To also run it on your own projects, point `MYST_CORPUS` at a folder:
 MYST_CORPUS=path/to/projects npm run conformance
 ```
 
-This reads every `.md` file and the Markdown cells of every `.ipynb` file, skipping `node_modules` and `_build`.
+This reads every `.md` file and the Markdown cells of every `.ipynb` file, skipping hidden files, `node_modules` and `_build`.
 It only reports; differences in the corpus don't fail the run.
 mystmd leaves the body of a directive it doesn't know, like `{myst}` in mystmd's docs, as text, so the regexes find references there that mystmd doesn't.
 

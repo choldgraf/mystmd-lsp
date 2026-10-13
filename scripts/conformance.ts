@@ -1,8 +1,9 @@
 // Compares the references and label definitions the regexes in src/syntax.ts find with mystmd's parse. See "Conformance" in docs/contributing.md.
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { relative } from 'node:path';
 import { load } from 'js-yaml';
 import { parse } from '../src/mystmd/parse.ts';
+import { markdownCells, workspaceFiles } from '../src/service.ts';
 import { labelDefinition, refsInText, splitLines } from '../src/syntax.ts';
 
 type Case = { id: string; src: string };
@@ -31,14 +32,10 @@ function specCases(): Case[] {
 
 /** Each Markdown file, and each Markdown cell of a notebook, under `root`. */
 function corpusCases(root: string): Case[] {
-  return readdirSync(root, { recursive: true, encoding: 'utf8' })
-    .filter((file) => /\.(?:md|ipynb)$/.test(file) && !/(?:^|\/)(?:node_modules|_build)\//.test(file))
-    .flatMap((file) => {
-      const text = readFileSync(join(root, file), 'utf8');
-      if (file.endsWith('.md')) return [{ id: file, src: text }];
-      const cells: { cell_type: string; source: string | string[] }[] = JSON.parse(text).cells;
-      return cells.flatMap((c, i) => (c.cell_type === 'markdown' ? [{ id: `${file}: cell ${i}`, src: [c.source].flat().join('') }] : []));
-    });
+  return workspaceFiles(root).flatMap((file) => {
+    const [id, src] = [relative(root, file), readFileSync(file, 'utf8')];
+    return file.endsWith('.md') ? [{ id, src }] : markdownCells(id, src).map(([id, src]) => ({ id, src }));
+  });
 }
 
 /** What mystmd's parse finds, like `label role fig1`. */
