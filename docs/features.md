@@ -56,6 +56,8 @@ If `myst.yml` lists plugins, unknown directives and roles aren't reported, since
 
 Editors that support pull diagnostics ask the server for them; other editors get them pushed as each page changes.
 Editors that pull workspace diagnostics also get them for the project's `.md` files and notebook Markdown cells on disk, not just open ones.
+Clients that support pull diagnostics don't get pushed ones.
+Their document selector must include notebook cells, in VS Code `{ language: 'markdown', notebookType: 'jupyter-notebook' }`, or open cells only get diagnostics from workspace pulls, if at all.
 
 ## Inlay hints and semantic tokens
 
