@@ -23,7 +23,9 @@ async function startServer(t: TestContext, files: Record<string, string>) {
 
 /** Poll workspace symbols until mystmd's first build is indexed. */
 async function waitForBuild(conn: ProtocolConnection) {
-  while (((await conn.sendRequest('workspace/symbol', { query: '' })) as any[]).length === 0) await new Promise((r) => setTimeout(r, 500));
+  const deadline = Date.now() + 30_000;
+  while (Date.now() < deadline && ((await conn.sendRequest('workspace/symbol', { query: '' })) as any[]).length === 0) await new Promise((r) => setTimeout(r, 500));
+  assert.ok(Date.now() < deadline, 'mystmd did not finish a build in 30s');
 }
 
 const text = `(fig-a)=
@@ -59,13 +61,14 @@ test('server completes, hints and diagnoses over stdio', async (t) => {
   assert.deepEqual(hints.map((h) => h.label), ['Figure 1']);
 });
 
-const hasMyst = spawnSync('myst', ['--version']).status === 0;
+// Needs a working mystmd, so `npm run test:mystmd` asks for these.
+const mystmd = { skip: !process.env.TEST_MYSTMD, timeout: 90_000 };
 const mystProject = {
   'myst.yml': 'version: 1\nproject:\n  id: test\nsite:\n  template: book-theme\n',
   'index.md': '# Title\n\n(sec-a)=\n## Section\n',
 };
 
-test('with real mystmd: the project loads, and the user is warned when mystmd dies', { skip: !hasMyst, timeout: 90_000 }, async (t) => {
+test('with real mystmd: the project loads, and the user is warned when mystmd dies', mystmd, async (t) => {
   const { child, conn } = await startServer(t, mystProject);
   const warning = new Promise<any>((resolve) => conn.onRequest('window/showMessageRequest', resolve));
   await waitForBuild(conn);
@@ -74,7 +77,7 @@ test('with real mystmd: the project loads, and the user is warned when mystmd di
   assert.match((await warning).message, /myst exited/);
 });
 
-test('with real mystmd: stopping the server with SIGTERM stops its mystmd', { skip: !hasMyst, timeout: 90_000 }, async (t) => {
+test('with real mystmd: stopping the server with SIGTERM stops its mystmd', mystmd, async (t) => {
   const { child, conn } = await startServer(t, mystProject);
   // mystmd outlives its parent once it's built and idle, so wait for the first build.
   await waitForBuild(conn);

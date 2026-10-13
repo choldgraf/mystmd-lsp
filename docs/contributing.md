@@ -20,10 +20,13 @@ From the repository root:
 ```sh
 npm ci
 npm test # builds first
+npm run test:mystmd # also runs the tests that start mystmd
 npm run typecheck
 ```
 
 CI runs the same commands.
+`npm test` skips the tests that start mystmd, so it passes without a working mystmd.
+`npm run test:mystmd` runs them, and fails if mystmd doesn't start.
 
 ## Try your build
 

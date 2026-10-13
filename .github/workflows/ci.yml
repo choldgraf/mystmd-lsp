@@ -14,3 +14,4 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test # builds first
+      - run: npm run test:mystmd

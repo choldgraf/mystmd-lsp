@@ -16,6 +16,7 @@
     "build": "node build.mjs",
     "pretest": "npm run build",
     "test": "node --test 'src/**/*.test.ts'",
+    "test:mystmd": "TEST_MYSTMD=1 npm test",
     "typecheck": "tsc",
     "prepack": "npm run build",
     "docs": "cd docs && myst build --html",
