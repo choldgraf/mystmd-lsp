@@ -18,8 +18,6 @@ const known = new Set([
   // The regexes miss a label with a space, like `:name: My code`.
   'directives.code.yml: Code directive, starting line',
   'directives.code.yml: Code-block starting line',
-  // The regexes count an image, `![](fun-fish.png)`, as a link to a file.
-  'directives.image.yml: Standard markdown image',
 ]);
 
 /** Each myst-spec example of MyST syntax with its source; the CommonMark examples are left out. */
@@ -46,8 +44,9 @@ function mystmd(src: string) {
     // mystmd keeps the spaces around a role's target in `label`, but drops them when it resolves the reference.
     if (node.type === 'crossReference' && ['ref', 'eq', 'numref'].includes(role)) found.push(`label role ${node.label.trim()}`);
     if (node.type === 'link' && role === 'doc') found.push(`doc role ${node.url}`);
-    // The regexes take a local link's path without its `#fragment`, and leave out URLs.
-    if (node.type === 'link' && !role && node.url) {
+    // The regexes take a local link's or Markdown image's path without its `#fragment`, and leave out URLs.
+    // A directive's image has no position, and its path isn't a link.
+    if ((node.type === 'link' || (node.type === 'image' && node.position)) && !role && node.url) {
       if (node.url.startsWith('#')) found.push(`label link ${node.url.slice(1)}`);
       else if (!/^\w+:/.test(node.url)) found.push(`path link ${node.url.split('#')[0]}`);
     }
