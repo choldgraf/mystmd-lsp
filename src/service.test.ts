@@ -202,9 +202,16 @@ test('moving a file updates `{doc}` roles, links and directive arguments that po
   const text = '{doc}`Intro <a>` [](a.md#sec) [](sub/a.md)\n```{include} /a.md\n```\n';
   service.update(uri('b.md'), text);
   const { changes } = service.willRenameFiles({ files: [{ oldUri: uri('a.md'), newUri: uri('guide/a.md') }] });
-  assert.deepEqual(Object.keys(changes), [uri('b.md')]);
+  assert.deepEqual(Object.keys(changes).sort(), [uri('a.md'), uri('b.md')]); // `a.md`'s own `x.png` follows it
   const moved = TextDocument.applyEdits(TextDocument.create(uri('b.md'), 'markdown', 0, text), changes[uri('b.md')]);
   assert.equal(moved, '{doc}`Intro <guide/a>` [](guide/a.md#sec) [](sub/a.md)\n```{include} /guide/a.md\n```\n');
+});
+
+test('a moved file\'s relative links follow it, and its root-relative ones stay', (t) => {
+  const { service, uri } = labelWorkspace(t);
+  service.update(uri('b.md'), '[](c.md#x) [](/c.md)');
+  const { changes } = service.willRenameFiles({ files: [{ oldUri: uri('b.md'), newUri: uri('guide/b.md') }] });
+  assert.deepEqual(changes, { [uri('b.md')]: [{ range: { start: { line: 0, character: 3 }, end: { line: 0, character: 7 } }, newText: '../c.md' }] });
 });
 
 test('hover shows mystmd docs for directives, options and roles, but references come first', () => {

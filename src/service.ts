@@ -376,7 +376,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       return { changes };
     },
 
-    /** Before files or folders move, update the `{doc}` roles, Markdown links and directive file arguments that point to them, in the files rename edits. */
+    /** Before files or folders move, update the `{doc}` roles, Markdown links and directive file arguments that point to them or are in them, in the files rename edits. */
     willRenameFiles({ files }: { files: { oldUri: string; newUri: string }[] }) {
       // Where `path` will be after the move. A file in a moved folder moves too, and an extensionless `{doc}` target moves with its file.
       const moved = (path: string) => {
@@ -393,9 +393,10 @@ export function createService(root: string | undefined, project: ReturnType<type
           // A link's target leaves out its `#fragment`, so the edit keeps it.
           const file = fileOf(uri, ref.target);
           const to = moved(file);
-          // Relative to where the referencing file will be, so links between files in a moved folder stay as they are.
-          const newText = ref.target.startsWith('/') && root ? `/${relative(root, to)}` : relative(dirname(moved(pathOf(uri))), to);
-          if (to !== file && newText !== ref.target) (changes[uri] ??= []).push({ range: rangeOf(ref), newText });
+          // Relative to where the referencing file will be, so a moved file's relative links still work.
+          const here = pathOf(uri);
+          const newText = ref.target.startsWith('/') && root ? `/${relative(root, to)}` : relative(dirname(moved(here)), to);
+          if ((to !== file || moved(here) !== here) && newText !== ref.target) (changes[uri] ??= []).push({ range: rangeOf(ref), newText });
         }
       }
       return { changes };
