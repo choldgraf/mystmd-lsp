@@ -38,8 +38,10 @@ URLs, notebook cells (`#id`), and paths with a `*` wildcard aren't checked.
 
 Both work on labels, from a reference or from the label's definition (`(label)=`, `:label:`, `$$ (label)`).
 They search the project's `.md` files on disk, using unsaved text for open documents.
-Rename edits every reference and the definition.
-It isn't offered for citations, external references, labels in closed notebooks, or headings without an explicit label.
+Find references also searches the Markdown cells of notebooks on disk.
+Rename edits every reference and the definition, but in notebooks only the open cells.
+The editor owns a notebook's cells and may hold its file open, so the server can't safely rewrite the notebook's JSON.
+Rename isn't offered for citations, external references, labels in closed notebooks, or headings without an explicit label.
 
 ## Diagnostics
 
@@ -91,7 +93,7 @@ Each project's `myst.xref.json` (MyST) or `objects.inv` (Sphinx) is fetched when
 Each Markdown cell is a document in its notebook's file, with all the features above.
 Clients can send cells through LSP notebook sync, as VS Code does.
 Other clients can open each cell as a document whose URI is the notebook's, with the cell id as the fragment.
-Find references and rename search open cells, not notebooks on disk.
+Find references also searches notebooks on disk, but rename only edits open cells.
 
 ## Limits
 

@@ -53,6 +53,16 @@ type Resolved =
   | { kind: 'file'; path: string }
   | { kind: 'missing'; problem?: string };
 
+/** The Markdown cells of the notebook `json` at `uri`: each one's URI as JupyterLab sends it (with the cell id as the fragment), and its text. */
+function markdownCells(uri: string, json: string): (readonly [string, string])[] {
+  try {
+    const { cells = [] } = JSON.parse(json);
+    return cells.filter((c: any) => c.cell_type === 'markdown' && c.id).map((c: any) => [`${uri}#${c.id}`, [c.source].flat().join('')] as const);
+  } catch {
+    return [];
+  }
+}
+
 function workspaceFiles(dir: string | undefined, pattern = /\.(md|ipynb)$/): string[] {
   if (!dir) return [];
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -177,15 +187,16 @@ export function createService(root: string | undefined, project: ReturnType<type
     return d && { uri, range: rangeOf(d) };
   }
 
-  /** Every reference to a label in the project's Markdown files and open documents. */
-  function labelRefs(identifier: string) {
+  /** Every reference to a label in the project's Markdown files and open documents, and with `notebooks`, in the Markdown cells of notebooks on disk. */
+  function labelRefs(identifier: string, notebooks = false) {
     // Skip files that are open: the client's URI for them can be encoded differently from ours.
     const open = new Set([...texts.keys()].map(pathOf));
-    const files = root && existsSync(root) ? workspaceFiles(root, /\.md$/).filter((f) => !open.has(f)) : [];
-    const uris = [...files.map((f) => pathToFileURL(f).href), ...texts.keys()];
+    const files = root && existsSync(root) ? workspaceFiles(root, notebooks ? /\.(md|ipynb)$/ : /\.md$/).filter((f) => !open.has(f)) : [];
+    const uris = files.map((f) => pathToFileURL(f).href);
+    const docs = [...uris.flatMap((uri) => (uri.endsWith('.ipynb') ? markdownCells(uri, source(uri)) : [[uri, source(uri)] as const])), ...texts];
     const targets = lookup();
     const isRef = (r: Resolved) => r.kind === 'label' && r.target.identifier === identifier;
-    return uris.flatMap((uri) => refsInText(source(uri)).filter((r) => isRef(resolveRef(r, uri, targets))).map((r) => ({ uri, range: rangeOf(r) })));
+    return docs.flatMap(([uri, text]) => refsInText(text).filter((r) => isRef(resolveRef(r, uri, targets))).map((r) => ({ uri, range: rangeOf(r) })));
   }
 
   /** mystmd's docs for the directive, directive option, or role name under the cursor. */
@@ -337,7 +348,7 @@ export function createService(root: string | undefined, project: ReturnType<type
     references(at: At & { context: { includeDeclaration: boolean } }) {
       const t = labelAtCursor(at)?.target;
       if (!t) return null;
-      const refs = labelRefs(t.identifier);
+      const refs = labelRefs(t.identifier, true);
       return at.context.includeDeclaration ? [definitionOf(t) ?? locationOf(t), ...refs] : refs;
     },
 

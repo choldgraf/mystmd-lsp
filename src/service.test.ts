@@ -139,10 +139,11 @@ test('external completion shows each target\'s kind, from MyST sites and Sphinx 
   ]);
 });
 
-// A workspace on disk: `a.md` defines the labels, `b.md` (also open, with unsaved edits) and `c.md` reference them.
+// A workspace on disk: `a.md` defines the labels, `b.md` (also open, with unsaved edits), `c.md` and a Markdown cell of `nb.ipynb` reference them.
 function labelWorkspace(t: TestContext) {
   const a = '(sec)=\n# Section\n\n:::{figure} x.png\n:label: Fig-One\n\nThe caption\n:::\n';
-  const dir = tmpWorkspace(t, { 'a.md': a, 'b.md': 'See {ref}`sec`.\n', 'c.md': 'See <#fig-one>.\n' });
+  const nb = { cells: [{ cell_type: 'code', id: 'code', source: 'See {numref}`fig-one`.' }, { cell_type: 'markdown', id: 'md', source: ['# Notes\n', 'See {numref}`fig-one`.'] }] };
+  const dir = tmpWorkspace(t, { 'a.md': a, 'b.md': 'See {ref}`sec`.\n', 'c.md': 'See <#fig-one>.\n', 'nb.ipynb': JSON.stringify(nb) });
   // The built figure reports its caption's line, not the `:label:` line.
   const targets = [
     { identifier: 'sec', kind: 'heading', text: 'Section', file: 'a.md', line: 2 },
@@ -157,10 +158,16 @@ function labelWorkspace(t: TestContext) {
   return { service, uri, spans };
 }
 
-test('find references from a reference, across files, preferring unsaved text', (t) => {
+test('find references from a reference, across files and notebook cells, preferring unsaved text', (t) => {
   const { service, uri, spans } = labelWorkspace(t);
-  const refs = service.references({ textDocument: { uri: uri('b.md') }, position: { line: 0, character: 6 }, context: { includeDeclaration: true } });
-  assert.deepEqual(spans(refs!), ['a.md:4:8', 'b.md:0:26', 'b.md:0:5', 'c.md:0:6']);
+  const at = { textDocument: { uri: uri('b.md') }, position: { line: 0, character: 6 }, context: { includeDeclaration: true } };
+  const refs = service.references(at)!;
+  assert.deepEqual(spans(refs), ['a.md:4:8', 'b.md:0:26', 'b.md:0:5', 'c.md:0:6', 'nb.ipynb#md:1:13']);
+  // A Markdown cell on disk is at its cell URI, with a range in the cell's source; the code cell isn't searched.
+  assert.deepEqual(refs.find((l) => l.uri.endsWith('#md')), { uri: `${uri('nb.ipynb')}#md`, range: { start: { line: 1, character: 13 }, end: { line: 1, character: 20 } } });
+  // Once the notebook is open, its open cells replace the file on disk.
+  service.update(`${uri('nb.ipynb')}#md`, '{numref}`fig-one`');
+  assert.deepEqual(spans(service.references(at)!), ['a.md:4:8', 'b.md:0:26', 'b.md:0:5', 'c.md:0:6', 'nb.ipynb#md:0:9']);
 });
 
 test('rename a label from its definition, and not citations or unknown labels', (t) => {
