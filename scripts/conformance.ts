@@ -10,7 +10,11 @@ type Case = { id: string; src: string };
 const kinds = ['label role', 'doc role', 'path link', 'label link', 'label definition'];
 
 // Spec examples where the regexes are known to differ from mystmd, and why.
-const known = new Set<string>([]);
+const known = new Set([
+  // mystmd accepts spaces in `:label:`, like `:name: My code`, but matching them makes frontmatter `name:` and option text look like definitions on real projects.
+  'directives.code.yml: Code directive, starting line',
+  'directives.code.yml: Code-block starting line',
+]);
 
 /** Each myst-spec example of MyST syntax with its source; the CommonMark examples are left out. */
 function specCases(): Case[] {
