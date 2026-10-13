@@ -57,6 +57,11 @@ test('refsInText finds references with target and end ranges', () => {
   );
 });
 
+test('refsInText leaves out the spaces around a role target', () => {
+  const [r] = refsInText('See {eq}`  matrix  `.');
+  assert.deepEqual([r.target, r.start, r.end], ['matrix', 11, 17]);
+});
+
 test('xref links: completion contexts and references', () => {
   assert.deepEqual(at('see [](xref:py|)'), { trigger: 'xref-key', prefix: 'py', start: 12, end: 14 });
   assert.deepEqual(at('<xref:spec/tables#ex|>'), { trigger: 'xref-target', prefix: 'ex', start: 18, end: 20, key: 'spec/tables' });

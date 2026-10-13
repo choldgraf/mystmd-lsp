@@ -128,7 +128,7 @@ export function refsInText(text: string): Ref[] {
     const lineText = maskInlineCode(raw);
     for (const [re, kind] of refPatterns) {
       for (const m of lineText.matchAll(re)) {
-        const target = m[m.length - 1];
+        const target = m[m.length - 1].trim(); // a padded role, like {eq}`  a  `, targets `a`
         const start = m.index! + m[0].lastIndexOf(target);
         refs.push({ kind: kind(m as RegExpExecArray), target, line, start, end: start + target.length, after: m.index! + m[0].length, text: m.groups?.text });
       }

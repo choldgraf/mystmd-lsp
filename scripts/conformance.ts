@@ -11,9 +11,6 @@ const kinds = ['label role', 'doc role', 'path link', 'label link', 'label defin
 
 // Spec examples where the regexes are known to differ from mystmd, and why.
 const known = new Set([
-  // The regexes keep the spaces around a role's target, which mystmd drops when it resolves the reference.
-  'references.equations.yml: Invalid equation reference',
-  'references.figures.yml: Invalid figure reference with messy label',
   // The regexes miss a link with a title, like `[](target "title")`.
   'references.figures.yml: Link-style figure reference with default ref',
   'references.headings.yml: Link-style custom header reference',
