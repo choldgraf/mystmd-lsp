@@ -58,19 +58,7 @@ To add a feature, such as a new diagnostic:
 
 ## Replacing the reference regexes
 
-Open documents are parsed twice.
-mystmd's parser (`src/mystmd/parse.ts`) finds targets and warnings.
-Regexes (`src/syntax.ts`) find the position of each reference.
-A parser such as [myst-parser-unified](https://chrisholdgraf.com/myst-parser-unified/) could replace the reference regexes if it provides:
-
-- Pre-transform myst-spec mdast, so myst-transforms still run on it.
-  mystmd's transforms use older majors of unified and vfile, so the parser's trees must still work with them.
-- Positions for the parts inside nodes, such as the target in `` {ref}`text <target>` ``, the label in `(x)=`, and directive arguments and options.
-- Tolerance of half-typed input, since most documents are mid-edit.
-- Speed enough to parse every page in the project for find references.
-
-The swap point is `refsInText` and `labelDefinition` in `src/syntax.ts`, not `parse.ts`.
-`refAt` and `optionAt` read the cursor's context in half-typed text, so they stay regex-based.
+See [](design.md#replacing-the-reference-regexes) for why references come from regexes and what a parser would need to replace them.
 
 ### Conformance
 

@@ -14,6 +14,7 @@ project:
     - file: features.md
     - file: configuration.md
     - file: how-it-works.md
+    - file: design.md
     - file: troubleshooting.md
     - file: contributing.md
 site:

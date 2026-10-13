@@ -14,3 +14,5 @@ title: How it works
 Without a content server, only open documents are indexed, and unknown targets aren't reported.
 That happens when there's no `myst.yml`, when mystmd isn't installed or fails to start, or when you pass `--no-myst`.
 See [](configuration.md) for the flags.
+
+See [](design.md) for why it works this way, and what we measured.
