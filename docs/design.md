@@ -9,10 +9,10 @@ See [](how-it-works.md) for the short version.
 
 The server reads a project two ways, because neither covers everything.
 
-- **The build.** Closed files' targets, titles and project-wide enumerators come from `myst start`, read page by page from the content server (`src/mystmd/content-server.ts`).
+- **The build.** Closed files' targets, titles and enumerators come from `myst start`, read page by page from the content server (`src/mystmd/content-server.ts`).
   We can't use `myst.xref.json` instead, because it isn't rewritten on edits and has no `title` or `enumerator`.
 - **The live parse.** Open documents get `mystParse` plus mystmd's per-page transforms, including `basicTransformationsPlugin` and `enumerateTargetsPlugin`, on that page alone (`src/mystmd/parse.ts`).
-  So an open page's enumerators can differ from the build's, which numbers across the project.
+  So an open page's enumerators can differ from the build's when frontmatter sets `numbering`.
 
 `src/project.ts` merges the two: an open document's targets replace its file's built ones.
 
@@ -26,11 +26,9 @@ The parse tree doesn't give us usable positions:
 
 - markdown-it records line numbers for blocks, but no columns inside a line.
 - In mystmd's parse of one sample, roles had no position after transforms, and before transforms their columns ran past the end of the line.
-- `[](#x)` links got a placeholder position (line 4, column 1 to 1).
+- `[](#x)` links got a placeholder position (column 1 to 1).
 - `<#x>` wasn't parsed as a reference.
 - `@key` was reported one line early.
-
-The regexes also have to work on half-typed input, since most documents are mid-edit.
 
 ### Replacing the reference regexes
 
@@ -62,24 +60,24 @@ On myst-spec, in CI:
 | `[](#label)` links | 0 | 0 | 0 |
 | Label definitions | 29 | 0 | 0 |
 
-myst-spec has no `{doc}` role or `[](#label)` examples.
 The CI check started with 8 known differences: kept spaces, link titles, labels with spaces, and images.
-That list is now empty, after fixing general rules rather than single cases: trimming padded role targets, accepting link titles, accepting spaces in `:label:` and `:name:`, and counting Markdown images as path links.
+We fixed general rules rather than single cases: trimming padded role targets, accepting link titles, and counting Markdown images as path links.
+Accepting spaces in `:label:` and `:name:` was reverted, because on real projects it read frontmatter `name:` fields, YAML in code blocks, and option text like a button's `:label:` as label definitions.
+So the list has two entries left, both labels with spaces.
 
-We also ran it on a corpus of seven projects: the mystmd, Jupyter Book and 2i2c docs, example-outputs, myst-parser-unified's docs, and this repository's docs and demo.
-These numbers are from before the fixes above:
+We also ran it on a corpus: clones of mystmd, Jupyter Book, 2i2c's docs and example-outputs, plus copies of our own docs.
+These numbers are from a clean run on 2026-10-13, on the corpus listed in `.ai/myst-project-examples/SOURCES.md` in the workspace above this repository:
 
 | Kind | Matched | Missed | False positive |
 |---|---|---|---|
-| Label roles | 735 | 0 | 6 |
-| `{doc}` roles | 2 | 0 | 0 |
-| Path links | 523 | 0 | 20 |
-| `[](#label)` links | 454 | 2 | 53 |
-| Label definitions | 533 | 0 | 149 |
+| Label roles | 729 | 0 | 6 |
+| `{doc}` roles | 1 | 0 | 0 |
+| Path links | 532 | 0 | 4 |
+| `[](#label)` links | 488 | 2 | 17 |
+| Label definitions | 525 | 0 | 149 |
 
-Most false positives are noise: `{myst}` example bodies that mystmd keeps as source, code blocks, and frontmatter.
-The real gaps were images and `<url>` counted as path links, links with titles, and references on directive lines.
-To get current numbers, run `MYST_CORPUS=path/to/projects npm run conformance`.
+Most false positives are noise: `{myst}` example bodies that mystmd keeps as source, code blocks, and frontmatter like a kernel's `name: python3`.
+The one real gap is a link written as `[](<url>)` with parentheses in the URL, which the regexes read as a path link.
 
 ## The parse-first experiment
 
@@ -98,12 +96,11 @@ On the seven corpus projects:
 So parse-first is viable for targets and enumerators on this corpus, because mystmd also numbers per page.
 The gaps are frontmatter `numbering`, mystmd's own warnings for closed files (unknown directives, roles and options), and notebooks without cell ids.
 
-The server hasn't switched.
 We keep the build because it's the source of truth for what mystmd renders, including what plugins add.
 
 ## What would let us delete code
 
 - **Column positions in mystmd's parser** ([mystmd#2864](https://github.com/jupyter-book/mystmd/issues/2864)) would let references come from the tree instead of regexes.
-- **A client exported by mystmd** (U8 in MyST Author's [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md), and a draft for a shared package) would delete `parse.ts`, `start.ts` and `content-server.ts`, which are copies of MyST Author's.
-- **A parser switch in mystmd** ([mystmd#1705](https://github.com/jupyter-book/mystmd/issues/1705)), or a parse-first index, would delete the build path, with the numbers above.
+- **A client exported by mystmd** (U8 in MyST Author's [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)) would delete `parse.ts`, `start.ts` and `content-server.ts`, which are copies of MyST Author's.
+- **A parser switch in mystmd** ([mystmd#1705](https://github.com/jupyter-book/mystmd/issues/1705)), or a parse-first index, would delete the build path; see the parse-first numbers above.
 - **`enumerator` and `title` in `myst.xref.json`** (U1 in the same proposals) would remove the content server page reads.
