@@ -39,3 +39,5 @@ roots = ["myst.yml"]
 ```
 
 `language-servers` replaces Helix's default Markdown servers, so list them too if you use one.
+
+If your client pulls diagnostics, its document selector must include notebook cells, in VS Code `{ language: 'markdown', notebookType: 'jupyter-notebook' }`, or open cells only get diagnostics from workspace pulls, if at all.

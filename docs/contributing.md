@@ -78,10 +78,7 @@ The swap point is `refsInText` and `labelDefinition` in `src/syntax.ts`, not `pa
 It compares the targets of label roles (`{ref}`, `{eq}`, `{numref}`), `{doc}` roles, `[](path)` links, `[](#label)` links, and label definitions (`(x)=`, `:label:` and `:name:` options, and `$$ (id)`).
 It runs on the [myst-spec](https://github.com/jupyter-book/myst-spec) examples of roles, directives and references, prints each difference, and prints a table of matched, missed and false positive targets for each kind.
 It fails if an example differs that isn't in the list of known differences at the top of `scripts/conformance.ts`, or if one in the list no longer differs.
-
-The check reads mystmd's targets the way they're used:
-mystmd keeps the spaces around a role's target but drops them when it resolves the reference, so the check trims them.
-Like `refsInText`, it leaves out links to URLs and a link's `#fragment`.
+myst-spec has no `{doc}` role or `[](#label)` examples, so CI's check doesn't cover those kinds; only a corpus run by hand does.
 
 To also run it on your own projects, point `MYST_CORPUS` at a folder:
 
