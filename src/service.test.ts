@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { CompletionItemKind, DiagnosticSeverity } from 'vscode-languageserver';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 import { parseMyst } from './mystmd/parse.ts';
 import { createProject } from './project.ts';
 import { createService, semanticTokensLegend } from './service.ts';
@@ -194,6 +195,16 @@ test('rename a label from its definition, and not citations or unknown labels', 
   service.update(uri('b.md'), '{doc}`a.md` @nope');
   assert.equal(service.prepareRename({ textDocument: { uri: uri('b.md') }, position: { line: 0, character: 7 } }), null);
   assert.equal(service.prepareRename({ textDocument: { uri: uri('b.md') }, position: { line: 0, character: 14 } }), null);
+});
+
+test('moving a file updates `{doc}` roles, links and directive arguments that point to it, and nothing else', (t) => {
+  const { service, uri } = labelWorkspace(t);
+  const text = '{doc}`Intro <a>` [](a.md#sec) [](sub/a.md)\n```{include} /a.md\n```\n';
+  service.update(uri('b.md'), text);
+  const { changes } = service.willRenameFiles({ files: [{ oldUri: uri('a.md'), newUri: uri('guide/a.md') }] });
+  assert.deepEqual(Object.keys(changes), [uri('b.md')]);
+  const moved = TextDocument.applyEdits(TextDocument.create(uri('b.md'), 'markdown', 0, text), changes[uri('b.md')]);
+  assert.equal(moved, '{doc}`Intro <guide/a>` [](guide/a.md#sec) [](sub/a.md)\n```{include} /guide/a.md\n```\n');
 });
 
 test('hover shows mystmd docs for directives, options and roles, but references come first', () => {

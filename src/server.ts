@@ -92,6 +92,8 @@ connection.onInitialize(async (params) => {
       semanticTokensProvider: { legend: semanticTokensLegend, full: true },
       // A file's diagnostics depend on the labels in other files.
       diagnosticProvider: { interFileDependencies: true, workspaceDiagnostics: true },
+      // Any file or folder, since Markdown links to images and code too.
+      workspace: { fileOperations: { willRename: { filters: [{ scheme: 'file', pattern: { glob: '**/*' } }] } } },
     },
   };
 });
@@ -115,6 +117,7 @@ connection.onDefinition((p) => service.definition(p));
 connection.onReferences((p) => service.references(p));
 connection.onPrepareRename((p) => service.prepareRename(p));
 connection.onRenameRequest((p) => service.rename(p));
+connection.workspace.onWillRenameFiles((p) => service.willRenameFiles(p));
 connection.languages.inlayHint.on((p) => service.inlayHints(p));
 connection.languages.semanticTokens.on((p) => service.semanticTokens(p));
 connection.onDocumentLinks((p) => service.documentLinks(p));

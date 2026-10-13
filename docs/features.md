@@ -43,6 +43,9 @@ Rename edits every reference and the definition, but in notebooks only the open 
 The editor owns a notebook's cells and may hold its file open, so the server can't safely rewrite the notebook's JSON.
 Rename isn't offered for citations, external references, labels in closed notebooks, or headings without an explicit label.
 
+When you move or rename a file or folder in the editor, the `{doc}` roles, `[](path)` links, and directive file arguments that point to it are updated.
+Like rename, this edits the project's `.md` files and open notebook cells, but not closed notebooks.
+
 ## Diagnostics
 
 The server warns about references to unknown targets, and labels defined more than once in the project.

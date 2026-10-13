@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { normalizeLabel } from 'myst-common';
 import { CompletionItemKind, DiagnosticSeverity, ErrorCodes, InsertTextFormat, ResponseError, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position, type TextEdit } from 'vscode-languageserver';
@@ -373,6 +373,31 @@ export function createService(root: string | undefined, project: ReturnType<type
       if (!new RegExp(`^[${labelChars}]+$`).test(at.newName)) throw new ResponseError(ErrorCodes.InvalidParams, `\`${at.newName}\` isn't a valid label`);
       const changes: Record<string, TextEdit[]> = {};
       for (const { uri, range } of [def, ...labelRefs(hit.target.identifier)]) (changes[uri] ??= []).push({ range, newText: at.newName });
+      return { changes };
+    },
+
+    /** Before files or folders move, update the `{doc}` roles, Markdown links and directive file arguments that point to them, in the files rename edits. */
+    willRenameFiles({ files }: { files: { oldUri: string; newUri: string }[] }) {
+      // Where `path` will be after the move. A file in a moved folder moves too, and an extensionless `{doc}` target moves with its file.
+      const moved = (path: string) => {
+        for (const f of files) {
+          const [from, to] = [pathOf(f.oldUri), pathOf(f.newUri)];
+          if (path === from || path.startsWith(from + sep)) return to + path.slice(from.length);
+          if (path === from.replace(/\.\w+$/, '')) return to.replace(/\.\w+$/, '');
+        }
+        return path;
+      };
+      const changes: Record<string, TextEdit[]> = {};
+      for (const [uri, text] of projectDocs(false)) {
+        for (const ref of refsInText(text).filter((r) => r.kind === 'doc' || r.kind === 'path')) {
+          // A link's target leaves out its `#fragment`, so the edit keeps it.
+          const file = fileOf(uri, ref.target);
+          const to = moved(file);
+          // Relative to where the referencing file will be, so links between files in a moved folder stay as they are.
+          const newText = ref.target.startsWith('/') && root ? `/${relative(root, to)}` : relative(dirname(moved(pathOf(uri))), to);
+          if (to !== file && newText !== ref.target) (changes[uri] ??= []).push({ range: rangeOf(ref), newText });
+        }
+      }
       return { changes };
     },
 
