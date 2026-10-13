@@ -149,8 +149,11 @@ export function createService(root: string | undefined, project: ReturnType<type
 
   const refs = (uri: string) => refsInText(texts.get(uri) ?? '');
   const linesOf = (uri: string) => splitLines(texts.get(uri) ?? '');
-  /** Each reference in an open document, with what it points to. */
-  const resolvedRefs = (uri: string, targets = lookup()) => refs(uri).map((ref) => [ref, resolveRef(ref, uri, targets)] as const);
+  /** Each reference in a document, by default an open one, with what it points to. */
+  const resolvedRefs = (uri: string, text = texts.get(uri) ?? '') => {
+    const targets = lookup();
+    return refsInText(text).map((ref) => [ref, resolveRef(ref, uri, targets)] as const);
+  };
   const refAtCursor = ({ textDocument, position: { line, character } }: At) =>
     refs(textDocument.uri).find((r) => r.line === line && r.start <= character && character <= r.end);
 
@@ -187,13 +190,18 @@ export function createService(root: string | undefined, project: ReturnType<type
     return d && { uri, range: rangeOf(d) };
   }
 
-  /** Every reference to a label in the project's Markdown files and open documents, and with `notebooks`, in the Markdown cells of notebooks on disk. */
-  function labelRefs(identifier: string, notebooks = false) {
+  /** The URI and text of the project's Markdown files and open documents, and with `notebooks`, of the Markdown cells of notebooks on disk. */
+  function projectDocs(notebooks: boolean) {
     // Skip files that are open: the client's URI for them can be encoded differently from ours.
     const open = new Set([...texts.keys()].map(pathOf));
     const files = root && existsSync(root) ? workspaceFiles(root, notebooks ? /\.(md|ipynb)$/ : /\.md$/).filter((f) => !open.has(f)) : [];
     const uris = files.map((f) => pathToFileURL(f).href);
-    const docs = [...uris.flatMap((uri) => (uri.endsWith('.ipynb') ? markdownCells(uri, source(uri)) : [[uri, source(uri)] as const])), ...texts];
+    return [...uris.flatMap((uri) => (uri.endsWith('.ipynb') ? markdownCells(uri, source(uri)) : [[uri, source(uri)] as const])), ...texts];
+  }
+
+  /** Every reference to a label in `projectDocs`. */
+  function labelRefs(identifier: string, notebooks = false) {
+    const docs = projectDocs(notebooks);
     const targets = lookup();
     const isRef = (r: Resolved) => r.kind === 'label' && r.target.identifier === identifier;
     return docs.flatMap(([uri, text]) => refsInText(text).filter((r) => isRef(resolveRef(r, uri, targets))).map((r) => ({ uri, range: rangeOf(r) })));
@@ -227,7 +235,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       }));
   }
 
-  return {
+  const service = {
     reloadConfig,
 
     /** Set an open document's text; the project re-parses it shortly after typing stops, then calls its `onChange`. */
@@ -431,12 +439,14 @@ export function createService(root: string | undefined, project: ReturnType<type
       return top;
     },
 
-    diagnostics(uri: string): Diagnostic[] {
-      const problems = resolvedRefs(uri).flatMap(([ref, r]) => (r.kind === 'missing' && r.problem ? [{ severity: DiagnosticSeverity.Warning, range: rangeOf(ref), message: r.problem, source: 'myst' }] : []));
-      const lines = linesOf(uri);
+    /** A document's problems, by default an open one's. Files on disk only get mystmd's own warnings once they're open. */
+    diagnostics(uri: string, text = texts.get(uri) ?? ''): Diagnostic[] {
+      const problems = resolvedRefs(uri, text).flatMap(([ref, r]) => (r.kind === 'missing' && r.problem ? [{ severity: DiagnosticSeverity.Warning, range: rangeOf(ref), message: r.problem, source: 'myst' }] : []));
+      const lines = splitLines(text);
       // Labels in this file that are defined more than once in the project. Like mystmd, not implicit heading labels.
+      // Built targets don't say which notebook cell they're in, so a cell only gets its own live-parsed ones.
       const explicit = project.loaded ? project.targets().filter((t) => !t.implicit) : [];
-      const duplicates = explicit.filter((t) => inDocument(t, uri)).flatMap((t) => {
+      const duplicates = explicit.filter((t) => inDocument(t, uri) && (t.uri || !uri.includes('#'))).flatMap((t) => {
         const others = explicit.filter((o) => o !== t && o.identifier === t.identifier);
         if (!others.length) return [];
         const range = definitionOf(t, uri)?.range ?? rangeOf({ line: t.line - 1, start: 0, end: (lines[t.line - 1] ?? '').length });
@@ -453,5 +463,11 @@ export function createService(root: string | undefined, project: ReturnType<type
       });
       return [...problems, ...duplicates, ...mystmd];
     },
+
+    /** Every document in `projectDocs`, including notebook cells, with its problems. */
+    workspaceDiagnostics() {
+      return { items: projectDocs(true).map(([uri, text]) => ({ kind: 'full' as const, uri, version: null, items: service.diagnostics(uri, text) })) };
+    },
   };
+  return service;
 }

@@ -30,6 +30,8 @@ let loading = false;
 let progress: WorkDoneProgressServerReporter | undefined;
 let reloadConfig = () => {};
 let canWatchFiles = false;
+// Clients that pull diagnostics get them that way only, so they don't see each one twice.
+let push = true;
 let content: ReturnType<typeof contentServer> | undefined;
 
 // mystmd couldn't start or stopped: tell the user, and carry on with open documents only.
@@ -44,12 +46,14 @@ connection.onInitialize(async (params) => {
   const folder = params.workspaceFolders?.[0]?.uri ?? params.rootUri;
   const workspace = params.capabilities.workspace;
   canWatchFiles = !!workspace?.didChangeWatchedFiles?.dynamicRegistration;
+  push = !params.capabilities.textDocument?.diagnostic;
   const refresh = () => {
     if (loading && project.loaded) {
       loading = false;
       progress?.done();
     }
-    [...documents.all(), ...cells.all()].forEach(({ uri }) => connection.sendDiagnostics({ uri, diagnostics: service.diagnostics(uri) }));
+    if (push) [...documents.all(), ...cells.all()].forEach(({ uri }) => connection.sendDiagnostics({ uri, diagnostics: service.diagnostics(uri) }));
+    if (workspace?.diagnostics?.refreshSupport) connection.languages.diagnostics.refresh();
     if (workspace?.inlayHint?.refreshSupport) connection.languages.inlayHint.refresh();
     if (workspace?.semanticTokens?.refreshSupport) connection.languages.semanticTokens.refresh();
   };
@@ -86,6 +90,8 @@ connection.onInitialize(async (params) => {
       documentSymbolProvider: true,
       documentLinkProvider: {},
       semanticTokensProvider: { legend: semanticTokensLegend, full: true },
+      // A file's diagnostics depend on the labels in other files.
+      diagnosticProvider: { interFileDependencies: true, workspaceDiagnostics: true },
     },
   };
 });
@@ -114,13 +120,15 @@ connection.languages.semanticTokens.on((p) => service.semanticTokens(p));
 connection.onDocumentLinks((p) => service.documentLinks(p));
 connection.onWorkspaceSymbol((p) => service.workspaceSymbols(p));
 connection.onDocumentSymbol((p) => service.documentSymbols(p));
+connection.languages.diagnostics.on((p) => ({ kind: 'full', items: service.diagnostics(p.textDocument.uri) }));
+connection.languages.diagnostics.onWorkspace(() => service.workspaceDiagnostics());
 
 // Diagnostics are sent when the project changes (after the service re-parses an edited document), not on every keystroke.
 for (const docs of [documents, cells]) {
   docs.onDidChangeContent(({ document }) => service.update(document.uri, document.getText()));
   docs.onDidClose(({ document }) => {
     service.close(document.uri);
-    connection.sendDiagnostics({ uri: document.uri, diagnostics: [] });
+    if (push) connection.sendDiagnostics({ uri: document.uri, diagnostics: [] });
   });
 }
 

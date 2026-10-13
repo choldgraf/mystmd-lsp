@@ -54,6 +54,9 @@ Like mystmd, headings without an explicit label can share a name.
 Open pages also get mystmd's own warnings from parsing them, such as unknown directives, roles and directive options.
 If `myst.yml` lists plugins, unknown directives and roles aren't reported, since the server's parser doesn't load plugins.
 
+Editors that support pull diagnostics ask the server for them; other editors get them pushed as each page changes.
+Editors that pull workspace diagnostics also get them for the project's `.md` files and notebook Markdown cells on disk, not just open ones.
+
 ## Inlay hints and semantic tokens
 
 - **Inlay hints** show the resolved text after each reference, e.g. `Figure 1` or `(1)`.

@@ -50,9 +50,12 @@ test('server completes, hints and diagnoses over stdio', async (t) => {
   conn.sendNotification('textDocument/didOpen', { textDocument: { uri, languageId: 'markdown', version: 1, text } });
 
   // Without a content server, unknown targets aren't flagged (they may live in files that aren't open).
-  const { diagnostics: [xref, ...rest] } = await diagnostics;
+  const pushed = await diagnostics;
+  const [xref, ...rest] = pushed.diagnostics;
   assert.match(xref.message, /Unknown external project `nope`/);
   assert.deepEqual(rest, []);
+  // Clients that pull diagnostics get the same ones.
+  assert.deepEqual(await conn.sendRequest('textDocument/diagnostic', { textDocument: { uri } }), { kind: 'full', items: pushed.diagnostics });
 
   const items: any[] = await conn.sendRequest('textDocument/completion', { textDocument: { uri }, position: { line: 10, character: 9 } });
   assert.deepEqual(items.map((i) => [i.label, i.detail, i.labelDetails.description, i.kind]), [['fig-logo', 'Figure 1 · index.md', 'Figure 1', CompletionItemKind.Color]]);

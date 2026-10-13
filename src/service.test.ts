@@ -170,6 +170,20 @@ test('find references from a reference, across files and notebook cells, preferr
   assert.deepEqual(spans(service.references(at)!), ['a.md:4:8', 'b.md:0:26', 'b.md:0:5', 'c.md:0:6', 'nb.ipynb#md:0:9']);
 });
 
+test('workspace diagnostics cover files and notebook cells on disk, and open documents\' unsaved text', (t) => {
+  const nb = { cells: [{ cell_type: 'markdown', id: 'md', source: '{ref}`in-cell`' }] };
+  const dir = tmpWorkspace(t, { 'a.md': '{ref}`on-disk`\n', 'b.md': '{ref}`saved`\n', 'nb.ipynb': JSON.stringify(nb) });
+  // A label built from the notebook isn't flagged as a duplicate in each of its cells.
+  const service = createService(dir, stubProject([built, { ...built, file: 'nb.ipynb' }]));
+  service.update(pathToFileURL(join(dir, 'b.md')).href, '{ref}`unsaved`\n');
+  const { items } = service.workspaceDiagnostics();
+  assert.deepEqual(items.map((r) => [r.uri.split('/').at(-1), r.items.map((d) => d.message)]), [
+    ['a.md', ['Unknown reference target `on-disk`']],
+    ['nb.ipynb#md', ['Unknown reference target `in-cell`']],
+    ['b.md', ['Unknown reference target `unsaved`']],
+  ]);
+});
+
 test('rename a label from its definition, and not citations or unknown labels', (t) => {
   const { service, uri, spans } = labelWorkspace(t);
   const at = { textDocument: { uri: uri('a.md') }, position: { line: 4, character: 10 } };
