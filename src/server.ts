@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createConnection, DidChangeWatchedFilesNotification, NotebookDocuments, ProposedFeatures, TextDocuments, TextDocumentSyncKind, type WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { contentServer } from './mystmd/content-server.ts';
-import { startMyst } from './mystmd/start.ts';
+import { contentServer } from 'mystmd-client/content-server';
+import { startMyst } from 'mystmd-client/start';
 import { createProject } from './project.ts';
 import { findProjectRoot } from './root.ts';
 import { createService, semanticTokensLegend } from './service.ts';
@@ -32,12 +32,12 @@ let reloadConfig = () => {};
 let canWatchFiles = false;
 // Clients that pull diagnostics get them that way only, so they don't see each one twice.
 let push = true;
-let content: ReturnType<typeof contentServer> | undefined;
+let project: ReturnType<typeof createProject> | undefined;
 
 // mystmd couldn't start or stopped: tell the user, and carry on with open documents only.
 const fail = (message: string) => {
   loading = false;
-  content?.stop();
+  project?.unwatch();
   progress?.done();
   connection.window.showWarningMessage(`MyST: ${message}. Project-wide features are off; see the server log.`);
 };
@@ -48,7 +48,7 @@ connection.onInitialize(async (params) => {
   canWatchFiles = !!workspace?.didChangeWatchedFiles?.dynamicRegistration;
   push = !params.capabilities.textDocument?.diagnostic;
   const refresh = () => {
-    if (loading && project.loaded) {
+    if (loading && project?.loaded) {
       loading = false;
       progress?.done();
     }
@@ -68,8 +68,7 @@ connection.onInitialize(async (params) => {
     url = myst.url;
   }
   loading = !!url;
-  content = url ? contentServer(url) : undefined;
-  const project = createProject(content, refresh);
+  project = createProject(url ? contentServer(url) : undefined, refresh);
   // External projects from myst.yml `project.references`, refreshed as their inventories load.
   const xrefs: Record<string, XrefProject> = {};
   const readXrefs = () => syncXrefs(xrefs, root ? readReferences(root) : {}, refresh);

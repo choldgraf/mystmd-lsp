@@ -2,7 +2,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import { load } from 'js-yaml';
-import { parse } from '../src/mystmd/parse.ts';
+import { parse } from 'mystmd-client/parse';
 import { markdownCells, workspaceFiles } from '../src/service.ts';
 import { labelDefinition, refsInText, splitLines } from '../src/syntax.ts';
 

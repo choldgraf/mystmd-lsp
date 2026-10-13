@@ -9,15 +9,15 @@ See [](how-it-works.md) for the short version.
 
 The server reads a project two ways, because neither covers everything.
 
-- **The build.** Closed files' targets, titles and enumerators come from `myst start`, read page by page from the content server (`src/mystmd/content-server.ts`).
+- **The build.** Closed files' targets, titles and enumerators come from `myst start`, read page by page from the content server (`content-server` in [mystmd-client](https://github.com/choldgraf/mystmd-client)).
   We can't use `myst.xref.json` instead, because it isn't rewritten on edits and has no `title` or `enumerator`.
-- **The live parse.** Open documents get `mystParse` plus mystmd's per-page transforms, including `basicTransformationsPlugin` and `enumerateTargetsPlugin`, on that page alone (`src/mystmd/parse.ts`).
+- **The live parse.** Open documents get `mystParse` plus mystmd's per-page transforms, including `basicTransformationsPlugin` and `enumerateTargetsPlugin`, on that page alone (`parse` in mystmd-client).
   So an open page's enumerators can differ from the build's when frontmatter sets `numbering`.
 
 `src/project.ts` merges the two: an open document's targets replace its file's built ones.
 
 Directive transforms drop `position` on the nodes they make.
-`parse.ts` copies the directive's position onto its children, and `src/index-targets.ts` falls back to the first positioned descendant in built page JSON.
+mystmd-client's `parse` copies the directive's position onto its children, and `src/index-targets.ts` falls back to the first positioned descendant in built page JSON.
 
 ## References come from regexes
 
@@ -101,6 +101,6 @@ We keep the build because it's the source of truth for what mystmd renders, incl
 ## What would let us delete code
 
 - **Column positions in mystmd's parser** ([mystmd#2864](https://github.com/jupyter-book/mystmd/issues/2864)) would let references come from the tree instead of regexes.
-- **A client exported by mystmd** (U8 in MyST Author's [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)) would delete `parse.ts`, `start.ts` and `content-server.ts`, which are copies of MyST Author's.
+- **A client exported by mystmd** (U8 in MyST Author's [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)) would replace mystmd-client.
 - **A parser switch in mystmd** ([mystmd#1705](https://github.com/jupyter-book/mystmd/issues/1705)), or a parse-first index, would delete the build path; see the parse-first numbers above.
 - **`enumerator` and `title` in `myst.xref.json`** (U1 in the same proposals) would remove the content server page reads.

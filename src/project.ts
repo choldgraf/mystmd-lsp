@@ -1,5 +1,5 @@
-import type { BuiltPage } from './mystmd/content-server.ts';
-import { parseMyst } from './mystmd/parse.ts';
+import type { BuiltPage } from 'mystmd-client/content-server';
+import { parseMyst } from 'mystmd-client/parse';
 import { targetsFromTree, type Target } from './index-targets.ts';
 
 /**
@@ -7,7 +7,7 @@ import { targetsFromTree, type Target } from './index-targets.ts';
  * Built pages come from `server` (the `myst start` content server); open documents replace their file's targets with a live parse.
  * Open documents are keyed by URI, since a notebook's Markdown cells are separate documents in one file.
  */
-export function createProject(server: { pages(): Promise<BuiltPage[]>; watch(onReload: () => void): void } | undefined, onChange: () => void) {
+export function createProject(server: { pages(): Promise<Pick<BuiltPage, 'location' | 'mdast'>[]>; watch(onReload: () => void): () => void } | undefined, onChange: () => void) {
   let built: Target[] = [];
   const open = new Map<string, { file: string; targets: Target[]; messages: ReturnType<typeof parseMyst>['messages'] }>();
   // Without a content server we only know the open documents, so we never claim a target is missing.
@@ -19,9 +19,11 @@ export function createProject(server: { pages(): Promise<BuiltPage[]>; watch(onR
     loaded = true;
     onChange();
   }
-  server?.watch(() => load().catch((e) => console.error(`[lsp] failed to load project: ${e}`)));
+  const stop = server?.watch(() => load().catch((e) => console.error(`[lsp] failed to load project: ${e}`)));
 
   return {
+    /** Stop watching for rebuilds, e.g. once mystmd has exited. */
+    unwatch: () => stop?.(),
     get loaded() {
       return loaded;
     },
@@ -31,7 +33,8 @@ export function createProject(server: { pages(): Promise<BuiltPage[]>; watch(onR
       return [...built.filter((t) => !openFiles.has(t.file)), ...docs.flatMap((d) => d.targets)];
     },
     setOpen(file: string, text: string, uri: string) {
-      const { tree, messages } = parseMyst(text);
+      // Keep a leading `# Title`, which mystmd removes, for the outline and labels.
+      const { tree, messages } = parseMyst(text, { keepTitle: true });
       open.set(uri, { file, targets: targetsFromTree(tree, file).map((t) => ({ ...t, uri })), messages });
       onChange();
     },

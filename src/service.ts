@@ -3,7 +3,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { normalizeLabel } from 'myst-common';
 import { CompletionItemKind, DiagnosticSeverity, ErrorCodes, InsertTextFormat, ResponseError, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position, type TextEdit } from 'vscode-languageserver';
-import { directives, roles } from './mystmd/parse.ts';
+import { directives, roles } from 'mystmd-client/parse';
 import { authorYear, readBibliography, type BibEntry } from './cite.ts';
 import { kindIcon } from './kinds.ts';
 import type { createProject } from './project.ts';
@@ -12,7 +12,7 @@ import { labelChars, labelDefinition, nameAt, optionAt, refAt, refsInText, split
 import type { Target } from './index-targets.ts';
 import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
 
-// The same directives and roles as mystmd's parser (`./mystmd/parse.ts`), by name and alias.
+// The same directives and roles as mystmd's parser (`mystmd-client/parse`), by name and alias.
 const byName = <T extends { name: string; alias?: string[] }>(specs: T[]) => new Map(specs.flatMap((s) => [s.name, ...(s.alias ?? [])].map((n) => [n, s] as const)));
 const directiveSpecs = byName(directives);
 const roleSpecs = byName(roles);

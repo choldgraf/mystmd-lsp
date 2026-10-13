@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseMyst } from './mystmd/parse.ts';
+import { parseMyst } from 'mystmd-client/parse';
 import { targetsFromTree } from './index-targets.ts';
 
 const doc = `(intro)=
@@ -18,7 +18,7 @@ See {ref}\`intro\`.
 `;
 
 test('targetsFromTree finds headings, figures and equations', () => {
-  const targets = targetsFromTree(parseMyst(doc).tree, 'index.md');
+  const targets = targetsFromTree(parseMyst(doc, { keepTitle: true }).tree, 'index.md');
   assert.deepEqual(
     targets.map((t) => [t.identifier, t.kind, t.text, t.enumerator, t.line]),
     [
@@ -30,7 +30,7 @@ test('targetsFromTree finds headings, figures and equations', () => {
 });
 
 test('page frontmatter numbers targets, and a leading heading stays a target', () => {
-  const targets = targetsFromTree(parseMyst('---\nnumbering:\n  figure:\n    start: 5\n---\n' + doc).tree, 'index.md');
+  const targets = targetsFromTree(parseMyst('---\nnumbering:\n  figure:\n    start: 5\n---\n' + doc, { keepTitle: true }).tree, 'index.md');
   assert.deepEqual(targets.map((t) => [t.identifier, t.enumerator]), [['intro', undefined], ['fig-logo', '5'], ['euler', '1']]);
 });
 

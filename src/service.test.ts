@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { CompletionItemKind, DiagnosticSeverity } from 'vscode-languageserver';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { parseMyst } from './mystmd/parse.ts';
+import { parseMyst } from 'mystmd-client/parse';
 import { createProject } from './project.ts';
 import { createService, semanticTokensLegend } from './service.ts';
 import { marks, stubProject, tmpWorkspace } from './test-helpers.ts';
@@ -281,9 +281,9 @@ test('duplicate labels are flagged, but not implicit heading labels', () => {
 
 test('an open document replaces its built page once mystmd has built the project', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
-  const page = (location: string, md: string) => ({ location, mdast: parseMyst(md).tree });
+  const page = (location: string, md: string) => ({ location, mdast: parseMyst(md, { keepTitle: true }).tree });
   let reload = () => {};
-  const project = createProject({ pages: async () => [page('/index.md', '(dup)=\n# A\n'), page('/chapter.md', '(dup)=\n# B\n')], watch: (cb) => void (reload = cb) }, () => {});
+  const project = createProject({ pages: async () => [page('/index.md', '(dup)=\n# A\n'), page('/chapter.md', '(dup)=\n# B\n')], watch: (cb) => ((reload = cb), () => {}) }, () => {});
   const service = createService(root, project);
   const duplicates = () => service.diagnostics(uri).map((d) => d.message);
   service.update(uri, '(dup)=\n# A\n');
@@ -303,9 +303,9 @@ test('an open document replaces its built page once mystmd has built the project
 });
 
 test('an open page keeps the built labels of the files it includes', async () => {
-  const include = { type: 'include', file: 'part.md', children: parseMyst('(sec-inc)=\n# Inc\n').tree.children };
+  const include = { type: 'include', file: 'part.md', children: parseMyst('(sec-inc)=\n# Inc\n', { keepTitle: true }).tree.children };
   let reload = () => {};
-  const project = createProject({ pages: async () => [{ location: '/index.md', mdast: { type: 'root', children: [include] } }], watch: (cb) => void (reload = cb) }, () => {});
+  const project = createProject({ pages: async () => [{ location: '/index.md', mdast: { type: 'root', children: [include] } }], watch: (cb) => ((reload = cb), () => {}) }, () => {});
   reload();
   await new Promise(setImmediate);
   project.setOpen('index.md', '```{include} part.md\n```\n', uri);

@@ -46,7 +46,7 @@ In VS Code, MyST Author's extension can run your build; see its [VS Code page](h
 - `src/kinds.ts`: the completion icon for each kind of target.
 - `src/service.ts`: the features (completion, hover, diagnostics, ...) without an LSP connection, so tests can call them directly.
 - `src/server.ts`: the LSP wiring.
-- `src/mystmd/`: the mystmd parser with its default extensions (`parse.ts`), a client for the content server (`content-server.ts`), and a launcher for `myst start` (`start.ts`).
+- [mystmd-client](https://github.com/choldgraf/mystmd-client), a separate package: the mystmd parser with its default extensions (`parse`), a client for the content server (`content-server`), and a launcher for `myst start` (`start`).
 
 Tests sit next to the code they cover, as `*.test.ts`.
 To add a feature, such as a new diagnostic:
