@@ -10,11 +10,7 @@ type Case = { id: string; src: string };
 const kinds = ['label role', 'doc role', 'path link', 'label link', 'label definition'];
 
 // Spec examples where the regexes are known to differ from mystmd, and why.
-const known = new Set([
-  // The regexes miss a label with a space, like `:name: My code`.
-  'directives.code.yml: Code directive, starting line',
-  'directives.code.yml: Code-block starting line',
-]);
+const known = new Set<string>([]);
 
 /** Each myst-spec example of MyST syntax with its source; the CommonMark examples are left out. */
 function specCases(): Case[] {
