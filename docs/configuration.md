@@ -16,6 +16,7 @@ mystmd-lsp --stdio [--root=path/to/project] [--content-server=URL] [--no-myst]
 
 See [](how-it-works.md) for when the server starts mystmd.
 Like any `myst start`, that runs the project's plugins, which can run any code, and writes `_build/`.
+If your editor has no workspace trust, start the server with `--no-myst` for folders you do not trust.
 `myst start` listens on `localhost`, which can resolve to IPv6 only.
 To pass an `http://127.0.0.1:<port>` address, start it with `HOST=127.0.0.1 myst start --headless`.
 To run a `myst` that isn't on your `PATH`, set the `MYST_BIN` environment variable to its path.
