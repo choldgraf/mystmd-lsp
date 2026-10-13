@@ -22,6 +22,7 @@ npm ci
 npm test # builds first
 npm run test:mystmd # also runs the tests that start mystmd
 npm run typecheck
+npm run conformance # compares the reference regexes with mystmd; see Conformance below
 ```
 
 CI runs the same commands.
@@ -70,6 +71,27 @@ A parser such as [myst-parser-unified](https://chrisholdgraf.com/myst-parser-uni
 
 The swap point is `refsInText` and `labelDefinition` in `src/syntax.ts`, not `parse.ts`.
 `refAt` and `optionAt` read the cursor's context in half-typed text, so they stay regex-based.
+
+### Conformance
+
+`npm run conformance` checks that the regexes find the same references and label definitions as mystmd's parser.
+It compares the targets of label roles (`{ref}`, `{eq}`, `{numref}`), `{doc}` roles, `[](path)` links, `[](#label)` links, and label definitions (`(x)=`, `:label:` and `:name:` options, and `$$ (id)`).
+It runs on the [myst-spec](https://github.com/jupyter-book/myst-spec) examples of roles, directives and references, prints each difference, and prints a table of matched, missed and false positive targets for each kind.
+It fails if an example differs that isn't in the list of known differences at the top of `scripts/conformance.ts`.
+
+The check reads mystmd's targets the way they're used:
+mystmd keeps the spaces around a role's target but drops them when it resolves the reference, so the check trims them.
+Like `refsInText`, it leaves out links to URLs and a link's `#fragment`.
+
+To also run it on your own projects, point `MYST_CORPUS` at a folder:
+
+```sh
+MYST_CORPUS=path/to/projects npm run conformance
+```
+
+This reads every `.md` file and the Markdown cells of every `.ipynb` file, skipping `node_modules` and `_build`.
+It only reports; differences in the corpus don't fail the run.
+mystmd leaves the body of a directive it doesn't know, like `{myst}` in mystmd's docs, as text, so the regexes find references there that mystmd doesn't.
 
 ## Docs
 

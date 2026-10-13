@@ -15,3 +15,4 @@ jobs:
       - run: npm run typecheck
       - run: npm test # builds first
       - run: npm run test:mystmd
+      - run: npm run conformance

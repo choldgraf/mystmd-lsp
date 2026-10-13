@@ -1,0 +1,120 @@
+// Compares the references and label definitions the regexes in src/syntax.ts find with mystmd's parse. See "Conformance" in docs/contributing.md.
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { load } from 'js-yaml';
+import { mystParse } from 'myst-parser';
+import { directives, roles } from '../src/mystmd/parse.ts';
+import { labelDefinition, refsInText, splitLines } from '../src/syntax.ts';
+
+type Case = { id: string; src: string };
+const kinds = ['label role', 'doc role', 'path link', 'label link', 'label definition'];
+
+// Spec examples where the regexes are known to differ from mystmd, and why.
+const known = new Set([
+  // The regexes keep the spaces around a role's target, which mystmd drops when it resolves the reference.
+  'references.equations.yml: Invalid equation reference',
+  'references.figures.yml: Invalid figure reference with messy label',
+  // The regexes miss a link with a title, like `[](target "title")`.
+  'references.figures.yml: Link-style figure reference with default ref',
+  'references.headings.yml: Link-style custom header reference',
+  'references.tables.yml: Link-style table figure reference with custom ref',
+  // The regexes miss a label with a space, like `:name: My code`.
+  'directives.code.yml: Code directive, starting line',
+  'directives.code.yml: Code-block starting line',
+  // The regexes count an image, `![](fun-fish.png)`, as a link to a file.
+  'directives.image.yml: Standard markdown image',
+]);
+
+/** Each myst-spec example of MyST syntax with its source; the CommonMark examples are left out. */
+function specCases(): Case[] {
+  const dir = new URL('../node_modules/myst-spec/dist/examples/', import.meta.url);
+  return readdirSync(dir).filter((file) => /^(?:roles|directives|references)\./.test(file)).flatMap((file) =>
+    (load(readFileSync(new URL(file, dir), 'utf8')) as { cases: { title: string; myst?: string }[] }).cases.filter((c) => c.myst).map((c) => ({ id: `${file}: ${c.title}`, src: c.myst! })),
+  );
+}
+
+/** Each Markdown file, and each Markdown cell of a notebook, under `root`. */
+function corpusCases(root: string): Case[] {
+  return readdirSync(root, { recursive: true, encoding: 'utf8' })
+    .filter((file) => /\.(?:md|ipynb)$/.test(file) && !/(?:^|\/)(?:node_modules|_build)\//.test(file))
+    .flatMap((file) => {
+      const text = readFileSync(join(root, file), 'utf8');
+      if (file.endsWith('.md')) return [{ id: file, src: text }];
+      const cells: { cell_type: string; source: string | string[] }[] = JSON.parse(text).cells;
+      return cells.flatMap((c, i) => (c.cell_type === 'markdown' ? [{ id: `${file}: cell ${i}`, src: [c.source].flat().join('') }] : []));
+    });
+}
+
+/** What mystmd's parse finds, like `label role fig1`. */
+function mystmd(src: string) {
+  const found: string[] = [];
+  const walk = (node: any, parent?: any) => {
+    const role = parent?.type === 'mystRole' ? parent.name : undefined;
+    // mystmd keeps the spaces around a role's target in `label`, but drops them when it resolves the reference.
+    if (node.type === 'crossReference' && ['ref', 'eq', 'numref'].includes(role)) found.push(`label role ${node.label.trim()}`);
+    if (node.type === 'link' && role === 'doc') found.push(`doc role ${node.url}`);
+    // The regexes take a local link's path without its `#fragment`, and leave out URLs.
+    if (node.type === 'link' && !role && node.url) {
+      if (node.url.startsWith('#')) found.push(`label link ${node.url.slice(1)}`);
+      else if (!/^\w+:/.test(node.url)) found.push(`path link ${node.url.split('#')[0]}`);
+    }
+    // An `{index}` directive makes a `mystTarget` without a label.
+    if (node.type === 'mystTarget' && node.label) found.push(`label definition ${node.label}`);
+    if (node.type === 'mystDirective') for (const o of ['label', 'name']) if (node.options?.[o]) found.push(`label definition ${node.options[o]}`);
+    // A `math` directive's label is counted on the directive.
+    if (node.type === 'math' && node.label && parent?.type !== 'mystDirective') found.push(`label definition ${node.label}`);
+    node.children?.forEach((c: any) => walk(c, node));
+  };
+  walk(mystParse(src, { markdownit: { linkify: true }, directives, roles }));
+  return found;
+}
+
+/** What the regexes find. */
+function regexes(src: string) {
+  const lines = splitLines(src);
+  const refs = refsInText(src).flatMap((r) => {
+    if (['ref', 'eq', 'numref'].includes(r.kind)) return [`label role ${r.target}`];
+    if (r.kind === 'link') return [`label link ${r.target}`];
+    // `doc` is both a {doc} role and a Markdown link to a file; a link's target follows `(`.
+    if (r.kind === 'doc') return [`${lines[r.line][r.start - 1] === '(' ? 'path link' : 'doc role'} ${r.target}`];
+    return [];
+  });
+  const defs = lines.flatMap((line) => labelDefinition(line)?.target ?? []).map((t) => `label definition ${t}`);
+  return [...refs, ...defs];
+}
+
+/** Names in `a` but not in `b`, counting repeats. */
+function minus(a: string[], b: string[]) {
+  const rest = [...b];
+  return a.filter((name) => {
+    const i = rest.indexOf(name);
+    if (i >= 0) rest.splice(i, 1);
+    return i < 0;
+  });
+}
+
+/** Prints each difference and a table per kind, and returns the number of cases that differ but aren't `known`. */
+function report(title: string, cases: Case[]) {
+  console.log(`${title}: - is something mystmd found and the regexes didn't, + the other way round`);
+  const counts = Object.fromEntries(kinds.map((k) => [k, { matched: 0, missed: 0, 'false positive': 0 }]));
+  const count = (names: string[], status: 'matched' | 'missed' | 'false positive') => names.forEach((n) => counts[kinds.find((k) => n.startsWith(k))!][status]++);
+  let unexpected = 0;
+  for (const { id, src } of cases) {
+    const expected = mystmd(src);
+    const found = regexes(src);
+    const missed = minus(expected, found);
+    const extra = minus(found, expected);
+    count(minus(expected, missed), 'matched');
+    count(missed, 'missed');
+    count(extra, 'false positive');
+    if (!missed.length && !extra.length) continue;
+    if (!known.has(id)) unexpected++;
+    console.log(`  ${known.has(id) ? 'known ' : ''}${id}: ${[...missed.map((n) => `-${n}`), ...extra.map((n) => `+${n}`)].join(', ')}`);
+  }
+  console.table(counts);
+  return unexpected;
+}
+
+const unexpected = report('myst-spec', specCases());
+if (process.env.MYST_CORPUS) report(process.env.MYST_CORPUS, corpusCases(process.env.MYST_CORPUS));
+if (unexpected) process.exitCode = 1;
