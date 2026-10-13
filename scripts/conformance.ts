@@ -89,12 +89,12 @@ function minus(a: string[], b: string[]) {
   });
 }
 
-/** Prints each difference and a table per kind, and returns the number of cases that differ but aren't `known`. */
+/** Prints each difference and a table per kind, and returns the ids of the cases that differ. */
 function report(title: string, cases: Case[]) {
   console.log(`${title}: - is something mystmd found and the regexes didn't, + the other way round`);
   const counts = Object.fromEntries(kinds.map((k) => [k, { matched: 0, missed: 0, 'false positive': 0 }]));
   const count = (names: string[], status: 'matched' | 'missed' | 'false positive') => names.forEach((n) => counts[kinds.find((k) => n.startsWith(k))!][status]++);
-  let unexpected = 0;
+  const differ: string[] = [];
   for (const { id, src } of cases) {
     const expected = mystmd(src);
     const found = regexes(src);
@@ -104,13 +104,15 @@ function report(title: string, cases: Case[]) {
     count(missed, 'missed');
     count(extra, 'false positive');
     if (!missed.length && !extra.length) continue;
-    if (!known.has(id)) unexpected++;
+    differ.push(id);
     console.log(`  ${known.has(id) ? 'known ' : ''}${id}: ${[...missed.map((n) => `-${n}`), ...extra.map((n) => `+${n}`)].join(', ')}`);
   }
   console.table(counts);
-  return unexpected;
+  return differ;
 }
 
-const unexpected = report('myst-spec', specCases());
+const differ = report('myst-spec', specCases());
+const fixed = [...known].filter((id) => !differ.includes(id));
+fixed.forEach((id) => console.log(`Known difference no longer differs, remove it from \`known\`: ${id}`));
 if (process.env.MYST_CORPUS) report(process.env.MYST_CORPUS, corpusCases(process.env.MYST_CORPUS));
-if (unexpected) process.exitCode = 1;
+if (fixed.length || differ.some((id) => !known.has(id))) process.exitCode = 1;
