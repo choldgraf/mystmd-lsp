@@ -111,7 +111,8 @@ export function createService(root: string | undefined, project: ReturnType<type
   const point = (uri: string, line: number) => ({ uri, range: { start: { line, character: 0 }, end: { line, character: 0 } } });
   const locationOf = (t: Target) => point(t.uri ?? toUri(t.file), t.line - 1);
   // Targets in an open document: its own live parse, or its file's built targets until that's ready.
-  const inDocument = (t: Target, uri: string) => (t.uri ? t.uri === uri : t.file === toFile(uri));
+  // Built targets don't say which notebook cell they're in, so a cell only gets its own live-parsed ones.
+  const inDocument = (t: Target, uri: string) => (t.uri ? t.uri === uri : !uri.includes('#') && t.file === toFile(uri));
 
   const lookup = () => new Map(project.targets().map((t) => [t.identifier, t]));
   // How mystmd turns the text of a label into the identifier that targets have.
@@ -470,9 +471,8 @@ export function createService(root: string | undefined, project: ReturnType<type
       const problems = resolvedRefs(uri, text).flatMap(([ref, r]) => (r.kind === 'missing' && r.problem ? [{ severity: DiagnosticSeverity.Warning, range: rangeOf(ref), message: r.problem, source: 'myst' }] : []));
       const lines = splitLines(text);
       // Labels in this file that are defined more than once in the project. Like mystmd, not implicit heading labels.
-      // Built targets don't say which notebook cell they're in, so a cell only gets its own live-parsed ones.
       const explicit = project.loaded ? project.targets().filter((t) => !t.implicit) : [];
-      const duplicates = explicit.filter((t) => inDocument(t, uri) && (t.uri || !uri.includes('#'))).flatMap((t) => {
+      const duplicates = explicit.filter((t) => inDocument(t, uri)).flatMap((t) => {
         const others = explicit.filter((o) => o !== t && o.identifier === t.identifier);
         if (!others.length) return [];
         const range = definitionOf(t, uri)?.range ?? rangeOf({ line: t.line - 1, start: 0, end: (lines[t.line - 1] ?? '').length });
