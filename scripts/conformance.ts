@@ -11,10 +11,6 @@ const kinds = ['label role', 'doc role', 'path link', 'label link', 'label defin
 
 // Spec examples where the regexes are known to differ from mystmd, and why.
 const known = new Set([
-  // The regexes miss a link with a title, like `[](target "title")`.
-  'references.figures.yml: Link-style figure reference with default ref',
-  'references.headings.yml: Link-style custom header reference',
-  'references.tables.yml: Link-style table figure reference with custom ref',
   // The regexes miss a label with a space, like `:name: My code`.
   'directives.code.yml: Code directive, starting line',
   'directives.code.yml: Code-block starting line',

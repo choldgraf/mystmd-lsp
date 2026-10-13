@@ -92,8 +92,8 @@ const refPatterns: [RegExp, (m: RegExpExecArray) => Ref['kind']][] = [
   [/\{(ref|numref|eq|doc|term)\}`(?:[^`<]*<)?([^`<>]+)>?`/g, (m) => m[1] as Ref['kind']],
   [/\]\(#([^)\s]+)\)/g, () => 'link'],
   [/<#([^>\s]+)>/g, () => 'link'],
-  // A link to a local file, like `[](chapter.md#intro)`; not URLs or `#label`. The lookahead keeps `#intro` out of the match, so a fragment that repeats the path can't move `start`.
-  [/\]\((?!\w+:|#)([^)\s#]+)(?=[#)])/g, () => 'doc'],
+  // A link to a local file, like `[](chapter.md#intro "title")`; not URLs or `#label`. The lookahead keeps `#intro` out of the match, so a fragment that repeats the path can't move `start`.
+  [/\]\((?!\w+:|#)([^)\s#]+)(?=[#)]|\s+"[^"]*"\))/g, () => 'doc'],
   [/\[(?<text>[^\]]*)\]\(xref:([^)\s]+)\)/g, () => 'xref'],
   [/<xref:([^>\s]+)>/g, () => 'xref'],
   [/(?<=\{cite(?::\w+)?\}`(?:[^`]*[,;])?\s*)[^`,;\s]+(?=[^`]*`)/g, () => 'cite'], // each key of a `{cite}` role
