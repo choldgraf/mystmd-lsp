@@ -35,7 +35,7 @@ See [features](docs/features.md) for the full list.
 
 ## Inspiration
 
-This takes inspiration from the [myst-lsp project](https://marketplace.visualstudio.com/items?itemName=chrisjsewell.myst-lsp), adapting that approach for the current MyST engine.
+This takes inspiration from chrisjsewell's [myst-lsp](https://marketplace.visualstudio.com/items?itemName=chrisjsewell.myst-lsp).
 
 ## Project status
 
