@@ -2,16 +2,16 @@
 title: What we learned
 ---
 
-Why the server is built the way it is, what we measured, and what upstream changes would let us delete code.
+Why the server is built the way it is, what we measured, and what we need upstream.
 See [](how-it-works.md) for the short version.
 
 ## A build and a live parse
 
 The server reads a project two ways, because neither covers everything.
 
-- **The build.** Closed files' targets, titles and enumerators come from `myst start`, read page by page from the content server (`content-server` in [mystmd-client](https://github.com/choldgraf/mystmd-client)).
+- **The build.** Closed files' targets, titles and enumerators come from `myst start`, read page by page from the content server (`mystmd-client/content-server`).
   We can't use `myst.xref.json` instead, because it isn't rewritten on edits and has no `title` or `enumerator`.
-- **The live parse.** Open documents get `mystParse` plus mystmd's per-page transforms, including `basicTransformationsPlugin` and `enumerateTargetsPlugin`, on that page alone (`parse` in mystmd-client).
+- **The live parse.** Open documents get `mystParse` plus mystmd's per-page transforms, including `basicTransformationsPlugin` and `enumerateTargetsPlugin`, on that page alone (`mystmd-client/parse`).
   So an open page's enumerators can differ from the build's when frontmatter sets `numbering`.
 
 `src/project.ts` merges the two: an open document's targets replace its file's built ones.
@@ -40,7 +40,7 @@ A parser such as [myst-parser-unified](https://chrisholdgraf.com/myst-parser-uni
 - Tolerance of half-typed input, since most documents are mid-edit.
 - Speed enough to parse every page in the project for find references.
 
-The swap point is `refsInText` and `labelDefinition` in `src/syntax.ts`, not `parse.ts`.
+The swap point is `refsInText` and `labelDefinition` in `src/syntax.ts`, not `mystmd-client/parse`.
 `refAt` and `optionAt` read the cursor's context in half-typed text, so they stay regex-based.
 
 `labelChars` leaves out `<>` on purpose, so a rename doesn't end `` {ref}`text <label>` `` early.
@@ -48,7 +48,7 @@ The swap point is `refsInText` and `labelDefinition` in `src/syntax.ts`, not `pa
 
 ## Conformance
 
-`npm run conformance` compares the regexes with mystmd's parse; see [](contributing.md#conformance) for what it checks.
+`npm run conformance` compares the regexes with mystmd's parse; see [](contributing.md#conformance) for what it checks, and [](contributing.md#kept-in-sync-by-hand) for the lists it shares with the source.
 
 On myst-spec, in CI:
 
@@ -58,15 +58,13 @@ On myst-spec, in CI:
 | `{doc}` roles | 0 | 0 | 0 |
 | Path links | 8 | 0 | 0 |
 | `[](#label)` links | 0 | 0 | 0 |
-| Label definitions | 29 | 0 | 0 |
+| Label definitions | 27 | 2 | 0 |
 
-The CI check started with 8 known differences: kept spaces, link titles, labels with spaces, and images.
-We fixed general rules rather than single cases: trimming padded role targets, accepting link titles, and counting Markdown images as path links.
+We fixed known differences with general rules rather than single cases: trimming padded role targets, accepting link titles, and counting Markdown images as path links.
 Accepting spaces in `:label:` and `:name:` was reverted, because on real projects it read frontmatter `name:` fields, YAML in code blocks, and option text like a button's `:label:` as label definitions.
-So the list has two entries left, both labels with spaces.
+The differences left are in `known` at the top of `scripts/conformance.ts`, with the reason for each.
 
-We also ran it on a corpus: clones of mystmd, Jupyter Book, 2i2c's docs and example-outputs, plus copies of our own docs.
-These numbers are from a clean run on 2026-10-13, on the corpus listed in `.ai/myst-project-examples/SOURCES.md` in the workspace above this repository:
+We also ran `MYST_CORPUS=<path> npm run conformance` by hand on 2026-10-13, on the corpus listed in `.ai/myst-project-examples/SOURCES.md` in the workspace above this repository:
 
 | Kind | Matched | Missed | False positive |
 |---|---|---|---|
@@ -82,25 +80,30 @@ The one real gap is a link written as `[](<url>)` with parentheses in the URL, w
 ## The parse-first experiment
 
 The `experiment/parse-first` branch indexes closed files with the live parser instead of the build.
-It was never merged.
-On the seven corpus projects:
+It was never merged, and predates the move of the mystmd helpers to mystmd-client.
+These numbers are from `MYST_CORPUS=<path> node scripts/parse-first.ts` on that branch, on the seven projects in the script's `roots`:
 
 - **Targets**: 1443 in both, 127 only in the parse (126 of them headings), and 38 only in the build.
   6 files had no built page, so they were left out.
-- **Enumerators** differ on 16 targets, all in mystmd's docs, and all because `parse.ts` ignores frontmatter `numbering: headings`.
+- **Enumerators** differ on 16 targets, all in mystmd's docs, and all because mystmd-client's `parse` ignores frontmatter `numbering: headings`.
   None differ in notebooks.
 - **Time to the first project-wide completion**: 1.5 s for the parse, against 80.6 s for a cold build and 16.5 s warm.
   These are one sample each, and build times move in 2 s steps because of the content server's reconnect interval.
-- **Code**: a switch would delete 176 lines (`start.ts`, `start.test.ts`, `content-server.ts`, and parts of `server.ts` and its test), change about 54, and grow `project.ts` by 11.
+- **Code**: the branch adds 25 lines to `src/` and removes 26 (`git diff --shortstat main...experiment/parse-first -- src`).
+  A switch would also stop using `mystmd-client/start` and `mystmd-client/content-server`.
 
 So parse-first is viable for targets and enumerators on this corpus, because mystmd also numbers per page.
 The gaps are frontmatter `numbering`, mystmd's own warnings for closed files (unknown directives, roles and options), and notebooks without cell ids.
 
 We keep the build because it's the source of truth for what mystmd renders, including what plugins add.
 
-## What would let us delete code
+## What we need upstream
 
 - **Column positions in mystmd's parser** ([mystmd#2864](https://github.com/jupyter-book/mystmd/issues/2864)) would let references come from the tree instead of regexes.
-- **A client exported by mystmd** (U8 in MyST Author's [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)) would replace mystmd-client.
 - **A parser switch in mystmd** ([mystmd#1705](https://github.com/jupyter-book/mystmd/issues/1705)), or a parse-first index, would delete the build path; see the parse-first numbers above.
-- **`enumerator` and `title` in `myst.xref.json`** (U1 in the same proposals) would remove the content server page reads.
+- **`enumerator` and `title` in `myst.xref.json`** (U1 in MyST Author's [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)) would remove the content server page reads.
+- **Structured diagnostics from `myst start`** (U2 in the same proposals) would let closed files get mystmd's own warnings at their file and line.
+- **LSP and editor support** ([mystmd#1916](https://github.com/jupyter-book/mystmd/issues/1916)) is the mystmd issue this server answers.
+- **`myst start` binding IPv6 `localhost` unless `HOST` is set** ([mystmd#2254](https://github.com/jupyter-book/mystmd/issues/2254), [mystmd#2471](https://github.com/jupyter-book/mystmd/issues/2471)) is why [](configuration.md#starting-mystmd) sets `HOST=127.0.0.1`.
+- **`myst preview`** ([mystmd#2017](https://github.com/jupyter-book/mystmd/issues/2017)) would read the content server the same way this server does.
+- **mystmd exporting its parser, `myst start` launcher and content server client** would replace the mystmd-client package this repository uses; mystmd-client's README tracks what that needs.

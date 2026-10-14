@@ -3,7 +3,7 @@ title: Features
 ---
 
 What the server does for your MyST files.
-It uses mystmd's own parser and directive specs, so it knows the same directives, roles and options as mystmd, except ones that plugins add.
+It uses mystmd's own parser and directive specs, so it knows the same directives, roles and options as mystmd.
 
 ## Completion
 

@@ -14,7 +14,6 @@ See [how the repositories fit together](https://chrisholdgraf.com/myst-author/de
 ## Set up
 
 You need Node 22.18 or newer, since the tests run the TypeScript source directly.
-The bundled server runs on Node 22.
 From the repository root:
 
 ```sh
@@ -46,7 +45,7 @@ In VS Code, MyST Author's extension can run your build; see its [VS Code page](h
 - `src/kinds.ts`: the completion icon for each kind of target.
 - `src/service.ts`: the features (completion, hover, diagnostics, ...) without an LSP connection, so tests can call them directly.
 - `src/server.ts`: the LSP wiring.
-- [mystmd-client](https://github.com/choldgraf/mystmd-client), a separate package: the mystmd parser with its default extensions (`parse`), a client for the content server (`content-server`), and a launcher for `myst start` (`start`).
+- `mystmd-client`, a separate package: the mystmd parser with its default extensions (`parse`), a client for the content server (`content-server`), and a launcher for `myst start` (`start`).
 
 Tests sit next to the code they cover, as `*.test.ts`.
 To add a feature, such as a new diagnostic:
@@ -78,6 +77,19 @@ This reads every `.md` file and the Markdown cells of every `.ipynb` file, skipp
 It only reports; differences in the corpus don't fail the run.
 mystmd leaves the body of a directive it doesn't know, like `{myst}` in mystmd's docs, as text, so the regexes find references there that mystmd doesn't.
 
+## Kept in sync by hand
+
+Change these together:
+
+- `.github/workflows/ci.yml` and the commands under Set up.
+- The label roles `['ref', 'eq', 'numref']` in `scripts/conformance.ts` and the role alternation in `src/syntax.ts`.
+- The `kinds` in `scripts/conformance.ts`, the prefixes that its `mystmd` and `regexes` functions emit, the kinds listed under Conformance, and the tables in [](design.md#conformance).
+- The `known` entries in `scripts/conformance.ts` and the myst-spec example titles they name.
+- `labelChars` in `src/syntax.ts` and mystmd's `TARGET_PATTERN` in markdown-it-myst's `dist/block.js`.
+- The links a file move rewrites, listed in [](features.md#find-references-and-rename), and the `r.kind` checks for them in `src/service.ts`.
+- The VS Code document selector in [](editors.md) and MyST Author's language client.
+- The `mystmd` version here and the `myst-parser` version that mystmd-client pins; see mystmd-client's README.
+
 ## Docs
 
 The docs are a MyST site in `docs/`.
@@ -93,7 +105,8 @@ The site deploys to GitHub Pages when `main` changes.
 ## Releasing
 
 1. Run `npm version <version> --no-git-tag-version`.
-2. Commit the changes to `package.json` and `package-lock.json`. Push to main.
+2. Commit the changes to `package.json` and `package-lock.json`.
+   Push to main.
 3. Run the Release workflow (`.github/workflows/release.yml`) from the Actions tab, or with `gh workflow run release.yml`.
 
 It publishes the package at the version in `package.json`, then tags the commit `mystmd-lsp-v<version>` and creates a GitHub release with generated notes.
