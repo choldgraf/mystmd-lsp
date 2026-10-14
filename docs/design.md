@@ -89,8 +89,10 @@ These numbers are from `MYST_CORPUS=<path> node scripts/parse-first.ts` on that 
   None differ in notebooks.
 - **Time to the first project-wide completion**: 1.5 s for the parse, against 80.6 s for a cold build and 16.5 s warm.
   These are one sample each, and build times move in 2 s steps because of the content server's reconnect interval.
-- **Code**: the branch adds 25 lines to `src/` and removes 26 (`git diff --shortstat main...experiment/parse-first -- src`).
-  A switch would also stop using `mystmd-client/start` and `mystmd-client/content-server`.
+- **Code**: at the experiment's commit `9e8923e`, a switch would have deleted 176 lines, because `start.ts`, `start.test.ts` and `content-server.ts` still lived in `src/mystmd/`.
+  Those files moved to mystmd-client in `b6c390f`, so that figure no longer applies to this repository.
+  On `main`, a switch would delete the content server wiring: the code that starts mystmd and reads the content server, and the `mystmd-client/start` and `mystmd-client/content-server` imports.
+  `git grep -n "mystmd-client/start\|mystmd-client/content-server\|startMyst\|contentServer" src` lists it.
 
 So parse-first is viable for targets and enumerators on this corpus, because mystmd also numbers per page.
 The gaps are frontmatter `numbering`, mystmd's own warnings for closed files (unknown directives, roles and options), and notebooks without cell ids.
