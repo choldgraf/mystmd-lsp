@@ -16,8 +16,8 @@ The server reads a project two ways, because neither covers everything.
 
 `src/project.ts` merges the two: an open document's targets replace its file's built ones.
 
-Directive transforms drop `position` on the nodes they make.
-mystmd-client's `parse` copies the directive's position onto its children, and `src/index-targets.ts` falls back to the first positioned descendant in built page JSON.
+Directive transforms drop `position` on the nodes they make (see MyST Author's [data and packaging gaps](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md#data-and-packaging-gaps-candidates-for-small-fixes)).
+mystmd-client's `parseMyst` copies the directive's position onto its children, and `src/index-targets.ts` falls back to the first positioned descendant in built page JSON.
 
 ## References come from regexes
 
@@ -106,6 +106,6 @@ We keep the build because it's the source of truth for what mystmd renders, incl
 - **`enumerator` and `title` in `myst.xref.json`** (U1 in MyST Author's [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)) would remove the content server page reads.
 - **Structured diagnostics from `myst start`** (U2 in the same proposals) would let closed files get mystmd's own warnings at their file and line.
 - **LSP and editor support** ([mystmd#1916](https://github.com/jupyter-book/mystmd/issues/1916)) is the mystmd issue this server answers.
-- **`myst start` binding IPv6 `localhost` unless `HOST` is set** ([mystmd#2254](https://github.com/jupyter-book/mystmd/issues/2254), [mystmd#2471](https://github.com/jupyter-book/mystmd/issues/2471)) is why [](configuration.md#starting-mystmd) sets `HOST=127.0.0.1`.
+- **`myst start` binding IPv6 `localhost` unless `HOST` is set** ([mystmd#2254](https://github.com/jupyter-book/mystmd/issues/2254), [mystmd#2471](https://github.com/jupyter-book/mystmd/issues/2471)) is why mystmd-client's `startMyst` sets `HOST=127.0.0.1`, and why the [configuration page](configuration.md#starting-mystmd) tells you to set it when you start mystmd yourself.
 - **`myst preview`** ([mystmd#2017](https://github.com/jupyter-book/mystmd/issues/2017)) would read the content server the same way this server does.
-- **mystmd exporting its parser, `myst start` launcher and content server client** would replace the mystmd-client package this repository uses; mystmd-client's README tracks what that needs.
+- **mystmd exporting the helpers that mystmd-client provides** (U8 in the same [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)) would let this repository drop mystmd-client, whose README lists them.
