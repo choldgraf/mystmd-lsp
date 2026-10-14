@@ -7,7 +7,7 @@ title: How it works
 Three processes take part: your editor, this server, and mystmd's `myst start`, which builds the project and serves the result from a content server.
 Inside the server, `src/server.ts` speaks LSP to the editor and hands each request to `src/service.ts`, which has the features.
 `service.ts` finds references in the text with the regexes in `src/syntax.ts`, and looks up what they point to in the index in `src/project.ts`.
-The index holds the project's targets, from the build and from a live parse of each open document; see "Two sources of truth" below.
+The index is filled as described in [](#two-sources-of-truth).
 `service.diagnostics` computes a document's diagnostics when asked: unresolved references, duplicate labels in the index, and mystmd's own warnings from the live parse.
 
 ```{mermaid}
