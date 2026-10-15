@@ -6,6 +6,8 @@ It speaks the [Language Server Protocol](https://microsoft.github.io/language-se
 It completes and checks `{ref}` targets, citations, files and directives across your whole project, because it reads the project through mystmd.
 It has a VS Code extension, and [MyST Author](https://chrisholdgraf.com/myst-author/) builds on it with a live preview; see [editor setup](docs/editors.md).
 
+![In VS Code: completing a numref reference and a citation, then hovering the reference to see what it points to](docs/images/mystmd-lsp.gif)
+
 **Warning**: This is experimental and evolving rapidly! See "Project status" below.
 
 ## Install
