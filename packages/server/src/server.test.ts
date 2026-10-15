@@ -62,6 +62,9 @@ test('server completes, hints and diagnoses over stdio', async (t) => {
 
   const hints: any[] = await conn.sendRequest('textDocument/inlayHint', { textDocument: { uri }, range: { start: { line: 0, character: 0 }, end: { line: 11, character: 0 } } });
   assert.deepEqual(hints.map((h) => h.label), ['Figure 1']);
+
+  // No myst.yml, so no content server.
+  assert.deepEqual(await conn.sendRequest('myst/project', {}), { root });
 });
 
 // Needs a working mystmd, so `npm run test:mystmd` asks for these.
@@ -75,6 +78,7 @@ test('with real mystmd: the project loads, and the user is warned when mystmd di
   const { child, conn } = await startServer(t, mystProject);
   const warning = new Promise<any>((resolve) => conn.onRequest('window/showMessageRequest', resolve));
   await waitForBuild(conn);
+  assert.match(((await conn.sendRequest('myst/project', {})) as any).contentServer, /^http:\/\/127\.0\.0\.1:\d+$/);
 
   spawnSync('pkill', ['-P', String(child.pid)]); // mystmd is the server's only child
   assert.match((await warning).message, /myst exited/);

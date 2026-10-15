@@ -12,9 +12,9 @@ import { findProjectRoot } from './root.ts';
 import { createService, semanticTokensLegend } from './service.ts';
 import { readReferences, syncXrefs, type XrefProject } from './xref.ts';
 
-const args = parseArgs({ strict: false, options: { 'content-server': { type: 'string' }, root: { type: 'string' }, 'no-myst': { type: 'boolean' }, help: { type: 'boolean', short: 'h' } } }).values as { 'content-server'?: string; root?: string; 'no-myst'?: boolean; help?: boolean };
+const args = parseArgs({ strict: false, options: { 'content-server': { type: 'string' }, root: { type: 'string' }, 'no-myst': { type: 'boolean' }, execute: { type: 'boolean' }, help: { type: 'boolean', short: 'h' } } }).values as { 'content-server'?: string; root?: string; 'no-myst'?: boolean; execute?: boolean; help?: boolean };
 if (args.help) {
-  console.log('Usage: mystmd-lsp --stdio [--root=path/to/project] [--content-server=URL] [--no-myst]\nSee https://chrisholdgraf.com/mystmd-lsp/configuration');
+  console.log('Usage: mystmd-lsp --stdio [--root=path/to/project] [--content-server=URL] [--no-myst] [--execute]\nSee https://chrisholdgraf.com/mystmd-lsp/configuration');
   process.exit(0);
 }
 
@@ -63,7 +63,7 @@ connection.onInitialize(async (params) => {
   // Unless told otherwise, the server runs mystmd itself when the project has a myst.yml, so clients needn't start it.
   let url = args['content-server'];
   if (!url && !args['no-myst'] && root && existsSync(join(root, 'myst.yml'))) {
-    const myst = await startMyst(root);
+    const myst = await startMyst(root, undefined, args.execute ? ['--execute'] : []);
     myst.exited.catch((e) => fail(e.message));
     url = myst.url;
   }
@@ -75,6 +75,8 @@ connection.onInitialize(async (params) => {
   readXrefs();
   service = createService(root, project, xrefs);
   reloadConfig = () => (service.reloadConfig(), readXrefs(), refresh());
+  // Where the project is, for clients that build on this server (MyST Author's preview uses the same mystmd).
+  connection.onRequest('myst/project', () => ({ root, contentServer: url }));
   return {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,

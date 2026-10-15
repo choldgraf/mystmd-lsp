@@ -5,12 +5,19 @@ title: Configuration
 The server has a few command-line flags, and reads your project's `myst.yml`.
 
 ```sh
-mystmd-lsp --stdio [--root=path/to/project] [--content-server=URL] [--no-myst]
+mystmd-lsp --stdio [--root=path/to/project] [--content-server=URL] [--no-myst] [--execute]
 ```
 
 - `--root`: the project folder, instead of searching for it.
 - `--content-server`: use a `myst start --headless` content server that is already running, instead of starting one.
 - `--no-myst`: don't start mystmd.
+- `--execute`: when the server starts mystmd, run code cells and inline `{eval}` expressions too (`myst start --execute`). This runs the project's code, and needs Jupyter.
+
+## Asking where the project is
+
+Clients that build on this server can send the request `myst/project` once the server is initialized.
+It answers `{ root?: string; contentServer?: string }`: the project folder the server chose (see below), and mystmd's URL if the server runs it.
+MyST Author's VS Code extension uses it to point its preview at the same mystmd.
 
 ## Starting mystmd
 
