@@ -1,54 +1,18 @@
 {
-  "name": "mystmd-lsp",
-  "version": "0.0.6",
-  "description": "A language server for MyST Markdown projects, built on the mystmd engine.",
-  "type": "module",
-  "engines": {
-    "node": ">=22"
-  },
-  "bin": {
-    "mystmd-lsp": "dist/server.cjs"
-  },
-  "files": [
-    "dist/server.cjs"
+  "name": "mystmd-lsp-repo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
   ],
   "scripts": {
-    "build": "node build.mjs",
-    "pretest": "npm run build",
-    "test": "node --test 'src/**/*.test.ts'",
-    "test:mystmd": "TEST_MYSTMD=1 npm test",
-    "typecheck": "tsc",
-    "conformance": "node scripts/conformance.ts",
-    "prepack": "npm run build",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "test:mystmd": "npm run test:mystmd -w packages/server",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "conformance": "npm run conformance -w packages/server",
     "docs": "cd docs && myst build --html",
     "docs:live": "cd docs && myst start",
     "demo:copy": "rsync -a --delete --exclude _build --exclude .ipynb_checkpoints demo/ /tmp/mystmd-lsp-demo/",
     "demo:live": "npm run demo:copy && cd /tmp/mystmd-lsp-demo && myst start"
-  },
-  "devDependencies": {
-    "@types/js-yaml": "^4.0.9",
-    "@types/node": "^26.6.3",
-    "esbuild": "^0.28.2",
-    "js-yaml": "^4.1.0",
-    "myst-common": "^1.10.1",
-    "myst-spec": "^0.0.6",
-    "mystmd": "^1.11.0",
-    "mystmd-client": "github:choldgraf/mystmd-client",
-    "punycode": "^2.3.1",
-    "typescript": "^7.0.2",
-    "vscode-languageserver": "^10.1.2",
-    "vscode-languageserver-textdocument": "^1.0.12"
-  },
-  "license": "CC0-1.0",
-  "keywords": [
-    "myst",
-    "mystmd",
-    "lsp",
-    "language-server",
-    "markdown"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/choldgraf/mystmd-lsp.git"
   }
 }

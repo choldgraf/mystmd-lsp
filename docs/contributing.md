@@ -4,9 +4,12 @@ title: Contributing
 
 ## Layout
 
-- `src`: the server, which `npm run build` bundles into `dist/server.cjs` for npm.
+- `packages/server`: the `mystmd-lsp` npm package. `npm run build` bundles `src` into `dist/server.cjs`.
 - `demo`: a MyST project that walks through each feature.
 - `docs`: this site.
+
+The root `package.json` is private and runs each command in every package, so the commands below work from the repository root.
+Paths like `src/service.ts` in these docs are inside `packages/server`.
 
 [MyST Author](https://chrisholdgraf.com/myst-author/) is one client of this server.
 See [how the repositories fit together](https://chrisholdgraf.com/myst-author/develop/repositories) for what lives where.
@@ -51,7 +54,7 @@ Tests sit next to the code they cover, as `*.test.ts`.
 To add a feature, such as a new diagnostic:
 
 1. Put the logic in `src/service.ts`, and add a test to `service.test.ts` beside it.
-   To run one file, use `node --test src/service.test.ts`.
+   To run one file, use `node --test src/service.test.ts` in `packages/server`.
 2. Wire it up in `server.ts`.
 3. Document it in [](features.md), and add a line to the README's "What you get" only if it's a new kind of feature.
 
@@ -104,12 +107,12 @@ The site deploys to GitHub Pages when `main` changes.
 
 ## Releasing
 
-1. Run `npm version <version> --no-git-tag-version`.
-2. Commit the changes to `package.json` and `package-lock.json`.
+1. Run `npm version <version> --no-git-tag-version -w packages/server`.
+2. Commit the changes to `packages/server/package.json` and `package-lock.json`.
    Push to main.
 3. Run the Release workflow (`.github/workflows/release.yml`) from the Actions tab, or with `gh workflow run release.yml`.
 
-It publishes the package at the version in `package.json`, then tags the commit `mystmd-lsp-v<version>` and creates a GitHub release with generated notes.
+It publishes the package at the version in its `package.json`, then tags the commit `mystmd-lsp-v<version>` and creates a GitHub release with generated notes.
 Edit the release afterwards to replace the notes with ones from `github-activity`.
 Publishing needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`.
 MyST Author picks up a new release when its `mystmd-lsp` dependency is bumped.

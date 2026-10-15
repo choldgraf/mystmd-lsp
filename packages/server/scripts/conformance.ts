@@ -18,7 +18,7 @@ const known = new Set([
 
 /** Each myst-spec example of MyST syntax with its source; the CommonMark examples are left out. */
 function specCases(): Case[] {
-  const dir = new URL('../node_modules/myst-spec/dist/examples/', import.meta.url);
+  const dir = new URL('dist/examples/', import.meta.resolve('myst-spec/package.json'));
   return readdirSync(dir).filter((file) => /^(?:roles|directives|references)\./.test(file)).flatMap((file) =>
     (load(readFileSync(new URL(file, dir), 'utf8')) as { cases: { title: string; myst?: string }[] }).cases.filter((c) => c.myst).map((c) => ({ id: `${file}: ${c.title}`, src: c.myst! })),
   );

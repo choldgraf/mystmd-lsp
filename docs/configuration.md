@@ -39,5 +39,5 @@ It re-reads them when `myst.yml` or a `.bib` file changes, if your editor suppor
 ## Semantic token colours
 
 References are semantic tokens, so you can colour them by kind.
-The kinds are listed in `semanticTokensLegend` in [`src/service.ts`](https://github.com/choldgraf/mystmd-lsp/blob/main/src/service.ts).
+The kinds are listed in `semanticTokensLegend` in [`src/service.ts`](https://github.com/choldgraf/mystmd-lsp/blob/main/packages/server/src/service.ts).
 To colour references to figures in VS Code, set `"editor.semanticTokenColorCustomizations": { "rules": { "label.figure": "#2a9d8f" } }`.
