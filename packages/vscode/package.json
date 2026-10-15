@@ -40,6 +40,9 @@
           "markdownDescription": "Run code cells and inline `{eval}` expressions when mystmd builds, with `myst start --execute`. This runs the project's code, and needs Jupyter. Reload the window after changing it."
         }
       }
+    },
+    "configurationDefaults": {
+      "markdown.suggest.paths.enabled": false
     }
   },
   "scripts": {

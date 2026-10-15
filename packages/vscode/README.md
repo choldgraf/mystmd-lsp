@@ -23,3 +23,4 @@ VS Code resolves extension dependencies from the Marketplace, so until MyST Synt
 `mystmdLsp.serverPath` runs another build of the server, and `mystmdLsp.execute` runs the project's code when mystmd builds; the Settings UI describes each.
 Reload the window after changing them.
 The server finds the project from the workspace folder; see [configuration](https://chrisholdgraf.com/mystmd-lsp/configuration).
+The extension also turns off VS Code's own Markdown link suggestions (`markdown.suggest.paths.enabled`), which suggest GitHub-style heading slugs that mystmd doesn't use; the server completes files and labels instead.
