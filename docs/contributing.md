@@ -34,7 +34,7 @@ CI runs the same commands.
 
 ## Try your build
 
-Run `npm run demo:copy`, then open `/tmp/mystmd-lsp-demo` in an editor set up to run your `dist/server.cjs` (see [](editors.md)).
+Run `npm run demo:copy`, then open `/tmp/mystmd-lsp-demo` in an editor whose LSP command is `node packages/server/dist/server.cjs --stdio` instead of `mystmd-lsp --stdio` (see [](editors.md)).
 The demo walks through each feature, and works on a copy so `demo/` isn't edited.
 In VS Code, point the MyST Language Server extension's `mystmdLsp.serverPath` setting at your `packages/server/dist/server.cjs`.
 
@@ -119,5 +119,6 @@ The extension bundles the server from the working tree, so a server change usual
 
 It publishes the package at the version in its `package.json`, then tags the commit (`mystmd-lsp-v<version>` for the server, `vscode-v<version>` for the extension) and creates a GitHub release with generated notes.
 Edit the release afterwards to replace the notes with ones from `github-activity`.
-Publishing the server needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`; publishing the extension needs `VSCE_PAT` and `OVSX_PAT` secrets for the `myst-author` publisher on the Marketplace and on Open VSX, which code-server uses.
+Publishing the server needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`.
+Publishing the extension needs `VSCE_PAT` and `OVSX_PAT` secrets for the `myst-author` publisher on the Marketplace and on Open VSX, which code-server uses.
 MyST Author picks up new releases through its dependencies; see [how the repositories fit together](https://chrisholdgraf.com/myst-author/develop/repositories).

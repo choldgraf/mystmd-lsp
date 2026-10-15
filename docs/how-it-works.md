@@ -61,6 +61,7 @@ Rename and file moves only edit open cells; see [](features.md#find-references-a
 
 Other lists change with it; see [](contributing.md#kept-in-sync-by-hand).
 
+(two-sources-of-truth)=
 ## Two sources of truth
 
 - **The content server.** In a project with a `myst.yml`, the server starts `myst start --headless`, which builds every page and serves a content server.

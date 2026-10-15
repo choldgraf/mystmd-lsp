@@ -63,7 +63,7 @@ connection.onInitialize(async (params) => {
   // Unless told otherwise, the server runs mystmd itself when the project has a myst.yml, so clients needn't start it.
   let url = args['content-server'];
   if (!url && !args['no-myst'] && root && existsSync(join(root, 'myst.yml'))) {
-    const myst = await startMyst(root, undefined, args.execute ? ['--execute'] : []);
+    const myst = await startMyst(root, undefined, args.execute ? ['--execute'] : undefined);
     myst.exited.catch((e) => fail(e.message));
     url = myst.url;
   }
