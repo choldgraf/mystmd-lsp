@@ -1,14 +1,12 @@
 # MyST Language Server for VS Code
 
 Runs the [mystmd-lsp](../../README.md) language server in VS Code, for Markdown files and the Markdown cells of notebooks; see its [features](https://chrisholdgraf.com/mystmd-lsp/features).
-Highlighting comes from the [MyST Syntax](https://github.com/choldgraf/myst-syntax) extension, which this one depends on.
+Highlighting comes from the [MyST Syntax](https://github.com/choldgraf/myst-syntax) extension, which this one depends on so that one install gives both.
 [MyST Author](https://chrisholdgraf.com/myst-author/) builds on this extension to add a live preview.
 
 ## Install
 
-Once it is published, search for "MyST Language Server" in the Extensions view, or install `myst-author.mystmd-lsp-vscode` from the Marketplace.
-
-Until then, build and install the `.vsix` from the repository root:
+Until it is published, build and install the `.vsix` from the repository root; after that, search for "MyST Language Server" in the Extensions view.
 
 ```sh
 npm install
@@ -16,7 +14,7 @@ npm run package -w packages/vscode    # writes packages/vscode/mystmd-lsp.vsix
 code --install-extension packages/vscode/mystmd-lsp.vsix
 ```
 
-VS Code resolves extension dependencies from the Marketplace, so until MyST Syntax is published there, build and install its `.vsix` from the [myst-syntax](https://github.com/choldgraf/myst-syntax) repository first.
+Until MyST Syntax is published, build and install its `.vsix` from the [myst-syntax](https://github.com/choldgraf/myst-syntax) repository first, since VS Code resolves extension dependencies from its gallery.
 
 ## Settings
 

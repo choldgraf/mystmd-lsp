@@ -31,9 +31,10 @@ jobs:
       - if: inputs.package == 'server'
         run: npm publish -w packages/server
       - if: inputs.package == 'vscode'
-        run: npm run package -w packages/vscode && npx -w packages/vscode @vscode/vsce publish --no-dependencies --packagePath mystmd-lsp.vsix
+        run: npm run package -w packages/vscode && npx -w packages/vscode @vscode/vsce publish --no-dependencies --packagePath mystmd-lsp.vsix && npx -w packages/vscode ovsx publish mystmd-lsp.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
       # The server keeps its old tag name, mystmd-lsp-v<version>, so its release history stays in one series; the extension is vscode-v<version>.
       - run: gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$TAG" --generate-notes

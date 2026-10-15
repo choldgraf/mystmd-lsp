@@ -85,13 +85,14 @@ mystmd leaves the body of a directive it doesn't know, like `{myst}` in mystmd's
 
 Change these together:
 
-- `.github/workflows/ci.yml` and the commands under Set up.
+- `.github/workflows/test.yml` and the commands under Set up.
 - The label roles `['ref', 'eq', 'numref']` in `scripts/conformance.ts` and the role alternation in `src/syntax.ts`.
 - The `kinds` in `scripts/conformance.ts`, the prefixes that its `mystmd` and `regexes` functions emit, the kinds listed under Conformance, and the tables in [](design.md#conformance).
 - The `known` entries in `scripts/conformance.ts` and the myst-spec example titles they name.
 - `labelChars` in `src/syntax.ts` and mystmd's `TARGET_PATTERN` in markdown-it-myst's `dist/block.js`.
 - The links a file move rewrites, listed in [](features.md#find-references-and-rename), and the `r.kind` checks for them in `src/service.ts`.
 - The VS Code document selector in [](editors.md) and in `packages/vscode/src/extension.ts`.
+- What the VS Code extension's `activate` returns, described in [](configuration.md#asking-where-the-project-is), and what MyST Author's extension reads from it.
 - The `mystmd` version here and the `myst-parser` version that mystmd-client pins; see mystmd-client's README.
 
 ## Docs
@@ -118,5 +119,5 @@ The extension bundles the server from the working tree, so a server change usual
 
 It publishes the package at the version in its `package.json`, then tags the commit (`mystmd-lsp-v<version>` for the server, `vscode-v<version>` for the extension) and creates a GitHub release with generated notes.
 Edit the release afterwards to replace the notes with ones from `github-activity`.
-Publishing the server needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`; publishing the extension needs a `VSCE_PAT` secret for the `myst-author` Marketplace publisher.
+Publishing the server needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`; publishing the extension needs `VSCE_PAT` and `OVSX_PAT` secrets for the `myst-author` publisher on the Marketplace and on Open VSX, which code-server uses.
 MyST Author picks up new releases through its dependencies; see [how the repositories fit together](https://chrisholdgraf.com/myst-author/develop/repositories).

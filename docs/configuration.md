@@ -18,6 +18,8 @@ mystmd-lsp --stdio [--root=path/to/project] [--content-server=URL] [--no-myst] [
 Clients that build on this server can send the request `myst/project` once the server is initialized.
 It answers `{ root?: string; contentServer?: string }`: the project folder the server chose (see below), and mystmd's URL if the server runs it.
 MyST Author's VS Code extension uses it to point its preview at the same mystmd.
+In VS Code, the MyST Language Server extension's `activate()` returns `{ client, server }`: its language client, and the path of the server script it runs, which MyST Author spawns again with `--root` and `--content-server` for its own editors.
+Both stay as they are; anything new is added beside them.
 
 ## Starting mystmd
 
