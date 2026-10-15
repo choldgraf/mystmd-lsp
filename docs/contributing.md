@@ -8,6 +8,7 @@ title: Contributing
 - `packages/vscode`: the VS Code extension, which copies that bundle in at build time; see its [README](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/vscode).
 - `demo`: a MyST project that walks through each feature.
 - `docs`: this site.
+- `.devcontainer` and `binder`: the Codespaces and Binder configs, which open the demo with the extension and with jupyterlab-lsp.
 
 The root `package.json` is private and runs each command in every package, so the commands below work from the repository root.
 Paths like `src/service.ts` in these docs are inside `packages/server`.
@@ -91,6 +92,7 @@ Change these together:
 - The `known` entries in `scripts/conformance.ts` and the myst-spec example titles they name.
 - `labelChars` in `src/syntax.ts` and mystmd's `TARGET_PATTERN` in markdown-it-myst's `dist/block.js`.
 - The links a file move rewrites, listed in [](features.md#find-references-and-rename), and `isFile` in `src/service.ts`.
+- The jupyterlab-lsp entry in [](editors.md) and in `binder/jupyter_server_config.py`.
 - The VS Code document selector in [](editors.md) and in `packages/vscode/src/extension.ts`.
 - What the VS Code extension's `activate` returns, described in [](configuration.md#asking-where-the-project-is), and what MyST Author's extension reads from it.
 - The `mystmd` version here and the `myst-parser` version that mystmd-client pins; see mystmd-client's README.

@@ -1,0 +1,14 @@
+// GitHub Codespaces: VS Code with the MyST Language Server extension, opened on the demo project.
+// The workspace is `demo/`, because the server looks for myst.yml at or above the workspace folder.
+{
+  "name": "mystmd-lsp",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
+  "workspaceFolder": "/workspaces/mystmd-lsp/demo",
+  // MyST Syntax comes from a clone until it is published, since VS Code resolves extension dependencies from its gallery.
+  "postCreateCommand": "cd /workspaces/mystmd-lsp && npm ci && npm install -g mystmd && npm run package -w packages/vscode && git clone --depth 1 https://github.com/choldgraf/myst-syntax /workspaces/myst-syntax && cd /workspaces/myst-syntax && npm ci && npm run package -w packages/vscode",
+  // `code` only reaches the editor once it has attached, so install the extensions here rather than in postCreateCommand.
+  "postAttachCommand": "code --install-extension /workspaces/myst-syntax/packages/vscode/myst-syntax.vsix && code --install-extension /workspaces/mystmd-lsp/packages/vscode/mystmd-lsp.vsix",
+  "customizations": {
+    "codespaces": { "openFiles": ["demo/index.md"] }
+  }
+}

@@ -29,6 +29,8 @@ c.LanguageServerManager.language_servers = {
 }
 ```
 
+The repository's [Binder config](https://github.com/choldgraf/mystmd-lsp/blob/main/binder/jupyter_server_config.py) is a working copy of this, on the demo project.
+
 jupyterlab-lsp doesn't send notebook Markdown cells to a language server (U11 in MyST Author's [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)), so cells only get this server through MyST Author.
 
 ## Other editors

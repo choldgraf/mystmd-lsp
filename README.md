@@ -1,5 +1,8 @@
 # mystmd-lsp
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/choldgraf/mystmd-lsp)
+[![Launch on Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/choldgraf/mystmd-lsp/main?urlpath=lab/tree/index.md)
+
 A language server for [MyST](https://mystmd.org) projects, built on the mystmd engine.
 It speaks the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) (LSP), so it works in any editor with an LSP client.
 
@@ -24,7 +27,7 @@ This needs Node 22 or newer, and [mystmd](https://mystmd.org/guide/quickstart) f
 
 Point your editor's LSP client at `mystmd-lsp --stdio` for Markdown files.
 See [editor setup](docs/editors.md) for examples, and [troubleshooting](docs/troubleshooting.md) if something doesn't work.
-The [demo project](demo/index.md) walks through each feature.
+The [demo project](demo/index.md) walks through each feature; the Codespaces badge above opens it in VS Code with the extension, and the Binder badge in JupyterLab through jupyterlab-lsp.
 
 ## What you get
 

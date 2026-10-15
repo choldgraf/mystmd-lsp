@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+npm ci
+npm run build -w packages/server
+npm install -g mystmd
+mkdir -p ~/.jupyter
+ln -sf "$PWD/binder/jupyter_server_config.py" ~/.jupyter/jupyter_server_config.py

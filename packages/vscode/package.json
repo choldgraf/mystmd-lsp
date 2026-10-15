@@ -46,7 +46,7 @@
     }
   },
   "scripts": {
-    "build": "node build.mjs",
+    "build": "npm run build --prefix ../server && node build.mjs",
     "typecheck": "tsc",
     "package": "npm run build && vsce package --no-dependencies -o mystmd-lsp.vsix"
   },
