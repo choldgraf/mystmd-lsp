@@ -19,13 +19,24 @@
   },
   "main": "dist/extension.js",
   "activationEvents": [
-    "onLanguage:markdown",
-    "onNotebook:jupyter-notebook"
+    "workspaceContains:**/myst.yml"
   ],
   "extensionDependencies": [
     "myst-author.myst-syntax-vscode"
   ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In an untrusted workspace the server doesn't start mystmd, so project-wide completion and warnings are off."
+    }
+  },
   "contributes": {
+    "commands": [
+      {
+        "command": "mystmdLsp.showProject",
+        "title": "MyST: Show Project"
+      }
+    ],
     "configuration": {
       "title": "MyST Language Server",
       "properties": {
