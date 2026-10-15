@@ -42,7 +42,7 @@ export const semanticTokensLegend = {
 };
 
 const rangeOf = (ref: Pick<Ref, 'line' | 'start' | 'end'>) => ({ start: { line: ref.line, character: ref.start }, end: { line: ref.line, character: ref.end } });
-// References to files rather than labels; a file move rewrites these (see features.md, Find references and rename).
+// References to files rather than labels, which a file move rewrites (see features.md, Find references and rename).
 const isFile = (ref: Ref) => ref.kind === 'doc' || ref.kind === 'path';
 
 type At = { textDocument: { uri: string }; position: Position };
@@ -82,7 +82,7 @@ export const pathOf = (uri: string) => fileURLToPath('file:' + uri.slice(uri.ind
 /**
  * The language server's features, without an LSP connection.
  * `root` is the project folder. `project` indexes the built pages and open files.
- * `xrefs` are the external projects from myst.yml `project.references`, by key; they're read on each request, so they can load later.
+ * `xrefs` are the external projects from myst.yml `project.references`, by key. They're read on each request, so they can load later.
  * Each method takes and returns the LSP request's params and result.
  */
 export function createService(root: string, project: ReturnType<typeof createProject>, xrefs: Record<string, XrefProject> = {}) {
@@ -109,7 +109,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
   };
 
   const toUri = (file: string) => pathToFileURL(resolve(root, file)).href;
-  // mystmd resolves file paths relative to the current file, or to the project root when they start with `/`.
+  // mystmd resolves file paths relative to the current file, or to the project folder when they start with `/`.
   const fileOf = (uri: string, path: string) => (path.startsWith('/') ? join(root, path) : join(dirname(pathOf(uri)), path));
   // A location at the start of a line (0-based).
   const point = (uri: string, line: number) => ({ uri, range: { start: { line, character: 0 }, end: { line, character: 0 } } });
@@ -247,7 +247,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
     /** Whether the document is a page of the project, which is what gets language features. */
     isPage: (uri: string) => project.isPage(toFile(uri)),
 
-    /** Set an open document's text; the project re-parses it shortly after typing stops, then calls its `onChange`. */
+    /** Set an open document's text. The project re-parses it shortly after typing stops, then calls its `onChange`. */
     update(uri: string, text: string) {
       texts.set(uri, text);
       clearTimeout(timers.get(uri));

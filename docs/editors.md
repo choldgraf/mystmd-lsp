@@ -3,7 +3,7 @@ title: Editor setup
 ---
 
 Open your MyST project, or a folder holding several, as the workspace.
-Each file's project is the nearest `myst.yml` at or above it, no higher than the workspace folder; see [](configuration.md#finding-the-project).
+See [](configuration.md#finding-the-project) for which project each file belongs to.
 If warnings don't show up, see [](troubleshooting.md).
 
 ## VS Code
@@ -32,7 +32,8 @@ c.LanguageServerManager.language_servers = {
 
 The repository's [Binder config](https://github.com/choldgraf/mystmd-lsp/blob/main/binder/jupyter_server_config.py) is a working copy of this, on the demo project.
 
-jupyterlab-lsp doesn't send notebook Markdown cells to a language server (U11 in MyST Author's [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)), so cells only get this server through MyST Author.
+jupyterlab-lsp doesn't send notebook Markdown cells to a language server, so cells only get this server through MyST Author.
+MyST Author tracks this as U11 in its [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md).
 
 ## Other editors
 
@@ -66,6 +67,6 @@ roots = ["myst.yml"]
 
 `language-servers` replaces Helix's default Markdown servers, so list them too if you use one.
 
-If your client pulls diagnostics, its document selector must include notebook cells.
+If you write an LSP client that pulls diagnostics, its document selector must include notebook cells.
 In VS Code that is `{ notebook: { notebookType: 'jupyter-notebook' }, language: 'markdown' }`.
 Without it, open cells only get diagnostics from workspace pulls.

@@ -45,7 +45,7 @@ See {numref}\`fig-logo\` and {ref}\`missing\`.
 [](xref:nope#x)
 `;
 
-// Each feature is tested through `createService` in service.test.ts; this checks that the server wires a few of them to LSP requests.
+// Each feature is tested through `createService` in service.test.ts. This checks that the server wires a few of them to LSP requests.
 test('server completes, hints and diagnoses over stdio', async (t) => {
   const { root, conn } = await startServer(t, { 'myst.yml': '', 'a.png': '' }, ['--no-myst']);
   const uri = pathToFileURL(join(root, 'index.md')).href;
@@ -66,7 +66,7 @@ test('server completes, hints and diagnoses over stdio', async (t) => {
   const hints: any[] = await conn.sendRequest('textDocument/inlayHint', { textDocument: { uri }, range: { start: { line: 0, character: 0 }, end: { line: 11, character: 0 } } });
   assert.deepEqual(hints.map((h) => h.label), ['Figure 1']);
 
-  // --no-myst, so no content server; before a build any document under the root is a page.
+  // --no-myst, so no content server, and before a build any document under the root is a page.
   assert.deepEqual(await conn.sendRequest('myst/project', { uri }), { root, page: true });
 });
 

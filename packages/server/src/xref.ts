@@ -1,7 +1,7 @@
 import { inflateSync } from 'node:zlib';
 import { readProjectConfig } from './root.ts';
 
-/** One target in an external project. `page` is set for MyST projects (e.g. `/tables`); `url` is absolute. */
+/** One target in an external project. `page` is set for MyST projects (e.g. `/tables`), and `url` is absolute. */
 export type XrefEntry = { name: string; kind: string; title?: string; url: string; page?: string; implicit?: boolean };
 
 /** An external project from `project.references`. `entries` stays undefined until (and unless) its inventory loads. */

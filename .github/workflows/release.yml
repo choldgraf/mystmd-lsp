@@ -36,7 +36,7 @@ jobs:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
-      # The server keeps its old tag name, mystmd-lsp-v<version>, so its release history stays in one series; the extension is vscode-v<version>.
+      # The server keeps its old tag name, mystmd-lsp-v<version>, so its release history stays in one series. The extension is vscode-v<version>.
       - run: gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$TAG" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}

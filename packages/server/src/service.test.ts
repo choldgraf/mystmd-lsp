@@ -164,7 +164,7 @@ test('find references from a reference, across files and notebook cells, preferr
   const at = { textDocument: { uri: uri('b.md') }, position: { line: 0, character: 6 }, context: { includeDeclaration: true } };
   const refs = service.references(at)!;
   assert.deepEqual(spans(refs), ['a.md:4:8', 'b.md:0:26', 'b.md:0:5', 'c.md:0:6', 'nb.ipynb#md:1:13']);
-  // A Markdown cell on disk is at its cell URI, with a range in the cell's source; the code cell isn't searched.
+  // A Markdown cell on disk is at its cell URI, with a range in the cell's source. The code cell isn't searched.
   assert.deepEqual(refs.find((l) => l.uri.endsWith('#md')), { uri: `${uri('nb.ipynb')}#md`, range: { start: { line: 1, character: 13 }, end: { line: 1, character: 20 } } });
   // Once the notebook is open, its open cells replace the file on disk.
   service.update(`${uri('nb.ipynb')}#md`, '{numref}`fig-one`');

@@ -38,7 +38,7 @@ type Entry = { service: Service; url?: string; loading: boolean; progress?: Work
 // Projects by root, started when the first document in them opens. The promise is stored so two documents opening at once share one mystmd.
 const entries = new Map<string, Promise<Entry>>();
 
-// A document's project root: --root for everything, else see findProjectRoot. Undefined outside every workspace folder.
+// A document's project folder: --root for everything, else see findProjectRoot. Undefined outside every workspace folder.
 const rootFor = (uri: string) => args.root ?? findProjectRoot(dirname(pathOf(uri)), ceilings);
 
 function entryFor(root: string) {
@@ -94,7 +94,7 @@ async function createEntry(root: string): Promise<Entry> {
   return entry;
 }
 
-// A document's service, when it's a page of its project; otherwise it gets no features.
+// A document's service, when it's a page of its project. Otherwise it gets no features.
 async function serviceFor(uri: string) {
   const root = rootFor(uri);
   const entry = root ? await entryFor(root) : undefined;
@@ -161,7 +161,7 @@ connection.workspace.onWillRenameFiles(async (p) => ({ changes: Object.assign({}
 connection.languages.inlayHint.on(onDocument((s, p) => s.inlayHints(p)));
 connection.languages.semanticTokens.on(onDocument((s, p) => s.semanticTokens(p)));
 connection.onDocumentLinks(onDocument((s, p) => s.documentLinks(p)));
-// Across projects, exact matches still come first (clients find a label's definition with this; see features.md).
+// Across projects, exact matches still come first, since clients find a label's definition with this (see features.md).
 connection.onWorkspaceSymbol(async ({ query }) => {
   const exact = (name: string) => Number(name.toLowerCase() === query.toLowerCase());
   return (await all()).flatMap((e) => e.service.workspaceSymbols({ query })).sort((a, b) => exact(b.name) - exact(a.name));

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-/** A BibTeX entry. `file` is an absolute path; `line` is 0-based. */
+/** A BibTeX entry. `file` is an absolute path and `line` is 0-based. */
 export type BibEntry = { key: string; file: string; line: number; author?: string; year?: string; title?: string };
 
 // A regex reader, not a full BibTeX parser: field values may nest braces one level deep, and `@string` macros aren't expanded.

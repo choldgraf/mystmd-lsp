@@ -7,7 +7,8 @@ A language server for [MyST](https://mystmd.org) projects, built on the mystmd e
 It speaks the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) (LSP), so it works in any editor with an LSP client.
 
 It completes and checks `{ref}` targets, citations, files and directives across your whole project, because it reads the project through mystmd.
-It has a VS Code extension, and [MyST Author](https://chrisholdgraf.com/myst-author/) builds on it with a live preview; see [editor setup](docs/editors.md).
+It has a VS Code extension, and [MyST Author](https://chrisholdgraf.com/myst-author/) builds on it with a live preview.
+See [editor setup](docs/editors.md) for both.
 
 ![In VS Code: completing a numref reference and a citation, then hovering the reference to see what it points to](docs/images/mystmd-lsp.gif)
 
@@ -15,7 +16,8 @@ It has a VS Code extension, and [MyST Author](https://chrisholdgraf.com/myst-aut
 
 ## Install
 
-In VS Code, install the [MyST Language Server](packages/vscode/README.md) extension; other editors need the server on your `PATH`:
+In VS Code, install the [MyST Language Server](packages/vscode/README.md) extension.
+Other editors need the server on your `PATH`:
 
 ```sh
 npm install -g mystmd-lsp
@@ -25,9 +27,11 @@ This needs Node 22 or newer, and [mystmd](https://mystmd.org/guide/quickstart) f
 
 ## Run
 
-Point your editor's LSP client at `mystmd-lsp --stdio` for Markdown files; features come for the pages of a project with a `myst.yml` (see [finding the project](docs/configuration.md#finding-the-project)).
+Point your editor's LSP client at `mystmd-lsp --stdio` for Markdown files.
+A file gets features when it's a page of a MyST project, as described in [finding the project](docs/configuration.md#finding-the-project).
 See [editor setup](docs/editors.md) for examples, and [troubleshooting](docs/troubleshooting.md) if something doesn't work.
-The [demo project](demo/index.md) walks through each feature; the Codespaces badge above opens it in VS Code with the extension, and the Binder badge in JupyterLab through jupyterlab-lsp.
+The [demo project](demo/index.md) walks through each feature.
+The Codespaces badge above opens it in VS Code with the extension, and the Binder badge opens it in JupyterLab through jupyterlab-lsp.
 
 ## What you get
 
@@ -35,8 +39,8 @@ The [demo project](demo/index.md) walks through each feature; the Codespaces bad
 - Links to labels and objects in external projects, through `xref`.
 - Hover, go to definition, find references, and rename for labels.
 - Warnings for unknown references, missing figure and include files, and duplicate labels.
-- Inline hints about what a reference points to, plus outline and workspace symbols.
-- Markdown cells in notebooks, such as JupyterLab or VS Code notebooks.
+- Inlay hints about what a reference points to, plus outline and workspace symbols.
+- Markdown cells in notebooks, in JupyterLab or VS Code.
 
 See [features](docs/features.md) for the full list.
 

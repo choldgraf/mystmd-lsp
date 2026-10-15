@@ -5,7 +5,7 @@ title: Contributing
 ## Layout
 
 - `packages/server`: the `mystmd-lsp` npm package. `npm run build` bundles `src` into `dist/server.cjs`.
-- `packages/vscode`: the VS Code extension, which copies that bundle in at build time; see its [README](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/vscode).
+- `packages/vscode`: the VS Code extension, which copies that bundle in at build time (see its [README](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/vscode)).
 - `demo`: a MyST project that walks through each feature.
 - `docs`: this site.
 - `.devcontainer` and `binder`: the Codespaces and Binder configs, which open the demo with the extension and with jupyterlab-lsp.
@@ -26,7 +26,7 @@ npm ci
 npm test # builds first
 npm run test:mystmd # also runs the tests that start mystmd
 npm run typecheck
-npm run conformance # compares the reference regexes with mystmd; see Conformance below
+npm run conformance # compares the reference regexes with mystmd (see Conformance below)
 ```
 
 `npm test` skips the tests that start mystmd, so it passes without a working mystmd.
@@ -35,7 +35,7 @@ CI runs `test:mystmd`, `typecheck` and `conformance`, and packages the VS Code e
 
 ## Try your build
 
-Run `npm run demo:copy`, then open `/tmp/mystmd-lsp-demo` in an editor whose LSP command is `node packages/server/dist/server.cjs --stdio` instead of `mystmd-lsp --stdio` (see [](editors.md)).
+Run `npm run demo:copy`, then open `/tmp/mystmd-lsp-demo` in an editor set up as in [](editors.md), with `node <absolute path to packages/server/dist/server.cjs> --stdio` as the command instead of `mystmd-lsp --stdio`.
 The demo walks through each feature, and works on a copy so `demo/` isn't edited.
 In VS Code, point the MyST Language Server extension's `mystmdLsp.serverPath` setting at your `packages/server/dist/server.cjs`.
 
@@ -70,7 +70,8 @@ See [](design.md#replacing-the-reference-regexes) for why references come from r
 It compares the targets of label roles (`{ref}`, `{eq}`, `{numref}`), `{doc}` roles, `[](path)` links, `[](#label)` links, and label definitions (`(x)=`, `:label:` and `:name:` options, and `$$ (id)`).
 It runs on the [myst-spec](https://github.com/jupyter-book/myst-spec) examples of roles, directives and references, prints each difference, and prints a table of matched, missed and false positive targets for each kind.
 It fails if an example differs that isn't in the list of known differences at the top of `scripts/conformance.ts`, or if one in the list no longer differs.
-myst-spec has no `{doc}` role or `[](#label)` examples, so CI's check doesn't cover those kinds; only a corpus run by hand does.
+myst-spec has no `{doc}` role or `[](#label)` examples, so CI's check doesn't cover those kinds.
+Only a corpus run by hand does.
 
 To also run it on your own projects, point `MYST_CORPUS` at a folder:
 
@@ -79,7 +80,8 @@ MYST_CORPUS=path/to/projects npm run conformance
 ```
 
 This reads every `.md` file and the Markdown cells of every `.ipynb` file, skipping hidden files, `node_modules` and `_build`.
-It only reports; differences in the corpus don't fail the run.
+It only reports.
+Differences in the corpus don't fail the run.
 mystmd leaves the body of a directive it doesn't know, like `{myst}` in mystmd's docs, as text, so the regexes find references there that mystmd doesn't.
 
 ## Kept in sync by hand
@@ -95,7 +97,7 @@ Change these together:
 - The jupyterlab-lsp entry in [](editors.md) and in `binder/jupyter_server_config.py`.
 - The VS Code document selector in [](editors.md) and in `packages/vscode/src/extension.ts`.
 - What the VS Code extension's `activate` returns, described in [](configuration.md#asking-where-the-project-is), and what MyST Author's extension reads from it.
-- The `mystmd` version here and the `myst-parser` version that mystmd-client pins; see mystmd-client's README.
+- The `mystmd` version here and the `myst-parser` version that mystmd-client pins (see mystmd-client's README).
 
 ## Docs
 
@@ -103,7 +105,7 @@ The docs are a MyST site in `docs/`.
 Each fact has one home, so change it there rather than repeating it:
 
 - [](features.md) and [](configuration.md) are the reference.
-- [](editors.md) has the setup for each kind of client; add new clients there.
+- [](editors.md) has the setup for each kind of client, so add new clients there.
 - The README only has what a visitor to the repository needs, and the home page of this site includes it.
 
 Run `npm run docs:live` to preview the site, and `npm run docs` to build it.
@@ -120,7 +122,7 @@ The extension bundles the server from the working tree, so a server change usual
 3. Run the Release workflow (`.github/workflows/release.yml`) from the Actions tab and pick the package, or run `gh workflow run release.yml -f package=<name>`.
 
 It publishes the package at the version in its `package.json`, then tags the commit (`mystmd-lsp-v<version>` for the server, `vscode-v<version>` for the extension) and creates a GitHub release with generated notes.
-Edit the release afterwards to replace the notes with ones from `github-activity`.
+Edit the release afterwards to replace the notes with ones from [github-activity](https://github-activity.readthedocs.io/).
 Publishing the server needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`.
 Publishing the extension needs `VSCE_PAT` and `OVSX_PAT` secrets for the `myst-author` publisher on the Marketplace and on Open VSX, which code-server uses.
-MyST Author picks up new releases through its dependencies; see [how the repositories fit together](https://chrisholdgraf.com/myst-author/develop/repositories).
+MyST Author picks up new releases through its dependencies (see [how the repositories fit together](https://chrisholdgraf.com/myst-author/develop/repositories)).

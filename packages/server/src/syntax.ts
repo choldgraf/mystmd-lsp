@@ -10,7 +10,7 @@ type Trigger = 'ref' | 'numref' | 'eq' | 'doc' | 'term' | 'link-hash' | 'link-pa
 type RefContext = { trigger: Trigger; prefix: string; start: number; end: number; key?: string; close?: string };
 
 /**
- * A reference in the text. `start`/`end` span the target; `after` is just past the closing delimiter.
+ * A reference in the text. `start`/`end` span the target, and `after` is just past the closing delimiter.
  * `text` is the link text of an `xref:` link (undefined for autolinks).
  * `cite` is a `{cite}` key or an `@key`, which may be a citation or a label.
  * `doc` is a `{doc}` target or a Markdown link to a local file.
@@ -25,7 +25,7 @@ const withName = (re: RegExp) => new RegExp(re.source.replaceAll('NAME', String.
 // The start of a directive whose argument is a file path.
 const fileDirective = /^(\s*(?:`{3,}|:{3,})\{(?:figure|image|include|literalinclude)\}\s+)/;
 
-// Each pattern matches the text before the cursor; the last group is the prefix.
+// Each pattern matches the text before the cursor, and the last group is the prefix.
 const contexts: [RegExp, Trigger | null][] = [
   [/\{cite(?::\w+)?\}`(?:[^`]*[,;]\s*)?([^`,;\s]*)$/, 'cite'],
   [/(?<=^|[\s[(]|[\s[]-)@([\w:.#$%&+?~/-]*)$/, 'at'],
@@ -92,7 +92,7 @@ const refPatterns: [RegExp, (m: RegExpExecArray) => Ref['kind']][] = [
   [/\{(ref|numref|eq|doc|term)\}`(?:[^`<]*<)?([^`<>]+)>?`/g, (m) => m[1] as Ref['kind']],
   [/\]\(#([^)\s]+)\)/g, () => 'link'],
   [/<#([^>\s]+)>/g, () => 'link'],
-  // A link to a local file, like `[](chapter.md#intro "title")`; not URLs or `#label`. The lookahead keeps `#intro` out of the match, so a fragment that repeats the path can't move `start`.
+  // A link to a local file, like `[](chapter.md#intro "title")`, but not a URL or `#label`. The lookahead keeps `#intro` out of the match, so a fragment that repeats the path can't move `start`.
   [/\]\((?!\w+:|#)([^)\s#]+)(?=[#)]|\s+"[^"]*"\))/g, () => 'doc'],
   [/\[(?<text>[^\]]*)\]\(xref:([^)\s]+)\)/g, () => 'xref'],
   [/<xref:([^>\s]+)>/g, () => 'xref'],
@@ -117,7 +117,7 @@ export function refsInText(text: string): Ref[] {
     const top = fences.at(-1);
     if (f && top && f[1][0] === top.fence[0] && f[1].length >= top.fence.length && !f[2]) return void fences.pop();
     if (top?.code) return;
-    // A directive's file argument; mystmd also accepts URLs, notebook cells (`#id`) and `*` wildcards, which aren't files.
+    // A directive's file argument. mystmd also accepts URLs, notebook cells (`#id`) and `*` wildcards, which aren't files.
     const p = raw.match(new RegExp(fileDirective.source + /(.*\S)/.source));
     if (p && !/^(\w+:|#)|\*/.test(p[2])) {
       const end = p[1].length + p[2].length;

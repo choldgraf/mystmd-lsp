@@ -26,7 +26,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const update = async (editor = vscode.window.activeTextEditor) => {
     const document = editor?.document;
     if (document?.languageId !== 'markdown' || !['file', 'vscode-notebook-cell'].includes(document.uri.scheme)) return status.hide();
-    // A notebook cell's uri is the notebook's path with the cell in the fragment; the server wants the notebook.
+    // A notebook cell's uri is the notebook's path with the cell in the fragment. The server wants the notebook.
     const uri = document.uri.with({ scheme: 'file', fragment: '' });
     const { root, page } = await client!.sendRequest<{ root?: string; page?: boolean }>('myst/project', { uri: uri.toString() });
     if (vscode.window.activeTextEditor !== editor) return; // switched again while we waited

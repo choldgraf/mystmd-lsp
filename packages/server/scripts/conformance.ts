@@ -16,7 +16,7 @@ const known = new Set([
   'directives.code.yml: Code-block starting line',
 ]);
 
-/** Each myst-spec example of MyST syntax with its source; the CommonMark examples are left out. */
+/** Each myst-spec example of MyST syntax with its source. The CommonMark examples are left out. */
 function specCases(): Case[] {
   const dir = new URL('dist/examples/', import.meta.resolve('myst-spec/package.json'));
   return readdirSync(dir).filter((file) => /^(?:roles|directives|references)\./.test(file)).flatMap((file) =>
@@ -63,7 +63,7 @@ function regexes(src: string) {
   const refs = refsInText(src).flatMap((r) => {
     if (['ref', 'eq', 'numref'].includes(r.kind)) return [`label role ${r.target}`];
     if (r.kind === 'link') return [`label link ${r.target}`];
-    // `doc` is both a {doc} role and a Markdown link to a file; a link's target follows `(`.
+    // `doc` is both a {doc} role and a Markdown link to a file. A link's target follows `(`.
     if (r.kind === 'doc') return [`${lines[r.line][r.start - 1] === '(' ? 'path link' : 'doc role'} ${r.target}`];
     return [];
   });

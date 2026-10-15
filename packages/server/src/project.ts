@@ -4,7 +4,7 @@ import { targetsFromTree, type Target } from './index-targets.ts';
 
 /**
  * The project's reference targets, each with its file (project-relative path, e.g. `chapter.md`).
- * Built pages come from `server` (the `myst start` content server); open documents replace their file's targets with a live parse.
+ * Built pages come from `server`, the `myst start` content server. Open documents replace their file's targets with a live parse.
  * Open documents are keyed by URI, since a notebook's Markdown cells are separate documents in one file.
  */
 export function createProject(server: { pages(): Promise<Pick<BuiltPage, 'location' | 'mdast'>[]>; watch(onReload: () => void): () => void } | undefined, onChange: () => void) {
