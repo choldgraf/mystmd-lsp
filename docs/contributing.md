@@ -60,11 +60,10 @@ To add a feature, such as a new diagnostic:
 2. Wire it up in `server.ts`.
 3. Document it in [](features.md), and add a line to the README's "What you get" only if it's a new kind of feature.
 
-## Replacing the reference regexes
+## Conformance
 
-See [](design.md#replacing-the-reference-regexes) for why references come from regexes and what a parser would need to replace them.
-
-### Conformance
+References come from regexes.
+[](design.md#replacing-the-reference-regexes) says why, and what a parser would need to replace them.
 
 `npm run conformance` checks that the regexes find the same references and label definitions as mystmd's parser.
 It compares the targets of label roles (`{ref}`, `{eq}`, `{numref}`), `{doc}` roles, `[](path)` links, `[](#label)` links, and label definitions (`(x)=`, `:label:` and `:name:` options, and `$$ (id)`).

@@ -66,7 +66,7 @@ We fixed known differences with general rules rather than single cases: trimming
 Accepting spaces in `:label:` and `:name:` was reverted, because on real projects it read frontmatter `name:` fields, YAML in code blocks, and option text like a button's `:label:` as label definitions.
 The differences left are in `known` at the top of `scripts/conformance.ts`, with the reason for each.
 
-We also ran `MYST_CORPUS=<path> npm run conformance` by hand on 2026-10-13, on the corpus listed in `.ai/myst-project-examples/SOURCES.md` in the workspace above this repository:
+We also ran `MYST_CORPUS=<path> npm run conformance` by hand on 2026-10-13, on a corpus of public MyST projects:
 
 | Kind | Matched | Missed | False positive |
 |---|---|---|---|
@@ -108,5 +108,4 @@ We keep the build because it's the source of truth for what mystmd renders, incl
 - LSP and editor support ([mystmd#1916](https://github.com/jupyter-book/mystmd/issues/1916)) is the mystmd issue this server answers.
 - `myst start` binds IPv6 `localhost` unless `HOST` is set ([mystmd#2254](https://github.com/jupyter-book/mystmd/issues/2254), [mystmd#2471](https://github.com/jupyter-book/mystmd/issues/2471)).
   That is why mystmd-client's `startMyst` sets `HOST=127.0.0.1`, and why the [configuration page](configuration.md#starting-mystmd) tells you to set it when you start mystmd yourself.
-- `myst preview` ([mystmd#2017](https://github.com/jupyter-book/mystmd/issues/2017)) would read the content server the same way this server does.
 - mystmd exporting the helpers that mystmd-client provides (U8 in the same [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)) would let this repository drop mystmd-client, whose README lists them.

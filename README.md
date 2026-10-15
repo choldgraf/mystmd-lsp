@@ -23,7 +23,7 @@ Other editors need the server on your `PATH`:
 npm install -g mystmd-lsp
 ```
 
-This needs Node 22 or newer, and [mystmd](https://mystmd.org/guide/quickstart) for project-wide features.
+This needs Node 22.18 or newer, and [mystmd](https://mystmd.org/guide/quickstart) for project-wide features.
 
 ## Run
 

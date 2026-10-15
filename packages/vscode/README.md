@@ -32,6 +32,11 @@ Click it for a sentence explaining the state.
 
 In an [untrusted workspace](https://code.visualstudio.com/docs/editor/workspace-trust) the server runs without mystmd, since mystmd runs the project's plugins, so the project-wide features are off until you trust the folder.
 
+## For other extensions
+
+The extension's `activate()` returns `{ client, server }`: its language client and the path of the server script it runs.
+MyST Author uses the client for `myst/project`, and spawns the script again with `--root` and `--content-server` for its own editors.
+
 ## Settings
 
 `mystmdLsp.serverPath` runs another build of the server, and `mystmdLsp.execute` runs the project's code when mystmd builds.

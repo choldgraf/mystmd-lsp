@@ -51,7 +51,7 @@ Like rename, it leaves closed notebooks alone.
 The server warns about references to unknown targets, and labels defined more than once in the project.
 Like mystmd, headings without an explicit label can share a name.
 Directive arguments that point to missing files, such as a `{figure}`'s image, and broken external references are reported right away.
-`{doc}` references and `[](file.md)` links to missing files aren't reported.
+`{doc}` references and `[](file.md)` links to missing files aren't reported, since their targets can also be page slugs and the server only warns when it's sure a target doesn't exist.
 Unknown targets and duplicate labels need a [content server](how-it-works.md), so they wait until the project has loaded.
 See [](troubleshooting.md) if you don't see them.
 

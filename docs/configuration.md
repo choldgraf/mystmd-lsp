@@ -23,8 +23,6 @@ A document with no project gets `{}`.
 Without a `uri`, the answer is the `--root` project's `{ root, contentServer }`, or `{}` when there is no `--root`.
 MyST Author's VS Code extension asks it for each document, to point its preview at the same mystmd.
 
-In VS Code, the MyST Language Server extension's `activate()` returns `{ client, server }`: its language client and the path of the server script it runs.
-MyST Author spawns that script again with `--root` and `--content-server` for its own editors.
 The request's and the result's fields won't change, and any new ones will be added beside them.
 
 ## Starting mystmd
@@ -37,6 +35,7 @@ If you start mystmd yourself and pass its address with `--content-server`, run i
 Without `HOST`, `myst start` listens on `localhost`, which can resolve to IPv6 only.
 To run a `myst` that isn't on your `PATH`, set the `MYST_BIN` environment variable to its path.
 
+(finding-the-project)=
 ## Finding the project
 
 A document's project is the nearest `myst.yml` at or above the document's folder, no higher than the workspace folder that contains it.
