@@ -29,7 +29,7 @@ c.LanguageServerManager.language_servers = {
 }
 ```
 
-jupyterlab-lsp doesn't send notebook Markdown cells to a language server, so cells only get this server through MyST Author.
+jupyterlab-lsp doesn't send notebook Markdown cells to a language server (U11 in MyST Author's [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)), so cells only get this server through MyST Author.
 
 ## Other editors
 
