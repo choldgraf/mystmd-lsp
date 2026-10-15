@@ -5,9 +5,31 @@ title: Editor setup
 Open your MyST project, the folder with `myst.yml`, as the workspace, so the server can find it.
 If warnings don't show up, see [](troubleshooting.md).
 
-## VS Code and JupyterLab
+## VS Code
 
-Use [MyST Author](https://chrisholdgraf.com/myst-author/), whose VS Code and JupyterLab extensions run this server along with a live preview.
+Install the [MyST Language Server](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/vscode) extension.
+It runs a bundled copy of this server for Markdown files and notebook Markdown cells, and installs [MyST Syntax](https://github.com/choldgraf/myst-syntax) for highlighting.
+[MyST Author](https://chrisholdgraf.com/myst-author/) adds a live preview on top of it.
+
+## JupyterLab
+
+[MyST Author](https://chrisholdgraf.com/myst-author/)'s JupyterLab extension runs this server for Markdown files and notebook cells.
+
+For Markdown files only, you can register the server with [jupyterlab-lsp](https://jupyterlab-lsp.readthedocs.io/) instead, in `jupyter_server_config.py`:
+
+```python
+c.LanguageServerManager.language_servers = {
+    "mystmd-lsp": {
+        "version": 2,
+        "argv": ["mystmd-lsp", "--stdio"],
+        "languages": ["markdown"],
+        "mime_types": ["text/markdown", "text/x-markdown"],
+        "display_name": "mystmd-lsp",
+    }
+}
+```
+
+jupyterlab-lsp doesn't send notebook Markdown cells to a language server, so cells only get this server through MyST Author.
 
 ## Other editors
 

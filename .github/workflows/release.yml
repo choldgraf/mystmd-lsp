@@ -1,16 +1,21 @@
-# Publishes mystmd-lsp to npm at the version in package.json, then tags the commit mystmd-lsp-v<version> and creates a GitHub release.
-# Run it from the Actions tab (Release → Run workflow), or: gh workflow run release.yml
-# See docs/contributing.md.
+# Publishes one package at the version in its package.json, then tags the commit and creates a GitHub release.
+# Run it from the Actions tab (Release → Run workflow) and pick the package, or: gh workflow run release.yml -f package=server
+# See docs/contributing.md, Releasing.
 name: Release
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Which package to publish
+        type: choice
+        required: true
+        options: [server, vscode]
 jobs:
-  npm:
+  publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write # npm trusted publishing
-    outputs:
-      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,15 +26,17 @@ jobs:
       - run: npm ci
       - run: npm test
       - id: version
-        run: echo "version=$(node -p 'require("./packages/server/package.json").version')" >> "$GITHUB_OUTPUT"
-      - run: npm publish -w packages/server
-  github-release:
-    needs: [npm]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
+        run: echo "version=$(node -p 'require("./packages/${{ inputs.package }}/package.json").version')" >> "$GITHUB_OUTPUT"
+
+      - if: inputs.package == 'server'
+        run: npm publish -w packages/server
+      - if: inputs.package == 'vscode'
+        run: npm run package -w packages/vscode && npx -w packages/vscode @vscode/vsce publish --no-dependencies --packagePath mystmd-lsp.vsix
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      # The server keeps its old tag name, mystmd-lsp-v<version>, so its release history stays in one series; the extension is vscode-v<version>.
       - run: gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "$TAG" --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: mystmd-lsp-v${{ needs.npm.outputs.version }}
+          TAG: ${{ inputs.package == 'server' && 'mystmd-lsp' || inputs.package }}-v${{ steps.version.outputs.version }}

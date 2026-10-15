@@ -4,11 +4,13 @@ A language server for [MyST](https://mystmd.org) projects, built on the mystmd e
 It speaks the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) (LSP), so it works in any editor with an LSP client.
 
 It completes and checks `{ref}` targets, citations, files and directives across your whole project, because it reads the project through mystmd.
-For VS Code and JupyterLab, [MyST Author](https://chrisholdgraf.com/myst-author/) runs it for you, along with a live preview.
+It has a VS Code extension, and [MyST Author](https://chrisholdgraf.com/myst-author/) builds on it with a live preview; see [editor setup](docs/editors.md).
 
 **Warning**: This is experimental and evolving rapidly! See "Project status" below.
 
 ## Install
+
+In VS Code, install the [MyST Language Server](packages/vscode/README.md) extension; other editors need the server on your `PATH`:
 
 ```sh
 npm install -g mystmd-lsp

@@ -64,7 +64,7 @@ Other lists change with it; see [](contributing.md#kept-in-sync-by-hand).
 ## Two sources of truth
 
 - **The content server.** In a project with a `myst.yml`, the server starts `myst start --headless`, which builds every page and serves a content server.
-  Clients that already run mystmd pass its address with `--content-server` instead, as [MyST Author does](https://chrisholdgraf.com/myst-author/develop/repositories).
+  Clients that already run mystmd pass its address with `--content-server` instead.
   The server indexes the result, so it knows every page, label and citation.
   It reloads the index when the content server reports a change.
   Warnings for unknown targets and completion of labels from other pages need this.

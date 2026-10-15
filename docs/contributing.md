@@ -5,6 +5,7 @@ title: Contributing
 ## Layout
 
 - `packages/server`: the `mystmd-lsp` npm package. `npm run build` bundles `src` into `dist/server.cjs`.
+- `packages/vscode`: the VS Code extension, which copies that bundle in at build time; see its [README](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/vscode).
 - `demo`: a MyST project that walks through each feature.
 - `docs`: this site.
 
@@ -35,7 +36,7 @@ CI runs the same commands.
 
 Run `npm run demo:copy`, then open `/tmp/mystmd-lsp-demo` in an editor set up to run your `dist/server.cjs` (see [](editors.md)).
 The demo walks through each feature, and works on a copy so `demo/` isn't edited.
-In VS Code, MyST Author's extension can run your build; see its [VS Code page](https://chrisholdgraf.com/myst-author/guide/vscode).
+In VS Code, point the MyST Language Server extension's `mystmdLsp.serverPath` setting at your `packages/server/dist/server.cjs`.
 
 ## Code map
 
@@ -90,7 +91,7 @@ Change these together:
 - The `known` entries in `scripts/conformance.ts` and the myst-spec example titles they name.
 - `labelChars` in `src/syntax.ts` and mystmd's `TARGET_PATTERN` in markdown-it-myst's `dist/block.js`.
 - The links a file move rewrites, listed in [](features.md#find-references-and-rename), and the `r.kind` checks for them in `src/service.ts`.
-- The VS Code document selector in [](editors.md) and MyST Author's language client.
+- The VS Code document selector in [](editors.md) and in `packages/vscode/src/extension.ts`.
 - The `mystmd` version here and the `myst-parser` version that mystmd-client pins; see mystmd-client's README.
 
 ## Docs
@@ -107,12 +108,15 @@ The site deploys to GitHub Pages when `main` changes.
 
 ## Releasing
 
-1. Run `npm version <version> --no-git-tag-version -w packages/server`.
-2. Commit the changes to `packages/server/package.json` and `package-lock.json`.
-   Push to main.
-3. Run the Release workflow (`.github/workflows/release.yml`) from the Actions tab, or with `gh workflow run release.yml`.
+Each package is released on its own, with its own version.
+The extension bundles the server from the working tree, so a server change usually means releasing both.
 
-It publishes the package at the version in its `package.json`, then tags the commit `mystmd-lsp-v<version>` and creates a GitHub release with generated notes.
+1. Run `npm version <version> --no-git-tag-version -w packages/<name>`.
+2. Commit the changes to that `package.json` and `package-lock.json`.
+   Push to main.
+3. Run the Release workflow (`.github/workflows/release.yml`) from the Actions tab and pick the package, or run `gh workflow run release.yml -f package=<name>`.
+
+It publishes the package at the version in its `package.json`, then tags the commit (`mystmd-lsp-v<version>` for the server, `vscode-v<version>` for the extension) and creates a GitHub release with generated notes.
 Edit the release afterwards to replace the notes with ones from `github-activity`.
-Publishing needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`.
-MyST Author picks up a new release when its `mystmd-lsp` dependency is bumped.
+Publishing the server needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`; publishing the extension needs a `VSCE_PAT` secret for the `myst-author` Marketplace publisher.
+MyST Author picks up new releases through its dependencies; see [how the repositories fit together](https://chrisholdgraf.com/myst-author/develop/repositories).

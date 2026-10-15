@@ -1,0 +1,58 @@
+{
+  "name": "mystmd-lsp-vscode",
+  "displayName": "MyST Language Server",
+  "description": "Completion, warnings and navigation for MyST Markdown projects, from the mystmd-lsp language server",
+  "version": "0.0.1",
+  "publisher": "myst-author",
+  "private": true,
+  "license": "CC0-1.0",
+  "engines": {
+    "vscode": "^1.91.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/choldgraf/mystmd-lsp.git",
+    "directory": "packages/vscode"
+  },
+  "main": "dist/extension.js",
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onNotebook:jupyter-notebook"
+  ],
+  "extensionDependencies": [
+    "myst-author.myst-syntax-vscode"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "MyST Language Server",
+      "properties": {
+        "mystmdLsp.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to another build of the server, such as dist/server.cjs from a mystmd-lsp clone, instead of the bundled one. Reload the window after changing it."
+        },
+        "mystmdLsp.execute": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Run code cells and inline `{eval}` expressions when mystmd builds, with `myst start --execute`. This runs the project's code, and needs Jupyter. Reload the window after changing it."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc",
+    "package": "npm run build && vsce package --no-dependencies -o mystmd-lsp.vsix"
+  },
+  "devDependencies": {
+    "@types/vscode": "~1.91.0",
+    "@vscode/vsce": "^4.0.0",
+    "esbuild": "^0.28.2",
+    "mystmd-lsp": "*",
+    "typescript": "^7.0.2",
+    "vscode-languageclient": "^10.1.2"
+  }
+}
