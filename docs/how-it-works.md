@@ -4,7 +4,8 @@ title: How it works
 
 ## The whole picture
 
-Three processes take part: your editor, this server, and mystmd's `myst start`, which builds the project and serves the result from a content server.
+Three processes take part: your editor, this server, and mystmd's `myst start`, which builds a project and serves the result from a content server.
+The server keeps one index, one service and one `myst start` per project, started when the first document in it opens; [](configuration.md#finding-the-project) says which project a document belongs to.
 Inside the server, `src/server.ts` speaks LSP to the editor and hands each request to `src/service.ts`, which has the features.
 `service.ts` finds references in the text with the regexes in `src/syntax.ts`, and looks up what they point to in the index in `src/project.ts`.
 The index is filled as described in [](#two-sources-of-truth).
@@ -28,7 +29,7 @@ flowchart LR
 2. `service.update` waits until typing has stopped for 150 ms, then calls `project.setOpen`.
 3. `setOpen` re-parses the document with `parseMyst` and replaces that document's targets and mystmd warnings, keyed by its URI.
 4. `setOpen` then calls its `onChange`, which is `refresh` in `server.ts` and also runs when the content server reports a rebuild.
-5. `refresh` pushes `service.diagnostics` for every open document with `sendDiagnostics`, unless the editor pulls diagnostics.
+5. `refresh` pushes `service.diagnostics` for every open page of that project with `sendDiagnostics`, unless the editor pulls diagnostics.
    An editor that pulls is asked to pull again if it supports that, and gets the same `service.diagnostics` back.
 
 ## On a hover or rename
@@ -64,8 +65,8 @@ Other lists change with it; see [](contributing.md#kept-in-sync-by-hand).
 (two-sources-of-truth)=
 ## Two sources of truth
 
-- **The content server.** In a project with a `myst.yml`, the server starts `myst start --headless`, which builds every page and serves a content server.
-  Clients that already run mystmd pass its address with `--content-server` instead.
+- **The content server.** For each project with a `myst.yml`, the server starts `myst start --headless`, which builds every page and serves a content server.
+  Clients that already run mystmd pass `--root` and its address with `--content-server` instead.
   The server indexes the result, so it knows every page, label and citation.
   It reloads the index when the content server reports a change.
   Warnings for unknown targets and completion of labels from other pages need this.
@@ -73,7 +74,8 @@ Other lists change with it; see [](contributing.md#kept-in-sync-by-hand).
   `targets()` in `src/project.ts` merges the two: an open document's targets replace its file's built ones.
 
 Without a content server, only open documents are indexed, and unknown targets aren't reported.
-That happens when there's no `myst.yml`, when mystmd isn't installed or fails to start, or when you pass `--no-myst`.
+That happens when mystmd isn't installed or fails to start, or when you pass `--no-myst`.
+A document with no project, or one its project doesn't build, gets no features at all; see [](configuration.md#finding-the-project).
 See [](configuration.md) for the flags.
 
 See [](design.md) for why it works this way, and what we measured.

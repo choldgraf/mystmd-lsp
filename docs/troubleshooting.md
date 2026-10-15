@@ -7,13 +7,14 @@ title: Troubleshooting
 These come from mystmd's content server, so most gaps mean it isn't running or hasn't finished building.
 Check that:
 
-- the workspace folder you opened has a `myst.yml` in it or above it,
-- the `myst.yml` is in the same git repository as that folder (see [](configuration.md#finding-the-project)),
-- `myst` is installed, and `myst start` works in that folder,
+- the file is under a workspace folder, with a `myst.yml` between it and that folder (see [](configuration.md#finding-the-project)),
+- the file is one mystmd builds, so not left out by `project.toc` or `project.exclude`,
+- `myst` is installed, and `myst start` works in the project folder,
 - you didn't pass `--no-myst`,
 - the project has finished loading.
 
-Some clients may not show the {gui}`Loading project` progress, so a project can still be loading when it looks idle.
+In VS Code, the status bar item says whether the file is a page of a project; see [](vscode.md).
+Some clients may not show the {gui}`Loading <folder>` progress, so a project can still be loading when it looks idle.
 See [](how-it-works.md) for why the server works this way.
 
 ## No citation warnings

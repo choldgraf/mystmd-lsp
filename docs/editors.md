@@ -2,7 +2,8 @@
 title: Editor setup
 ---
 
-Open your MyST project, the folder with `myst.yml`, as the workspace, so the server can find it.
+Open your MyST project, or a folder holding several, as the workspace.
+Each file's project is the nearest `myst.yml` at or above it, no higher than the workspace folder; see [](configuration.md#finding-the-project).
 If warnings don't show up, see [](troubleshooting.md).
 
 ## VS Code
@@ -36,7 +37,8 @@ jupyterlab-lsp doesn't send notebook Markdown cells to a language server (U11 in
 ## Other editors
 
 Install the server (see [Install](index.md#install)), then point your editor's LSP client at `mystmd-lsp --stdio` for Markdown files.
-In a project with a `myst.yml`, the server starts mystmd, so project-wide completion and warnings appear once its first build finishes.
+The configurations below use `myst.yml` as the root marker, so the editor sends the project folder as the workspace folder and the server starts mystmd there.
+Project-wide completion and warnings appear once its first build finishes.
 
 Neovim 0.11 or newer:
 

@@ -65,8 +65,7 @@ export function markdownCells(uri: string, json: string): (readonly [string, str
   }
 }
 
-export function workspaceFiles(dir: string | undefined, pattern = /\.(md|ipynb)$/): string[] {
-  if (!dir) return [];
+export function workspaceFiles(dir: string, pattern = /\.(md|ipynb)$/): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '_build') return [];
     const path = join(dir, e.name);
@@ -75,22 +74,25 @@ export function workspaceFiles(dir: string | undefined, pattern = /\.(md|ipynb)$
 }
 
 /**
+ * A document's path. Notebook cells are documents with the notebook's path and a fragment for the cell:
+ * `file:///nb.ipynb#<cell id>` from JupyterLab, `vscode-notebook-cell:/nb.ipynb#...` from VS Code.
+ */
+export const pathOf = (uri: string) => fileURLToPath('file:' + uri.slice(uri.indexOf(':') + 1));
+
+/**
  * The language server's features, without an LSP connection.
  * `root` is the project folder. `project` indexes the built pages and open files.
  * `xrefs` are the external projects from myst.yml `project.references`, by key; they're read on each request, so they can load later.
  * Each method takes and returns the LSP request's params and result.
  */
-export function createService(root: string | undefined, project: ReturnType<typeof createProject>, xrefs: Record<string, XrefProject> = {}) {
+export function createService(root: string, project: ReturnType<typeof createProject>, xrefs: Record<string, XrefProject> = {}) {
   const texts = new Map<string, string>(); // open documents by URI
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
 
-  // A document's path. Notebook cells are documents with the notebook's path and a fragment for the cell:
-  // `file:///nb.ipynb#<cell id>` from JupyterLab, `vscode-notebook-cell:/nb.ipynb#...` from VS Code.
-  const pathOf = (uri: string) => fileURLToPath('file:' + uri.slice(uri.indexOf(':') + 1));
   // Files are project-relative when inside `root` (matching the content server's `location`), else absolute paths.
   const toFile = (uri: string) => {
     const path = pathOf(uri);
-    return root && !relative(root, path).startsWith('..') ? relative(root, path) : path;
+    return relative(root, path).startsWith('..') ? path : relative(root, path).split(sep).join('/');
   };
   // Citations from the project's .bib files, read on startup and again on `reloadConfig()`.
   let bib = { entries: [] as BibEntry[], complete: false };
@@ -98,17 +100,17 @@ export function createService(root: string | undefined, project: ReturnType<type
   // Whether myst.yml lists plugins, whose directives and roles our parser doesn't know.
   let plugins = false;
   const reloadConfig = () => {
-    const config = root ? readProjectConfig(root) : {};
+    const config = readProjectConfig(root);
     // Like mystmd: `project.bibliography` from myst.yml, else every `.bib` in the project.
-    const files: string[] =[config.bibliography ?? (root && existsSync(root) ? workspaceFiles(root, /\.bib$/) : [])].flat();
-    bib = readBibliography(root ?? '', files);
+    const files: string[] =[config.bibliography ?? (existsSync(root) ? workspaceFiles(root, /\.bib$/) : [])].flat();
+    bib = readBibliography(root, files);
     citations = new Map(bib.entries.map((e) => [e.key, e]));
     plugins = !!config.plugins?.length;
   };
 
-  const toUri = (file: string) => pathToFileURL(root ? resolve(root, file) : file).href;
+  const toUri = (file: string) => pathToFileURL(resolve(root, file)).href;
   // mystmd resolves file paths relative to the current file, or to the project root when they start with `/`.
-  const fileOf = (uri: string, path: string) => (path.startsWith('/') && root ? join(root, path) : join(dirname(pathOf(uri)), path));
+  const fileOf = (uri: string, path: string) => (path.startsWith('/') ? join(root, path) : join(dirname(pathOf(uri)), path));
   // A location at the start of a line (0-based).
   const point = (uri: string, line: number) => ({ uri, range: { start: { line, character: 0 }, end: { line, character: 0 } } });
   const uriOf = (t: Target) => t.uri ?? toUri(t.file);
@@ -198,9 +200,10 @@ export function createService(root: string | undefined, project: ReturnType<type
   function projectDocs(notebooks: boolean) {
     // Skip files that are open: the client's URI for them can be encoded differently from ours.
     const open = new Set([...texts.keys()].map(pathOf));
-    const files = root && existsSync(root) ? workspaceFiles(root, notebooks ? /\.(md|ipynb)$/ : /\.md$/).filter((f) => !open.has(f)) : [];
+    const files = existsSync(root) ? workspaceFiles(root, notebooks ? /\.(md|ipynb)$/ : /\.md$/).filter((f) => !open.has(f)) : [];
     const uris = files.map(toUri);
-    return [...uris.flatMap((uri) => (uri.endsWith('.ipynb') ? markdownCells(uri, source(uri)) : [[uri, source(uri)] as const])), ...texts];
+    // Only pages: a file the build leaves out (or a nested project's) is neither searched nor edited.
+    return [...uris.flatMap((uri) => (uri.endsWith('.ipynb') ? markdownCells(uri, source(uri)) : [[uri, source(uri)] as const])), ...texts].filter(([uri]) => project.isPage(toFile(uri)));
   }
 
   /** Every reference to a label in `projectDocs`. */
@@ -241,6 +244,8 @@ export function createService(root: string | undefined, project: ReturnType<type
 
   const service = {
     reloadConfig,
+    /** Whether the document is a page of the project, which is what gets language features. */
+    isPage: (uri: string) => project.isPage(toFile(uri)),
 
     /** Set an open document's text; the project re-parses it shortly after typing stops, then calls its `onChange`. */
     update(uri: string, text: string) {
@@ -343,7 +348,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       const r = resolveRef(ref, at.textDocument.uri);
       const value =
         r.kind === 'xref' ? `**${r.entry.title || r.entry.name || r.entry.page || r.entry.url}** · ${r.entry.kind}\n\n${r.entry.url}`
-        : r.kind === 'citation' ? `**${authorYear(r.entry) || r.entry.key}** · ${relative(root ?? '', r.entry.file)}\n\n${r.entry.title ?? ''}`
+        : r.kind === 'citation' ? `**${authorYear(r.entry) || r.entry.key}** · ${relative(root, r.entry.file)}\n\n${r.entry.title ?? ''}`
         : r.kind === 'label' ? `**${title(r.target)}** · ${r.target.file}\n\n${r.target.doc ?? r.target.text}`
         : undefined;
       return value ? { contents: { kind: 'markdown' as const, value } } : null;
@@ -399,7 +404,7 @@ export function createService(root: string | undefined, project: ReturnType<type
           const to = moved(file);
           // Relative to where the referencing file will be, so a moved file's relative links still work.
           const here = pathOf(uri);
-          const newText = ref.target.startsWith('/') && root ? `/${relative(root, to)}` : relative(dirname(moved(here)), to);
+          const newText = ref.target.startsWith('/') ? `/${relative(root, to)}` : relative(dirname(moved(here)), to);
           if ((to !== file || moved(here) !== here) && newText !== ref.target) (changes[uri] ??= []).push({ range: rangeOf(ref), newText });
         }
       }

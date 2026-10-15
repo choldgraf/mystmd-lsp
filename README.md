@@ -25,7 +25,7 @@ This needs Node 22 or newer, and [mystmd](https://mystmd.org/guide/quickstart) f
 
 ## Run
 
-Point your editor's LSP client at `mystmd-lsp --stdio` for Markdown files.
+Point your editor's LSP client at `mystmd-lsp --stdio` for Markdown files; features come for the pages of a project with a `myst.yml` (see [finding the project](docs/configuration.md#finding-the-project)).
 See [editor setup](docs/editors.md) for examples, and [troubleshooting](docs/troubleshooting.md) if something doesn't work.
 The [demo project](demo/index.md) walks through each feature; the Codespaces badge above opens it in VS Code with the extension, and the Binder badge in JupyterLab through jupyterlab-lsp.
 

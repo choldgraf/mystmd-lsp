@@ -37,7 +37,7 @@ URLs, notebook cells (`#id`), and paths with a `*` wildcard aren't checked.
 ## Find references and rename
 
 Both work on labels, from a reference or from the label's definition (`(label)=`, `:label:`, `$$ (label)`).
-They search the project's `.md` files on disk, using unsaved text for open documents.
+They search the pages mystmd builds (every `.md` file under the project before its first build), using unsaved text for open documents.
 Find references also searches the Markdown cells of notebooks on disk.
 Rename edits every reference and the definition, but in notebooks only the open cells.
 The editor owns a notebook's cells and may hold its file open, so the server can't safely rewrite the notebook's JSON.
@@ -58,7 +58,7 @@ Open pages also get mystmd's own warnings from parsing them, such as unknown dir
 If `myst.yml` lists plugins, unknown directives and roles aren't reported, since the server's parser doesn't load plugins.
 
 Editors that support pull diagnostics ask the server for them; other editors get them pushed as each page changes.
-Editors that pull workspace diagnostics also get them for the project's `.md` files and notebook Markdown cells on disk, not just open ones.
+Editors that pull workspace diagnostics also get them for the pages and notebook Markdown cells on disk, not just open ones, across every project in the window.
 
 ## Inlay hints and semantic tokens
 
@@ -82,7 +82,7 @@ Unknown keys are only reported when every bibliography file is local, so project
 
 ## Symbols
 
-- **Workspace symbols**: every label, searchable by its label or text.
+- **Workspace symbols**: every label in every project in the window, searchable by its label or text.
   Each symbol is named by its label's identifier, which mystmd lowercases.
   Exact matches come first, since clients use them to find a label's definition.
 - **Document symbols**: the page outline, with headings nested by level and each section's labeled figures, tables, equations, ... under it.

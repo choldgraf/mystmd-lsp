@@ -3,7 +3,7 @@
 import os
 
 repo = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-# The server looks for myst.yml at or above the workspace root, which jupyterlab-lsp takes from root_dir.
+# A file's project is the nearest myst.yml between it and the workspace root, which jupyterlab-lsp takes from root_dir.
 c.ServerApp.root_dir = f"{repo}/demo"
 c.LanguageServerManager.language_servers = {
     "mystmd-lsp": {

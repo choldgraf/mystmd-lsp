@@ -1,5 +1,5 @@
 // GitHub Codespaces: VS Code with the MyST Language Server extension, opened on the demo project.
-// The workspace is `demo/`, because the server looks for myst.yml at or above the workspace folder.
+// The workspace is `demo/`, so its myst.yml is the one the server finds for the demo's pages.
 {
   "name": "mystmd-lsp",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:24",

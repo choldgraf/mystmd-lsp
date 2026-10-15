@@ -6,7 +6,7 @@ A guided tour of what the language server does.
 Each page has **Try this** boxes: do what they say, and check that you get what they describe.
 
 :::{note} Before you start
-- The first time, mystmd downloads its theme and builds the project, so wait for "Loading project" in the status bar to finish.
+- The first time, mystmd downloads its theme and builds the project, so wait for "Loading demo" in the status bar to finish.
   Warnings and project-wide completion only appear after that.
 - References are coloured by kind (figure, table, equation, heading, citation) and followed by grey text saying what they point to.
   Those are semantic tokens and inlay hints, and this folder's settings turn them on.

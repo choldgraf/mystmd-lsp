@@ -1,16 +1,18 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { load } from 'js-yaml';
 
 /**
- * The project folder for a workspace: the nearest folder at or above `start` that has a `myst.yml`.
- * The search stops at a git repository's root, at the filesystem root, or just below the home folder, so a `myst.yml` far above that isn't part of this project is never picked up.
+ * A document's project: the nearest folder at or above `start` with a `myst.yml`, no higher than the workspace folder (one of `ceilings`) that holds it.
+ * Nothing above the folder you opened is picked up, so a stray `myst.yml` there is never built.
  */
-export function findProjectRoot(start: string): string | undefined {
-  for (let dir = start; dir !== homedir(); dir = dirname(dir)) {
+export function findProjectRoot(start: string, ceilings: string[]): string | undefined {
+  // The innermost workspace folder, in case one is inside another.
+  const ceiling = ceilings.filter((c) => !relative(c, start).startsWith('..')).sort((a, b) => b.length - a.length)[0];
+  if (!ceiling) return;
+  for (let dir = start; ; dir = dirname(dir)) {
     if (existsSync(join(dir, 'myst.yml'))) return dir;
-    if (existsSync(join(dir, '.git')) || dirname(dir) === dir) return;
+    if (dir === ceiling || dirname(dir) === dir) return;
   }
 }
 
