@@ -42,6 +42,8 @@ export const semanticTokensLegend = {
 };
 
 const rangeOf = (ref: Pick<Ref, 'line' | 'start' | 'end'>) => ({ start: { line: ref.line, character: ref.start }, end: { line: ref.line, character: ref.end } });
+// References to files rather than labels; a file move rewrites these (see features.md, Find references and rename).
+const isFile = (ref: Ref) => ref.kind === 'doc' || ref.kind === 'path';
 
 type At = { textDocument: { uri: string }; position: Position };
 
@@ -109,7 +111,8 @@ export function createService(root: string | undefined, project: ReturnType<type
   const fileOf = (uri: string, path: string) => (path.startsWith('/') && root ? join(root, path) : join(dirname(pathOf(uri)), path));
   // A location at the start of a line (0-based).
   const point = (uri: string, line: number) => ({ uri, range: { start: { line, character: 0 }, end: { line, character: 0 } } });
-  const locationOf = (t: Target) => point(t.uri ?? toUri(t.file), t.line - 1);
+  const uriOf = (t: Target) => t.uri ?? toUri(t.file);
+  const locationOf = (t: Target) => point(uriOf(t), t.line - 1);
   // Targets in an open document: its own live parse, or its file's built targets until that's ready.
   // Built targets don't say which notebook cell they're in, so a cell only gets its own live-parsed ones.
   const inDocument = (t: Target, uri: string) => (t.uri ? t.uri === uri : !uri.includes('#') && t.file === toFile(uri));
@@ -130,7 +133,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       // Only once the inventory has loaded: offline or unreachable projects must not produce false errors.
       return { kind: 'missing', problem: p.entries ? `\`${ref.target}\` not found in ${key} (${p.url})` : undefined };
     }
-    if (ref.kind === 'doc' || ref.kind === 'path') {
+    if (isFile(ref)) {
       const path = fileOf(uri, ref.target);
       if (existsSync(path)) return { kind: 'file', path };
       return { kind: 'missing', problem: ref.kind === 'path' ? `File not found: \`${ref.target}\`` : undefined };
@@ -182,7 +185,7 @@ export function createService(root: string | undefined, project: ReturnType<type
   }
 
   /** Where a label is written. The definition closest to the target's line, since built directives can report a line inside them. */
-  function definitionOf(t: Target, uri = t.uri ?? toUri(t.file)) {
+  function definitionOf(t: Target, uri = uriOf(t)) {
     const defs = splitLines(source(uri)).flatMap((text, line) => {
       const d = labelDefinition(text);
       return d && labelId(d.target) === t.identifier ? [{ ...d, line }] : [];
@@ -196,7 +199,7 @@ export function createService(root: string | undefined, project: ReturnType<type
     // Skip files that are open: the client's URI for them can be encoded differently from ours.
     const open = new Set([...texts.keys()].map(pathOf));
     const files = root && existsSync(root) ? workspaceFiles(root, notebooks ? /\.(md|ipynb)$/ : /\.md$/).filter((f) => !open.has(f)) : [];
-    const uris = files.map((f) => pathToFileURL(f).href);
+    const uris = files.map(toUri);
     return [...uris.flatMap((uri) => (uri.endsWith('.ipynb') ? markdownCells(uri, source(uri)) : [[uri, source(uri)] as const])), ...texts];
   }
 
@@ -349,8 +352,8 @@ export function createService(root: string | undefined, project: ReturnType<type
     definition(at: At) {
       const ref = refAtCursor(at);
       const r = ref && resolveRef(ref, at.textDocument.uri);
-      if (r?.kind === 'file') return point(pathToFileURL(r.path).href, 0);
-      if (r?.kind === 'citation') return point(pathToFileURL(r.entry.file).href, r.entry.line);
+      if (r?.kind === 'file') return point(toUri(r.path), 0);
+      if (r?.kind === 'citation') return point(toUri(r.entry.file), r.entry.line);
       return r?.kind === 'label' ? locationOf(r.target) : null;
     },
 
@@ -390,7 +393,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       };
       const changes: Record<string, TextEdit[]> = {};
       for (const [uri, text] of projectDocs(false)) {
-        for (const ref of refsInText(text).filter((r) => r.kind === 'doc' || r.kind === 'path')) {
+        for (const ref of refsInText(text).filter(isFile)) {
           // A link's target leaves out its `#fragment`, so the edit keeps it.
           const file = fileOf(uri, ref.target);
           const to = moved(file);
@@ -414,7 +417,7 @@ export function createService(root: string | undefined, project: ReturnType<type
     semanticTokens({ textDocument }: { textDocument: { uri: string } }) {
       const builder = new SemanticTokensBuilder();
       for (const [ref, r] of resolvedRefs(textDocument.uri)) {
-        if (ref.kind === 'doc' || ref.kind === 'path') continue; // a file path, not a label
+        if (isFile(ref)) continue; // a file path, not a label
         const kind = r.kind === 'label' ? r.target.kind : r.kind === 'xref' ? r.entry.kind : r.kind === 'citation' ? 'citation' : '';
         const i = semanticTokensLegend.tokenModifiers.indexOf(kind);
         builder.push(ref.line, ref.start, ref.end - ref.start, 0, i < 0 ? 0 : 1 << i);
@@ -424,7 +427,7 @@ export function createService(root: string | undefined, project: ReturnType<type
 
     documentLinks({ textDocument }: { textDocument: { uri: string } }) {
       return resolvedRefs(textDocument.uri).flatMap(([ref, r]) => {
-        const target = r.kind === 'file' ? pathToFileURL(r.path).href : r.kind === 'xref' ? r.entry.url : undefined;
+        const target = r.kind === 'file' ? toUri(r.path) : r.kind === 'xref' ? r.entry.url : undefined;
         return target ? [{ range: rangeOf(ref), target }] : [];
       });
     },

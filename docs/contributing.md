@@ -28,9 +28,9 @@ npm run typecheck
 npm run conformance # compares the reference regexes with mystmd; see Conformance below
 ```
 
-CI runs the same commands.
 `npm test` skips the tests that start mystmd, so it passes without a working mystmd.
 `npm run test:mystmd` runs them, and fails if mystmd doesn't start.
+CI runs `test:mystmd`, `typecheck` and `conformance`, and packages the VS Code extension.
 
 ## Try your build
 
@@ -90,7 +90,7 @@ Change these together:
 - The `kinds` in `scripts/conformance.ts`, the prefixes that its `mystmd` and `regexes` functions emit, the kinds listed under Conformance, and the tables in [](design.md#conformance).
 - The `known` entries in `scripts/conformance.ts` and the myst-spec example titles they name.
 - `labelChars` in `src/syntax.ts` and mystmd's `TARGET_PATTERN` in markdown-it-myst's `dist/block.js`.
-- The links a file move rewrites, listed in [](features.md#find-references-and-rename), and the `r.kind` checks for them in `src/service.ts`.
+- The links a file move rewrites, listed in [](features.md#find-references-and-rename), and `isFile` in `src/service.ts`.
 - The VS Code document selector in [](editors.md) and in `packages/vscode/src/extension.ts`.
 - What the VS Code extension's `activate` returns, described in [](configuration.md#asking-where-the-project-is), and what MyST Author's extension reads from it.
 - The `mystmd` version here and the `myst-parser` version that mystmd-client pins; see mystmd-client's README.
