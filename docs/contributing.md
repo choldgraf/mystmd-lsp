@@ -7,7 +7,7 @@ title: Contributing
 - `packages/server`: the `mystmd-lsp` npm package. `npm run build` bundles `src` into `dist/server.cjs`.
 - `packages/vscode`: the VS Code extension, which copies that bundle in at build time.
   Its `activate()` returns `{ client, server }`, the language client and the path of the server script, for extensions that build on it.
-  MyST Author uses the client for `myst/project`, and runs the script again with `--root` and `--content-server` for its own editors.
+  MyST Author uses the client to [ask where the project is](configuration.md#asking-where-the-project-is), and runs the script again with `--root` and `--content-server` for its own editors.
 - `demo`: a MyST project that walks through each feature.
 - `docs`: this site.
 - `.devcontainer` and `binder`: the Codespaces and Binder configs, which open the demo with the extension and with jupyterlab-lsp.

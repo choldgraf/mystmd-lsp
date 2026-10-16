@@ -32,7 +32,7 @@ MyST Author's VS Code extension asks it for each document, to point its preview 
 
 See [](how-it-works.md) for when the server starts mystmd.
 When it does, mystmd runs the project's plugins, which can run any code, and writes `_build/`, like any `myst start`.
-If your editor has no workspace trust, start the server with `--no-myst` for folders you do not trust.
+If your editor can't mark folders as trusted, start the server with `--no-myst` for folders you do not trust.
 
 If you start mystmd yourself and pass its address with `--content-server`, run it as `HOST=127.0.0.1 myst start --headless` and pass `http://127.0.0.1:<port>`.
 Without `HOST`, `myst start` listens on `localhost`, which can resolve to IPv6 only.
@@ -46,7 +46,7 @@ So nothing above the folder you opened is picked up, and a folder holding severa
 A document outside every workspace folder, or with no `myst.yml` between it and its workspace folder, has no project and gets no features.
 
 A document gets features only if it's a page of its project, one that mystmd builds.
-So mystmd decides what counts, including `project.toc` and `project.exclude`, and the editor agrees with the build.
+So mystmd decides what counts, including `project.toc` and `project.exclude`, so the editor and the build agree.
 Until the first build is indexed, any Markdown file or notebook under the project folder counts as a page.
 Without mystmd, that stays the rule.
 

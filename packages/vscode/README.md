@@ -34,7 +34,7 @@ In an [untrusted workspace](https://code.visualstudio.com/docs/editor/workspace-
 
 ## Settings
 
-`mystmdLsp.serverPath` runs another build of the server, and `mystmdLsp.execute` runs the project's code when mystmd builds.
+`mystmdLsp.serverPath` runs a server you built yourself, and `mystmdLsp.execute` runs the project's code when mystmd builds.
 The Settings UI describes each.
 The extension also turns off VS Code's own Markdown path suggestions (`markdown.suggest.paths.enabled`), since they offer GitHub-style heading slugs that mystmd doesn't use and the server completes files and labels itself.
 

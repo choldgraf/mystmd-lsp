@@ -17,7 +17,8 @@ It uses mystmd's own parser and directive specs, so it knows the same directives
 | ```` ```{figure} ````, `{image}`, `{include}`, `{literalinclude}` argument | any file, relative to the current file |
 | ```` ```{ ````, `:::{` | directive names |
 | `{` | role names |
-| `/` at the start of a line, or `/name` after a space | a directive template (at the start of a line) or a role template, which you can tab through |
+| `/` at the start of a line | a directive template you can tab through |
+| `/` after a space | a role template you can tab through |
 | `:` on a line inside a directive's options | that directive's options, skipping ones already set |
 
 See [](configuration.md#what-it-reads-from-myst-yml) for where citation keys come from.
@@ -84,7 +85,7 @@ Projects without a `.bib` file get no citation warnings.
 
 Workspace symbols cover every label in every project in the window, searchable by its label or text.
 Each symbol is named by its label's identifier, which mystmd lowercases.
-Exact matches come first, since clients use them to find a label's definition.
+Exact matches come first.
 
 Document symbols are the page outline: headings nested by level, with each section's labeled figures, tables, equations and so on under it.
 

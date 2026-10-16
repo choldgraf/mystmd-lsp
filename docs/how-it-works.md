@@ -26,8 +26,7 @@ flowchart LR
 2. `service.update` waits until typing has stopped for 150 ms, then calls `project.setOpen`.
 3. `setOpen` re-parses the document with `parseMyst` and replaces that document's targets and mystmd warnings, keyed by its URI.
 4. `setOpen` then calls its `onChange`, which is `refresh` in `server.ts` and also runs when the content server reports a rebuild.
-5. `refresh` pushes `service.diagnostics` for every open page of that project with `sendDiagnostics`, unless the editor pulls diagnostics.
-   An editor that pulls is asked to pull again if it supports that, and gets the same `service.diagnostics` back.
+5. `refresh` pushes diagnostics for every open page of that project, or tells an editor that pulls diagnostics to pull again.
    `service.diagnostics` reports unresolved references, duplicate labels in the index, and mystmd's own warnings from the live parse.
 
 ## On a hover or rename
@@ -65,7 +64,7 @@ The comment above `known` in `scripts/conformance.ts` lists the other things tha
 
 The first is the content server.
 For each project with a `myst.yml`, the server starts `myst start --headless`, which builds every page and serves a content server.
-Clients that already run mystmd pass `--root` and its address with `--content-server` instead.
+Clients that already run mystmd pass `--root` and the content server's address with `--content-server` instead.
 The server indexes the result, so it knows every page, label and citation, and reloads the index when the content server reports a change.
 Warnings for unknown targets and completion of labels from other pages need this.
 

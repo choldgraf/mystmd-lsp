@@ -9,10 +9,10 @@ See [](how-it-works.md) for the short version.
 
 The server reads a project two ways, because neither covers everything.
 
-Closed files' targets, titles and enumerators (the `1` in `Figure 1`) come from the build: `myst start`, read page by page from the content server (`mystmd-client/content-server`).
+Closed files' targets, titles and enumerators (the `1` in `Figure 1`) come from the build, read page by page from `myst start`'s content server.
 We can't use `myst.xref.json` instead, because it isn't rewritten on edits and has no `title` or `enumerator`.
 
-Open documents get a live parse: `mystParse` plus mystmd's per-page transforms, including `basicTransformationsPlugin` and `enumerateTargetsPlugin`, on that page alone (`mystmd-client/parse`).
+Open documents get a live parse with mystmd's parser and its per-page transforms, on that page alone.
 So an open page's enumerators can differ from the build's when frontmatter sets `numbering`.
 
 Directive transforms drop `position` on the nodes they make (see MyST Author's [data and packaging gaps](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md#data-and-packaging-gaps-file-as-small-bug-reports)).
@@ -51,7 +51,7 @@ The swap point is `refsInText` and `labelDefinition` in `src/syntax.ts`, not `my
 See [](contributing.md#conformance) for what it checks, and run it for the current numbers.
 
 We fixed known differences with general rules rather than single cases: trimming padded role targets, accepting link titles, and counting Markdown images as path links.
-Accepting spaces in `:label:` and `:name:` was reverted, because on real projects it read frontmatter `name:` fields, YAML in code blocks, and option text like a button's `:label:` as label definitions.
+`:label:` and `:name:` values with spaces don't count, because on real projects accepting them read frontmatter `name:` fields, YAML in code blocks, and option text like a button's `:label:` as label definitions.
 The differences left are in `known` at the top of `scripts/conformance.ts`, with the reason for each.
 
 We also ran `MYST_CORPUS=<path> npm run conformance` by hand on 2026-10-13, on a corpus of public MyST projects:
