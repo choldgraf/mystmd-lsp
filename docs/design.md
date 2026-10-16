@@ -101,11 +101,11 @@ We keep the build because it's the source of truth for what mystmd renders, incl
 
 ## What we need upstream
 
-- Column positions in mystmd's parser ([mystmd#2864](https://github.com/jupyter-book/mystmd/issues/2864)) would let references come from the tree instead of regexes.
-- A parser switch in mystmd ([mystmd#1705](https://github.com/jupyter-book/mystmd/issues/1705)), or a parse-first index, would delete the build path (see the parse-first numbers above).
+- [Column positions in mystmd's parser](https://github.com/jupyter-book/mystmd/issues/2864) would let references come from the tree instead of regexes.
+- [A parser switch in mystmd](https://github.com/jupyter-book/mystmd/issues/1705), or a parse-first index, would delete the build path (see the parse-first numbers above).
 - `enumerator` and `title` in `myst.xref.json` (U1 in MyST Author's [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)) would remove the content server page reads.
 - Structured diagnostics from `myst start` (U2 in the same proposals) would let closed files get mystmd's own warnings at their file and line.
-- LSP and editor support ([mystmd#1916](https://github.com/jupyter-book/mystmd/issues/1916)) is the mystmd issue this server answers.
-- `myst start` binds IPv6 `localhost` unless `HOST` is set ([mystmd#2254](https://github.com/jupyter-book/mystmd/issues/2254), [mystmd#2471](https://github.com/jupyter-book/mystmd/issues/2471)).
+- [LSP and editor support](https://github.com/jupyter-book/mystmd/issues/1916) is the mystmd issue this server answers.
+- `myst start` [binds IPv6 `localhost` unless `HOST` is set](https://github.com/jupyter-book/mystmd/issues/2254), and mystmd's [build networking issue](https://github.com/jupyter-book/mystmd/issues/2471) is still open.
   That is why mystmd-client's `startMyst` sets `HOST=127.0.0.1`, and why the [configuration page](configuration.md#starting-mystmd) tells you to set it when you start mystmd yourself.
 - mystmd exporting the helpers that mystmd-client provides (U8 in the same [upstream proposals](https://github.com/choldgraf/myst-author/blob/main/upstream/README.md)) would let this repository drop mystmd-client, whose README lists them.
