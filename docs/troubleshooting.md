@@ -4,7 +4,7 @@ title: Troubleshooting
 
 ## No warnings or completions for other pages
 
-These come from mystmd's content server, so most gaps mean it isn't running or hasn't finished building.
+These need mystmd's content server, so most gaps mean it isn't running or the project hasn't finished loading.
 Check that:
 
 - the file belongs to a project and is a page of it, so not left out by `project.toc` or `project.exclude` (see [](configuration.md#finding-the-project)),

@@ -17,13 +17,16 @@ mystmd-lsp --stdio [--root=path/to/project] [--content-server=URL] [--no-myst] [
 ## Asking where the project is
 
 Clients that build on this server can send the request `myst/project` once the server is initialized.
-Its params are `{ uri?: string }`, and it answers `{ root?: string; contentServer?: string; page?: boolean }`.
-With a `uri`, `root` is the document's project folder (see [](#finding-the-project)), `contentServer` is mystmd's URL if the server runs one, and `page` says whether mystmd builds the document.
-A document with no project gets `{}`.
-Without a `uri`, the answer is the `--root` project's `{ root, contentServer }`, or `{}` when there is no `--root`.
-MyST Author's VS Code extension asks it for each document, to point its preview at the same mystmd.
 
-The request's and the result's fields won't change, and any new ones will be added beside them.
+```ts
+params: { uri?: string }
+result: { root?: string; contentServer?: string; page?: boolean }
+```
+
+With a `uri`, `root` is the document's project folder, `contentServer` is mystmd's URL if the server runs one, and `page` says whether mystmd builds the document.
+A document with no project gets `{}`.
+Without a `uri`, the answer describes the `--root` project, or is `{}` when there is no `--root`.
+MyST Author's VS Code extension asks it for each document, to point its preview at the same mystmd.
 
 ## Starting mystmd
 
@@ -43,9 +46,9 @@ So nothing above the folder you opened is picked up, and a folder holding severa
 A document outside every workspace folder, or with no `myst.yml` between it and its workspace folder, has no project and gets no features.
 
 A document gets features only if it's a page of its project, one that mystmd builds.
-That makes `project.toc`, `project.exclude`, `_build`, hidden folders and nested projects mystmd's decision, so the editor agrees with the build.
+So mystmd decides what counts, including `project.toc` and `project.exclude`, and the editor agrees with the build.
 Until the first build is indexed, any Markdown file or notebook under the project folder counts as a page.
-That is also the rule without mystmd, whether you passed `--no-myst` or it is missing or failed to start.
+Without mystmd, that stays the rule.
 
 `--root` replaces all of this with one project at that folder, with or without a `myst.yml`.
 A `myst.yml` created after the server started, or a workspace folder added later, isn't picked up until the server restarts (in VS Code, reload the window).

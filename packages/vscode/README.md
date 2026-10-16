@@ -27,18 +27,15 @@ Only files that are pages of a MyST project get completion, warnings and navigat
 [Finding the project](https://chrisholdgraf.com/mystmd-lsp/configuration#finding-the-project) says how a file's project is found.
 
 A status bar item follows the active Markdown file or notebook cell.
-It shows `MyST: <folder>` for a page of a project, `MyST: not a page of <folder>` when a `myst.yml` is there but mystmd leaves the file out, and `MyST: no project` when there's no `myst.yml` to find.
+It shows `MyST: <folder>` when the file is a page of a project, and `MyST: not a page of <folder>` or `MyST: no project` when it isn't.
 Click it for a sentence explaining the state.
 
 In an [untrusted workspace](https://code.visualstudio.com/docs/editor/workspace-trust) the server runs without mystmd, since mystmd runs the project's plugins, so the project-wide features are off until you trust the folder.
-
-## For other extensions
-
-The extension's `activate()` returns `{ client, server }`: its language client and the path of the server script it runs.
-MyST Author uses the client for `myst/project`, and spawns the script again with `--root` and `--content-server` for its own editors.
 
 ## Settings
 
 `mystmdLsp.serverPath` runs another build of the server, and `mystmdLsp.execute` runs the project's code when mystmd builds.
 The Settings UI describes each.
 The extension also turns off VS Code's own Markdown path suggestions (`markdown.suggest.paths.enabled`), since they offer GitHub-style heading slugs that mystmd doesn't use and the server completes files and labels itself.
+
+If you build an extension on this one, [contributing](https://chrisholdgraf.com/mystmd-lsp/contributing#layout) says what `activate()` returns.

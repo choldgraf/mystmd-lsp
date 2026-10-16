@@ -6,7 +6,7 @@
 A language server for [MyST](https://mystmd.org) projects, built on the mystmd engine.
 It speaks the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) (LSP), so it works in any editor with an LSP client.
 
-It completes and checks `{ref}` targets, citations, files and directives across your whole project, because it reads the project through mystmd.
+It reads your project through mystmd, so completion and warnings cover every page, not just the open one.
 It has a VS Code extension, and [MyST Author](https://chrisholdgraf.com/myst-author/) builds on it with a live preview.
 See [editor setup](docs/editors.md) for both.
 

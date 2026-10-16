@@ -4,13 +4,9 @@ title: How it works
 
 ## The whole picture
 
-Three processes take part: your editor, this server, and mystmd's `myst start`, which builds a project and serves the result from a content server.
-The server keeps one index, one service and one `myst start` per project, started when the first document in it opens.
-[](configuration.md#finding-the-project) says which project a document belongs to.
-Inside the server (`packages/server`), `src/server.ts` speaks LSP to the editor and hands each request to `src/service.ts`, which has the features.
-`service.ts` finds references in the text with the regexes in `src/syntax.ts`, and looks up what they point to in the index in `src/project.ts`.
-The index is filled as described in [](#two-sources-of-truth).
-`service.diagnostics` computes a document's diagnostics when asked: unresolved references, duplicate labels in the index, and mystmd's own warnings from the live parse.
+Three processes take part: your editor, this server, and mystmd's `myst start`, which builds the project and serves the result from a content server.
+Inside the server, `src/server.ts` speaks LSP to the editor and hands each request to `src/service.ts`, which has the features.
+`service.ts` finds references with the regexes in `src/syntax.ts` and looks them up in the index in `src/project.ts`, which is filled as described in [](#two-sources-of-truth).
 
 ```{mermaid}
 flowchart LR
@@ -32,6 +28,7 @@ flowchart LR
 4. `setOpen` then calls its `onChange`, which is `refresh` in `server.ts` and also runs when the content server reports a rebuild.
 5. `refresh` pushes `service.diagnostics` for every open page of that project with `sendDiagnostics`, unless the editor pulls diagnostics.
    An editor that pulls is asked to pull again if it supports that, and gets the same `service.diagnostics` back.
+   `service.diagnostics` reports unresolved references, duplicate labels in the index, and mystmd's own warnings from the live parse.
 
 ## On a hover or rename
 
@@ -49,7 +46,7 @@ Take the cursor on `label` in `` {ref}`label` ``.
 Each Markdown cell of an open notebook is its own document, at the notebook's path with the cell id as the fragment, like `file:///nb.ipynb#<cell id>` from JupyterLab.
 The index keys open documents by URI, so each cell has its own live targets.
 For find references and workspace diagnostics, `markdownCells` in `service.ts` splits notebooks on disk into their Markdown cells.
-Rename and file moves only edit open cells, for the reason given in [](features.md#find-references-and-rename).
+Rename and file moves only edit open cells, since the editor owns a notebook's cells and may hold its file open.
 
 ## To add a reference kind
 
@@ -61,7 +58,7 @@ Rename and file moves only edit open cells, for the reason given in [](features.
 6. Document it in [](features.md).
 7. Run `npm test` and `npm run conformance`.
 
-[](contributing.md#kept-in-sync-by-hand) lists the other things that change with it.
+The comment above `known` in `scripts/conformance.ts` lists the other things that change with it.
 
 (two-sources-of-truth)=
 ## Two sources of truth
@@ -79,6 +76,5 @@ These are re-parsed live with mystmd's parser, so unsaved labels are available i
 Without a content server, only open documents are indexed, and unknown targets aren't reported.
 That happens when mystmd isn't installed or fails to start, or when you pass `--no-myst`.
 A document with no project, or one its project doesn't build, gets no features at all (see [](configuration.md#finding-the-project)).
-See [](configuration.md) for the flags.
 
 See [](design.md) for why it works this way, and what we measured.

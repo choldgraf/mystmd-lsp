@@ -40,7 +40,6 @@ Both work on labels, from a reference or from the label's definition (`(label)=`
 They search the pages mystmd builds (see [](configuration.md#finding-the-project)), using unsaved text for open documents.
 Find references also searches the Markdown cells of notebooks on disk.
 Rename edits every reference and the definition, but in notebooks only the open cells.
-The editor owns a notebook's cells and may hold its file open, so the server can't safely rewrite the notebook's JSON.
 Rename isn't offered for citations, external references, labels in closed notebooks, or headings without an explicit label.
 
 When you move or rename a file or folder in the editor, the `{doc}` roles, `[](path)` links, and directive file arguments that point to it are updated, and so are the relative ones in it.
@@ -50,10 +49,9 @@ Like rename, it leaves closed notebooks alone.
 
 The server warns about references to unknown targets, and labels defined more than once in the project.
 Like mystmd, headings without an explicit label can share a name.
-Directive arguments that point to missing files, such as a `{figure}`'s image, and broken external references are reported right away.
-`{doc}` references and `[](file.md)` links to missing files aren't reported, since their targets can also be page slugs and the server only warns when it's sure a target doesn't exist.
-Unknown targets and duplicate labels need a [content server](how-it-works.md), so they wait until the project has loaded.
-See [](troubleshooting.md) if you don't see them.
+It also warns about missing files in directive arguments, such as a `{figure}`'s image, and about broken external references.
+`{doc}` references and `[](file.md)` links to missing files aren't reported, since their targets can also be page slugs.
+See [](troubleshooting.md) if warnings don't show up.
 
 Open pages also get mystmd's own warnings from parsing them, such as unknown directives, roles and directive options.
 If `myst.yml` lists plugins, unknown directives and roles aren't reported, since the server's parser doesn't load plugins.
@@ -80,7 +78,7 @@ Rename isn't offered, since a term's label is its text.
 This covers `@key`, `[@a; @b]`, and `` {cite:p}`a, b` ``.
 You get hover with author, year and title, go to definition in the `.bib` file, and diagnostics.
 Like mystmd, `@x` is a citation if the bibliography has `x`, else a reference to label `x`.
-Unknown keys are only reported when the project has at least one `.bib` file and all of them are local, so projects without a `.bib` get no citation warnings.
+Projects without a `.bib` file get no citation warnings.
 
 ## Symbols
 

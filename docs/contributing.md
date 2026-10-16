@@ -5,7 +5,9 @@ title: Contributing
 ## Layout
 
 - `packages/server`: the `mystmd-lsp` npm package. `npm run build` bundles `src` into `dist/server.cjs`.
-- `packages/vscode`: the VS Code extension, which copies that bundle in at build time (see its [README](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/vscode)).
+- `packages/vscode`: the VS Code extension, which copies that bundle in at build time.
+  Its `activate()` returns `{ client, server }`, the language client and the path of the server script, for extensions that build on it.
+  MyST Author uses the client for `myst/project`, and runs the script again with `--root` and `--content-server` for its own editors.
 - `demo`: a MyST project that walks through each feature.
 - `docs`: this site.
 - `.devcontainer` and `binder`: the Codespaces and Binder configs, which open the demo with the extension and with jupyterlab-lsp.
@@ -65,12 +67,8 @@ To add a feature, such as a new diagnostic:
 References come from regexes.
 [](design.md#replacing-the-reference-regexes) says why, and what a parser would need to replace them.
 
-`npm run conformance` checks that the regexes find the same references and label definitions as mystmd's parser.
-It compares the targets of label roles (`{ref}`, `{eq}`, `{numref}`), `{doc}` roles, `[](path)` links, `[](#label)` links, and label definitions (`(x)=`, `:label:` and `:name:` options, and `$$ (id)`).
-It runs on the [myst-spec](https://github.com/jupyter-book/myst-spec) examples of roles, directives and references, prints each difference, and prints a table of matched, missed and false positive targets for each kind.
-It fails if an example differs that isn't in the list of known differences at the top of `scripts/conformance.ts`, or if one in the list no longer differs.
-myst-spec has no `{doc}` role or `[](#label)` examples, so CI's check doesn't cover those kinds.
-Only a corpus run by hand does.
+`npm run conformance` checks that the regexes find the same references and label definitions as mystmd's parser, on the [myst-spec](https://github.com/jupyter-book/myst-spec) examples.
+It fails on a difference that isn't in `known` at the top of `scripts/conformance.ts`, or on one in `known` that no longer differs.
 
 To also run it on your own projects, point `MYST_CORPUS` at a folder:
 
@@ -79,24 +77,15 @@ MYST_CORPUS=path/to/projects npm run conformance
 ```
 
 This reads every `.md` file and the Markdown cells of every `.ipynb` file, skipping hidden files, `node_modules` and `_build`.
-It only reports.
-Differences in the corpus don't fail the run.
-mystmd leaves the body of a directive it doesn't know, like `{myst}` in mystmd's docs, as text, so the regexes find references there that mystmd doesn't.
+Corpus differences are reported but don't fail the run.
 
 ## Kept in sync by hand
 
 Change these together:
 
 - `.github/workflows/test.yml` and the commands under Set up.
-- The label roles `['ref', 'eq', 'numref']` in `scripts/conformance.ts` and the role alternation in `src/syntax.ts`.
-- The `kinds` in `scripts/conformance.ts`, the prefixes that its `mystmd` and `regexes` functions emit, the kinds listed under Conformance, and the tables in [](design.md#conformance).
-- The `known` entries in `scripts/conformance.ts` and the myst-spec example titles they name.
-- `labelChars` in `src/syntax.ts` and mystmd's `TARGET_PATTERN` in markdown-it-myst's `dist/block.js`.
-- The links a file move rewrites, listed in [](features.md#find-references-and-rename), and `isFile` in `src/service.ts`.
-- The jupyterlab-lsp entry in [](editors.md) and in `binder/jupyter_server_config.py`.
-- The VS Code document selector in [](editors.md) and in `packages/vscode/src/extension.ts`.
-- What the VS Code extension's `activate` returns, described in [](configuration.md#asking-where-the-project-is), and what MyST Author's extension reads from it.
-- The `mystmd` version here and the `myst-parser` version that mystmd-client pins (see mystmd-client's README).
+- The `mystmd` version here and the `myst-parser` version that mystmd-client pins, listed in [mystmd-client's README](https://github.com/choldgraf/mystmd-client).
+- What the VS Code extension's `activate` returns, under Layout, and what MyST Author's extension reads from it.
 
 ## Docs
 
@@ -120,8 +109,9 @@ The extension bundles the server from the working tree, so a server change usual
    Push to main.
 3. Run the Release workflow (`.github/workflows/release.yml`) from the Actions tab and pick the package, or run `gh workflow run release.yml -f package=<name>`.
 
-It publishes the package at the version in its `package.json`, then tags the commit (`mystmd-lsp-v<version>` for the server, `vscode-v<version>` for the extension) and creates a GitHub release with generated notes.
+It publishes the package at the version in its `package.json`.
+Then it tags the commit, `mystmd-lsp-v<version>` for the server or `vscode-v<version>` for the extension, and creates a GitHub release with generated notes.
 Edit the release afterwards to replace the notes with ones from [github-activity](https://github-activity.readthedocs.io/).
 Publishing the server needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`.
-Publishing the extension needs `VSCE_PAT` and `OVSX_PAT` secrets for the `myst-author` publisher on the Marketplace and on Open VSX, which code-server uses.
-MyST Author picks up new releases through its dependencies (see [how the repositories fit together](https://chrisholdgraf.com/myst-author/develop/repositories)).
+Publishing the extension needs the `VSCE_PAT` and `OVSX_PAT` secrets of the `myst-author` publisher, on the Marketplace and on Open VSX.
+MyST Author picks up new releases through [its dependencies](https://chrisholdgraf.com/myst-author/develop/repositories).
