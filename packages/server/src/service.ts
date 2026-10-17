@@ -66,6 +66,7 @@ export function markdownCells(uri: string, json: string): (readonly [string, str
 }
 
 export function workspaceFiles(dir: string, pattern = /\.(md|ipynb)$/): string[] {
+  if (!existsSync(dir)) return []; // a root that doesn't exist on disk, as the tests' don't, has no files
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '_build') return [];
     const path = join(dir, e.name);
@@ -102,7 +103,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
   const reloadConfig = () => {
     const config = readProjectConfig(root);
     // Like mystmd: `project.bibliography` from myst.yml, else every `.bib` in the project.
-    const files: string[] =[config.bibliography ?? (existsSync(root) ? workspaceFiles(root, /\.bib$/) : [])].flat();
+    const files: string[] = [config.bibliography ?? workspaceFiles(root, /\.bib$/)].flat();
     bib = readBibliography(root, files);
     citations = new Map(bib.entries.map((e) => [e.key, e]));
     plugins = !!config.plugins?.length;
@@ -200,7 +201,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
   function projectDocs(notebooks: boolean) {
     // Skip files that are open: the client's URI for them can be encoded differently from ours.
     const open = new Set([...texts.keys()].map(pathOf));
-    const files = existsSync(root) ? workspaceFiles(root, notebooks ? /\.(md|ipynb)$/ : /\.md$/).filter((f) => !open.has(f)) : [];
+    const files = workspaceFiles(root, notebooks ? /\.(md|ipynb)$/ : /\.md$/).filter((f) => !open.has(f));
     const uris = files.map(toUri);
     // Only pages: a file the build leaves out (or a nested project's) is neither searched nor edited.
     return [...uris.flatMap((uri) => (uri.endsWith('.ipynb') ? markdownCells(uri, source(uri)) : [[uri, source(uri)] as const])), ...texts].filter(([uri]) => project.isPage(toFile(uri)));

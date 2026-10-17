@@ -10,7 +10,7 @@ Each page has **Try this** boxes: do what they say, and check that you get what 
   Warnings and project-wide completion only appear after that.
 - References are coloured by kind (figure, table, equation, heading, citation) and followed by grey text saying what they point to.
   Those are semantic tokens and inlay hints, and this folder's settings turn them on.
-- If something doesn't work, check the server log (in VS Code, the Output panel's "MyST" channel).
+- If something doesn't work, check the server log (in VS Code, the Output panel's "MyST Language Server" channel).
 :::
 
 ## The tour

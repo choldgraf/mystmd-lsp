@@ -79,7 +79,7 @@ Rename isn't offered, since a term's label is its text.
 This covers `@key`, `[@a; @b]`, and `` {cite:p}`a, b` ``.
 You get hover with author, year and title, go to definition in the `.bib` file, and diagnostics.
 Like mystmd, `@x` is a citation if the bibliography has `x`, else a reference to label `x`.
-Projects without a `.bib` file get no citation warnings.
+Unknown keys are only reported when the project has a bibliography and all of it is local files, not URLs.
 
 ## Symbols
 
@@ -94,7 +94,7 @@ Document symbols are the page outline: headings nested by level, with each secti
 This covers `[](xref:key#target)` and `<xref:key/page#target>`.
 You get completion of keys, pages and targets, hover with the resolved URL, inlay hints with the remote title, diagnostics, and document links.
 Keys come from `project.references` in `myst.yml`.
-Each external project's `myst.xref.json` (MyST) or `objects.inv` (Sphinx) is fetched when the server starts.
+Each external project's `myst.xref.json` (MyST) or `objects.inv` (Sphinx) is fetched when the project loads, and again when `myst.yml` changes (see [](configuration.md#what-it-reads-from-myst-yml)).
 
 ## Notebooks
 
