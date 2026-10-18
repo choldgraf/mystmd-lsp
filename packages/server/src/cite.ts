@@ -4,7 +4,8 @@ import { resolve } from 'node:path';
 /** A BibTeX entry. `file` is an absolute path and `line` is 0-based. */
 export type BibEntry = { key: string; file: string; line: number; author?: string; year?: string; title?: string };
 
-// A regex reader, not a full BibTeX parser: field values may nest braces one level deep, and `@string` macros aren't expanded.
+// A regex reader, not a full BibTeX parser.
+// Field values may nest braces only one level deep, and `@string` macros aren't expanded.
 function parseBib(text: string, file: string): BibEntry[] {
   const entries = [...text.matchAll(/^[ \t]*@(\w+)\s*\{\s*([^,\s]+)\s*,/gm)];
   return entries.flatMap((m, i) => {

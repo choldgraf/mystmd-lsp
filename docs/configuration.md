@@ -9,7 +9,8 @@ mystmd-lsp --stdio [--root=path/to/project] [--content-server=URL] [--no-myst] [
 ```
 
 - `--root`: use one project at this folder for every document, instead of finding each document's project (see [](#finding-the-project)).
-- `--content-server`: use a `myst start --headless` [content server](how-it-works.md) that is already running for the `--root` project, instead of starting one.
+- `--content-server`: the URL of a `myst start --headless` [content server](how-it-works.md) you already run for the `--root` project.
+  The server uses it instead of starting its own.
 - `--no-myst`: don't start mystmd.
 - `--execute`: when the server starts mystmd, run code cells and inline `{eval}` expressions too (`myst start --execute`).
   This runs the project's code, and needs Jupyter.
@@ -23,7 +24,12 @@ params: { uri?: string }
 result: { root?: string; contentServer?: string; page?: boolean }
 ```
 
-With a `uri`, `root` is the document's project folder, `contentServer` is mystmd's URL if the server runs one, and `page` says whether mystmd builds the document.
+With a `uri`, the answer describes that document:
+
+- `root` is the document's project folder.
+- `contentServer` is mystmd's URL, if the server runs one.
+- `page` says whether mystmd builds the document.
+
 A document with no project gets `{}`.
 Without a `uri`, the answer describes the `--root` project, or is `{}` when there is no `--root`.
 MyST Author's VS Code extension asks it for each document, to point its preview at the same mystmd.
@@ -31,7 +37,8 @@ MyST Author's VS Code extension asks it for each document, to point its preview 
 ## Starting mystmd
 
 See [](how-it-works.md) for when the server starts mystmd.
-When it does, mystmd runs the project's plugins, which can run any code, and writes `_build/`, like any `myst start`.
+When the server starts mystmd, mystmd runs the project's plugins and writes `_build/`, like any `myst start`.
+Plugins can run any code.
 If your editor can't mark folders as trusted, start the server with `--no-myst` for folders you do not trust.
 
 If you start mystmd yourself and pass its address with `--content-server`, run it as `HOST=127.0.0.1 myst start --headless` and pass `http://127.0.0.1:<port>`.
@@ -42,11 +49,13 @@ To run a `myst` that isn't on your `PATH`, set the `MYST_BIN` environment variab
 ## Finding the project
 
 A document's project is the nearest `myst.yml` at or above the document's folder, no higher than the workspace folder that contains it.
-So nothing above the folder you opened is picked up, and a folder holding several projects works: each project starts its own mystmd and index when the first document in it opens.
+So nothing above the folder you opened is picked up.
+A folder can hold several projects, and each one starts its own mystmd and index when the first document in it opens.
 A document outside every workspace folder, or with no `myst.yml` between it and its workspace folder, has no project and gets no features.
 
 A document gets features only if it's a page of its project, one that mystmd builds.
-So mystmd decides what counts, including `project.toc` and `project.exclude`, so the editor and the build agree.
+mystmd decides what counts, including through `project.toc` and `project.exclude`.
+That way the editor and the build agree.
 Until the first build is indexed, any Markdown file or notebook under the project folder counts as a page.
 Without mystmd, that stays the rule.
 
@@ -64,6 +73,6 @@ It re-reads them when `myst.yml` or a `.bib` file changes, if your editor suppor
 
 ## Semantic token colours
 
-References are semantic tokens, so you can colour them by kind.
+The server tags each reference with its target's kind as a semantic token, so you can colour references by kind.
 The kinds are listed in `semanticTokensLegend` in [`src/service.ts`](https://github.com/choldgraf/mystmd-lsp/blob/main/packages/server/src/service.ts).
 To colour references to figures in VS Code, set `"editor.semanticTokenColorCustomizations": { "rules": { "label.figure": "#2a9d8f" } }`.

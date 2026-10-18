@@ -40,7 +40,7 @@ export async function activate(context: vscode.ExtensionContext) {
       explanation = `${file} is a page of the MyST project at ${root}.`;
     } else {
       status.text = `MyST: not a page of ${name}`;
-      explanation = `${root} has a myst.yml, but mystmd doesn't build ${file}: it's left out by the project's toc or exclude, or lives in _build or a hidden folder.`;
+      explanation = `${root} has a myst.yml, but mystmd doesn't build ${file}. The project's toc or exclude may leave it out, or it's in _build or a hidden folder.`;
     }
     status.show();
   };
@@ -52,7 +52,8 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   update();
 
-  // The extension's public API. MyST Author's extension reads it: the client for `myst/project`, and `server` to spawn for its own editors.
+  // The extension's public API, read by MyST Author's extension.
+  // It sends `myst/project` through `client`, and spawns `server` for its own editors.
   return { client, server };
 }
 

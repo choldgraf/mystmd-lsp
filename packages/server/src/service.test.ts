@@ -140,7 +140,8 @@ test('external completion shows each target\'s kind, from MyST sites and Sphinx 
   ]);
 });
 
-// A workspace on disk: `a.md` defines the labels, `b.md` (also open, with unsaved edits), `c.md` and a Markdown cell of `nb.ipynb` reference them.
+// A workspace on disk. `a.md` defines the labels.
+// `b.md`, `c.md` and a Markdown cell of `nb.ipynb` reference them, and `b.md` is also open with unsaved edits.
 function labelWorkspace(t: TestContext) {
   const a = '(sec)=\n# Section\n\n:::{figure} x.png\n:label: Fig-One\n\nThe caption\n:::\n';
   const nb = { cells: [{ cell_type: 'code', id: 'code', source: 'See {numref}`fig-one`.' }, { cell_type: 'markdown', id: 'md', source: ['# Notes\n', 'See {numref}`fig-one`.'] }] };

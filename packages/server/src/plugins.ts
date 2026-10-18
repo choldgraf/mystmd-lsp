@@ -7,7 +7,8 @@ type PluginInfo = string | { type: string; path: string };
 
 /**
  * The directives and roles of myst.yml's JavaScript plugins, from the same files mystmd loads.
- * mystmd saves a plugin URL to `_build/cache/config-item-<md5 of the URL><ext>` (myst-cli's `resolveToAbsolute`), so a URL is found only after mystmd has built once.
+ * mystmd downloads a plugin URL to `_build/cache/config-item-<md5 of the URL><ext>`, in myst-cli's `resolveToAbsolute`.
+ * So a plugin URL is found only after mystmd has built once.
  * Importing a plugin runs its code, so call this only when mystmd runs for the project.
  */
 export async function pluginSpecs(root: string, plugins: PluginInfo[] = []) {

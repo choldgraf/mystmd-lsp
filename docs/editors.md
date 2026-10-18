@@ -37,7 +37,8 @@ jupyterlab-lsp doesn't send notebook Markdown cells to a language server, so cel
 ## Other editors
 
 Install the server (see [Install](index.md#install)), then point your editor's LSP client at `mystmd-lsp --stdio` for Markdown files.
-The configurations below use `myst.yml` as the root marker, so the editor sends the project folder as the workspace folder and the server starts mystmd there.
+The configurations below tell the editor that a folder with a `myst.yml` is a project root.
+So the editor sends the project folder as the workspace folder, and the server starts mystmd there.
 Project-wide completion and warnings appear once its first build finishes.
 
 Neovim 0.11 or newer:
@@ -66,9 +67,21 @@ roots = ["myst.yml"]
 
 `language-servers` replaces Helix's default Markdown servers, so list them too if you use one.
 
-The server pushes diagnostics until your client first pulls them, rather than trusting the `textDocument.diagnostic` capability.
+(how-warnings-reach-your-editor)=
+## How warnings reach your editor
+
+LSP has two ways to deliver warnings (diagnostics).
+With push, the server sends them on its own whenever a page changes.
+With pull, the editor asks the server for them.
+
+The server pushes warnings until your editor first pulls them.
+Then it stops pushing, so you don't see each warning twice.
+It waits for a real pull rather than trusting the editor's `textDocument.diagnostic` capability.
 That's because `@codemirror/lsp-client` advertises that capability but never pulls.
+
+An editor can also pull warnings for the whole workspace.
+Then it gets them for pages and notebook Markdown cells on disk, not just open ones, across every project in the window.
 
 If you write an LSP client that pulls diagnostics, its document selector must include notebook cells.
 In VS Code that is `{ notebook: { notebookType: 'jupyter-notebook' }, language: 'markdown' }`.
-Without it, open cells only get diagnostics from workspace pulls.
+Without it, open cells only get warnings when the client pulls for the whole workspace.

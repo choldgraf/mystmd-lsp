@@ -39,7 +39,8 @@ Below, delete the text between the backticks, then type a backtick and pick from
 - `{numref}` offers only numbered things (figures, tables, equations).
 - `{eq}` offers only equations.
 - `[](#` and `@` also offer labels.
-- Each entry has an icon for its type (figures, tables, equations and sections differ), and the type on the right.
+- Each entry has an icon for its type, and the type on the right.
+  Figures, tables, equations and sections each get a different icon.
 
 Here is a line to edit: {ref}`fig-logo`
 :::

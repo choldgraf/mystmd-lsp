@@ -23,17 +23,19 @@ It uses mystmd's own parser and directive specs, so it knows the same directives
 
 See [](configuration.md#what-it-reads-from-myst-yml) for where citation keys come from.
 
-Completions show a preview of the target, like a figure's caption or an equation's LaTeX, and the docs of directives and roles.
+Completions show a preview of the target, like a figure's caption or an equation's LaTeX.
+Completions for directives and roles show their docs.
 
 Directives and roles from the JavaScript plugins in `myst.yml` complete too, after mystmd's first build.
-The server reads them from the same files mystmd loads, so it does this only when mystmd runs for the project.
+The server loads them from the same files mystmd loads, so this only works when mystmd runs for the project.
 Reload the window after changing a local plugin or adding a new one.
 
 ## Hover and go to definition
 
 References get hover and go to definition.
 Directive names, directive options and role names get hover with the docs from mystmd's specs, including a directive's argument and options.
-`{doc}` references and links to local files, like `[](chapter.md)`, get document links and go to definition when the file exists.
+`{doc}` references and links to local files, like `[](chapter.md)`, get go to definition when the file exists.
+They also get document links, which make the path clickable in the editor.
 
 ## File arguments
 
@@ -43,13 +45,16 @@ URLs, notebook cells (`#id`), and paths with a `*` wildcard aren't checked.
 
 ## Find references and rename
 
-Both work on labels, from a reference or from the label's definition (`(label)=`, `:label:`, `$$ (label)`).
+Both work on labels, from a reference or from the label's definition.
+A definition is `(label)=`, `:label:`, or `$$ (label)`.
 They search the pages mystmd builds (see [](configuration.md#finding-the-project)), using unsaved text for open documents.
 Find references also searches the Markdown cells of notebooks on disk.
 Rename edits every reference and the definition, but in notebooks only the open cells.
 Rename isn't offered for citations, external references, labels in closed notebooks, or headings without an explicit label.
 
-When you move or rename a file or folder in the editor, the `{doc}` roles, `[](path)` links, and directive file arguments that point to it are updated, and so are the relative ones in it.
+When you move or rename a file or folder in the editor, links to it are updated.
+That covers `{doc}` roles, `[](path)` links, and directive file arguments.
+Relative links inside what you moved are updated too.
 Like rename, it leaves closed notebooks alone.
 
 ## Diagnostics
@@ -63,20 +68,20 @@ See [](troubleshooting.md) if warnings don't show up.
 Open pages also get mystmd's own warnings from parsing them, such as unknown directives, roles and directive options.
 If `myst.yml` lists plugins, unknown directives and roles aren't reported, since the server's parser doesn't load plugins.
 
-The server pushes diagnostics as each page changes.
-Once an editor pulls diagnostics, the server stops pushing them to it.
-Editors that pull workspace diagnostics also get them for the pages and notebook Markdown cells on disk, not just open ones, across every project in the window.
+Editors that pull warnings for the whole workspace also get them for pages and notebook Markdown cells that aren't open (see [](editors.md#how-warnings-reach-your-editor)).
 
 ## Inlay hints and semantic tokens
 
-Inlay hints show the resolved text after each reference, such as `Figure 1` or `(1)`.
-Semantic tokens make each reference a `label` token, with its target's kind as a modifier, such as `label.figure`.
+Inlay hints are grey text after each reference that shows what it points to, such as `Figure 1` or `(1)`.
+Semantic tokens tell the editor what kind of thing each piece of text is, so it can colour it.
+Each reference is a `label` token, with its target's kind as a modifier, such as `label.figure`.
 Citations are `label.citation`.
 See [](configuration.md#semantic-token-colours) to colour them.
 
 ## Glossary terms
 
-`` {term}`text` `` and `` {term}`shown <text>` `` get hover with the term's definition, go to definition, find references, and a warning for unknown terms.
+This covers `` {term}`text` `` and `` {term}`shown <text>` ``.
+You get hover with the term's definition, go to definition, find references, and a warning for unknown terms.
 Terms are matched as mystmd matches them, ignoring case and quotes.
 Rename isn't offered, since a term's label is its text.
 
@@ -89,24 +94,28 @@ Unknown keys are only reported when the project has a bibliography and all of it
 
 ## Symbols
 
-Workspace symbols cover every label in every project in the window, searchable by its label or text.
+Workspace symbols let you search every label in every project in the window, by its label or text.
 Each symbol is named by its label's identifier, which mystmd lowercases.
 Exact matches come first.
 
-Document symbols are the page outline: headings nested by level, with each section's labeled figures, tables, equations and so on under it.
+Document symbols are the page outline.
+Headings are nested by level, and each section lists its labeled figures, tables, equations and so on.
 
 ## External references
 
 This covers `[](xref:key#target)` and `<xref:key/page#target>`.
-You get completion of keys, pages and targets, hover with the resolved URL, inlay hints with the remote title, diagnostics, and document links.
+You get completion of keys, pages and targets.
+Hover shows the URL a link points to, and an inlay hint shows the remote page's title.
+You also get diagnostics and document links.
 Keys come from `project.references` in `myst.yml`.
-Each external project's `myst.xref.json` (MyST) or `objects.inv` (Sphinx) is fetched when the project loads, and again when `myst.yml` changes (see [](configuration.md#what-it-reads-from-myst-yml)).
+The server fetches each external project's list of targets when the project loads, and again when `myst.yml` changes (see [](configuration.md#what-it-reads-from-myst-yml)).
+That list is `myst.xref.json` for a MyST site, or `objects.inv` for a Sphinx site.
 
 ## Notebooks
 
 Each Markdown cell is a document in its notebook's file, with all the features above.
 Clients can send cells through LSP notebook sync, as VS Code does.
-Other clients can open each cell as a document whose URI is the notebook's, with the cell id as the fragment.
+Other clients can open each cell as a document at the notebook's URI with `#<cell id>` on the end.
 
 ## Limits
 

@@ -6,8 +6,10 @@ title: Contributing
 
 - `packages/server`: the `mystmd-lsp` npm package. `npm run build` bundles `src` into `dist/server.cjs`.
 - `packages/vscode`: the VS Code extension, which copies that bundle in at build time.
-  Its `activate()` returns `{ client, server }`, the language client and the path of the server script, for extensions that build on it.
-  MyST Author uses the client to [ask where the project is](configuration.md#asking-where-the-project-is), and runs the script again with `--root` and `--content-server` for its own editors.
+  For extensions that build on it, `activate()` returns `{ client, server }`.
+  `client` is the language client, and `server` is the path of the server script.
+  MyST Author uses the client to [ask where the project is](configuration.md#asking-where-the-project-is).
+  It also runs the script again with `--root` and `--content-server` for its own editors.
 - `demo`: a MyST project that walks through each feature.
 - `docs`: this site.
 - `.devcontainer` and `binder`: the Codespaces and Binder configs, which open the demo with the extension and with jupyterlab-lsp.
@@ -37,8 +39,10 @@ CI runs `test:mystmd`, `typecheck` and `conformance`, and packages the VS Code e
 
 ## Try your build
 
-Run `npm run demo:copy`, then open `/tmp/mystmd-lsp-demo` in an editor set up as in [](editors.md), with `node <absolute path to packages/server/dist/server.cjs> --stdio` as the command instead of `mystmd-lsp --stdio`.
-The demo walks through each feature, and works on a copy so `demo/` isn't edited.
+Run `npm run demo:copy`, then open `/tmp/mystmd-lsp-demo` in an editor set up as in [](editors.md).
+Use `node <absolute path to packages/server/dist/server.cjs> --stdio` as the server command, instead of `mystmd-lsp --stdio`.
+The demo walks through each feature.
+It works on a copy, so `demo/` isn't edited.
 In VS Code, point the MyST Language Server extension's `mystmdLsp.serverPath` setting at your `packages/server/dist/server.cjs`.
 
 ## Code map
@@ -46,20 +50,23 @@ In VS Code, point the MyST Language Server extension's `mystmdLsp.serverPath` se
 - `src/syntax.ts`: finds reference syntax in text.
 - `src/index-targets.ts`: collects reference targets from an mdast tree.
 - `src/project.ts`: the project index, from the content server's pages and the open documents.
-- `src/root.ts`: finds a document's project, with the workspace folder as the ceiling, and reads its `myst.yml`.
+- `src/root.ts`: finds a document's project, looking no higher than its workspace folder, and reads its `myst.yml`.
 - `src/xref.ts`: external project inventories and `xref:` resolution.
 - `src/cite.ts`: reads the project's `.bib` files.
 - `src/kinds.ts`: the completion icon for each kind of target.
 - `src/service.ts`: the features (completion, hover, diagnostics, ...) without an LSP connection, so tests can call them directly.
-- `src/server.ts`: the LSP wiring.
-- `mystmd-client`, a separate package: the mystmd parser with its default extensions (`parse`), a client for the content server (`content-server`), and a launcher for `myst start` (`start`).
+- `src/server.ts`: connects the features in `service.ts` to LSP requests.
+- `mystmd-client`, a separate package, has three exports:
+  - `parse`: the mystmd parser with its default extensions.
+  - `content-server`: a client for the content server.
+  - `start`: a launcher for `myst start`.
 
 Tests sit next to the code they cover, as `*.test.ts`.
 To add a feature, such as a new diagnostic:
 
 1. Put the logic in `src/service.ts`, and add a test to `service.test.ts` beside it.
    To run one file, use `node --test src/service.test.ts` in `packages/server`.
-2. Wire it up in `server.ts`.
+2. Connect it to its LSP request in `server.ts`.
 3. Document it in [](features.md), and add a line to the README's "What you get" only if it's a new kind of feature.
 
 ## Conformance
@@ -68,7 +75,8 @@ References come from regexes.
 [](design.md#replacing-the-reference-regexes) says why, and what a parser would need to replace them.
 
 `npm run conformance` checks that the regexes find the same references and label definitions as mystmd's parser, on the [myst-spec](https://github.com/jupyter-book/myst-spec) examples.
-It fails on a difference that isn't in `known` at the top of `scripts/conformance.ts`, or on one in `known` that no longer differs.
+It fails when it finds a difference that isn't listed in `known`, at the top of `scripts/conformance.ts`.
+It also fails when a difference listed in `known` is gone.
 
 To also run it on your own projects, point `MYST_CORPUS` at a folder:
 
@@ -110,7 +118,8 @@ The extension bundles the server from the working tree, so a server change usual
 3. Run the Release workflow (`.github/workflows/release.yml`) from the Actions tab and pick the package, or run `gh workflow run release.yml -f package=<name>`.
 
 It publishes the package at the version in its `package.json`.
-Then it tags the commit, `mystmd-lsp-v<version>` for the server or `vscode-v<version>` for the extension, and creates a GitHub release with generated notes.
+Then it tags the commit and creates a GitHub release with generated notes.
+The tag is `mystmd-lsp-v<version>` for the server, or `vscode-v<version>` for the extension.
 Edit the release afterwards to replace the notes with ones from [github-activity](https://github-activity.readthedocs.io/).
 Publishing the server needs npm's [trusted publisher](https://docs.npmjs.com/trusted-publishers) set up for `release.yml`.
 Publishing the extension needs the `VSCE_PAT` and `OVSX_PAT` secrets of the `myst-author` publisher, on the Marketplace and on Open VSX.

@@ -59,7 +59,10 @@ export function readReferences(root: string): Record<string, string> {
   return Object.fromEntries(Object.entries(refs).map(([k, v]: [string, any]) => [k, typeof v === 'string' ? v : v?.url]));
 }
 
-/** Keep `xrefs` in step with `refs` (key → url): drop projects that went away or moved, and load new ones, calling `onLoad` as each arrives. */
+/**
+ * Keep `xrefs` in step with `refs`, which maps key to url.
+ * Drop projects that went away or moved, and load new ones, calling `onLoad` as each arrives.
+ */
 export function syncXrefs(xrefs: Record<string, XrefProject>, refs: Record<string, string>, onLoad: () => void) {
   for (const key of Object.keys(xrefs)) if (xrefs[key].url !== refs[key]) delete xrefs[key];
   for (const [key, url] of Object.entries(refs)) {

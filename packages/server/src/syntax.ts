@@ -15,7 +15,8 @@ type RefContext = { trigger: Trigger; prefix: string; start: number; end: number
  * `cite` is a `{cite}` key or an `@key`, which may be a citation or a label.
  * `doc` is a `{doc}` target or a Markdown link to a local file.
  * `term` is a `{term}` role's glossary term, as written.
- * `path` is the file argument of a `figure`, `image`, `include` or `literalinclude` directive (not URLs, `#cell` ids, or paths with `*`).
+ * `path` is the file argument of a `figure`, `image`, `include` or `literalinclude` directive.
+ * URLs, `#cell` ids, and paths with `*` aren't `path` refs.
  */
 export type Ref = { kind: 'ref' | 'numref' | 'eq' | 'doc' | 'term' | 'link' | 'xref' | 'cite' | 'path'; target: string; line: number; start: number; end: number; after: number; text?: string };
 
@@ -44,7 +45,8 @@ const contexts: [RegExp, Trigger | null][] = [
 ];
 
 /**
- * Cursor on a directive option line (`:lab|`) directly below `:::{name}` / ```` ```{name} ```` and any earlier options.
+ * The cursor is on a directive option line, like `:lab|`.
+ * The line must sit directly below `:::{name}` or ```` ```{name} ````, and any earlier options.
  * Returns the directive name, the options already used, and the span a completion replaces.
  */
 export function optionAt(lines: string[], line: number, character: number) {
@@ -92,12 +94,16 @@ const refPatterns: [RegExp, (m: RegExpExecArray) => Ref['kind']][] = [
   [/\{(ref|numref|eq|doc|term)\}`(?:[^`<]*<)?([^`<>]+)>?`/g, (m) => m[1] as Ref['kind']],
   [/\]\(#([^)\s]+)\)/g, () => 'link'],
   [/<#([^>\s]+)>/g, () => 'link'],
-  // A link to a local file, like `[](chapter.md#intro "title")`, but not a URL or `#label`. The lookahead keeps `#intro` out of the match, so a fragment that repeats the path can't move `start`.
+  // A link to a local file, like `[](chapter.md#intro "title")`, but not a URL or `#label`.
+  // The lookahead keeps `#intro` out of the match.
+  // `start` comes from `lastIndexOf` on the match, so a fragment that repeats the path would otherwise move it.
   [/\]\((?!\w+:|#)([^)\s#]+)(?=[#)]|\s+"[^"]*"\))/g, () => 'doc'],
   [/\[(?<text>[^\]]*)\]\(xref:([^)\s]+)\)/g, () => 'xref'],
   [/<xref:([^>\s]+)>/g, () => 'xref'],
   [/(?<=\{cite(?::\w+)?\}`(?:[^`]*[,;])?\s*)[^`,;\s]+(?=[^`]*`)/g, () => 'cite'], // each key of a `{cite}` role
-  // `@key`, as mystmd reads it: after a space, `[`, `(` or `-` (`[-@key]`), so not in emails or URLs, and not ending in punctuation.
+  // `@key`, as mystmd reads it.
+  // It must follow a space, `[`, `(` or `-` (as in `[-@key]`), so it doesn't match inside emails or URLs.
+  // It can't end in punctuation.
   [/(?<=^|[\s[(]|[\s[]-)@(\w(?:[\w:.#$%&+?~/-]*\w)?)/g, () => 'cite'],
 ];
 
@@ -137,10 +143,16 @@ export function refsInText(text: string): Ref[] {
   return refs.sort((a, b) => a.line - b.line || a.start - b.start);
 }
 
-/** mystmd's label characters (TARGET_PATTERN in markdown-it-myst) except `<>`, which rename leaves out because they would end a {ref}`text <label>` early. */
+/**
+ * mystmd's label characters (TARGET_PATTERN in markdown-it-myst), except `<>`.
+ * Rename leaves those out because they would end a {ref}`text <label>` early.
+ */
 export const labelChars = String.raw`a-zA-Z0-9|@*./_\-+:`;
 
-// Where a label is defined: `(id)=`, `:label: id` / `:name: id` (or without colons in a directive's YAML options), and `$$ (id)` after display math.
+// Where a label is defined:
+// - `(id)=`
+// - `:label: id` or `:name: id`, or without the leading colon in a directive's YAML options
+// - `$$ (id)` after display math
 const labelPatterns = [new RegExp(String.raw`^\s*\(([${labelChars}<>]+)\)=\s*$`), /^\s*:?(?:label|name):\s*(\S+)\s*$/, /\$\$\s*\(([^()\s]+)\)\s*$/];
 
 /** The label defined on a line, if any, with the span of its name. */

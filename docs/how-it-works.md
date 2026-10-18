@@ -6,7 +6,8 @@ title: How it works
 
 Three processes take part: your editor, this server, and mystmd's `myst start`, which builds the project and serves the result from a content server.
 Inside the server, `src/server.ts` speaks LSP to the editor and hands each request to `src/service.ts`, which has the features.
-`service.ts` finds references with the regexes in `src/syntax.ts` and looks them up in the index in `src/project.ts`, which is filled as described in [](#two-sources-of-truth).
+`service.ts` finds references with the regexes in `src/syntax.ts`.
+It looks them up in the index in `src/project.ts`, which is filled as described in [](#two-sources-of-truth).
 
 ```{mermaid}
 flowchart LR
@@ -25,7 +26,8 @@ flowchart LR
 1. The editor sends the change, and `server.ts` passes the document's new text to `service.update`.
 2. `service.update` waits until typing has stopped for 150 ms, then calls `project.setOpen`.
 3. `setOpen` re-parses the document with `parseMyst` and replaces that document's targets and mystmd warnings, keyed by its URI.
-4. `setOpen` then calls its `onChange`, which is `refresh` in `server.ts` and also runs when the content server reports a rebuild.
+4. `setOpen` then calls its `onChange`, which is `refresh` in `server.ts`.
+   `refresh` also runs when the content server reports a rebuild.
 5. `refresh` pushes diagnostics for every open page of that project, or tells an editor that pulls diagnostics to pull again.
    `service.diagnostics` reports unresolved references, duplicate labels in the index, and mystmd's own warnings from the live parse.
 
@@ -49,7 +51,8 @@ Rename and file moves only edit open cells, since the editor owns a notebook's c
 
 ## To add a reference kind
 
-1. Add its pattern to `refPatterns` and its name to the `kind` of `Ref` in `src/syntax.ts`, and to `contexts` if it should complete.
+1. In `src/syntax.ts`, add its pattern to `refPatterns` and its name to the `kind` of `Ref`.
+   Add it to `contexts` too if it should complete.
 2. Resolve it in `resolveRef` in `src/service.ts`, and add its completions under its trigger in `completion`.
 3. If it points at a new kind of target, give that kind a completion icon in `src/kinds.ts` and a modifier in `semanticTokensLegend` in `src/service.ts`.
 4. If mystmd's parse shows it, add it to `kinds` in `scripts/conformance.ts`.
@@ -65,7 +68,8 @@ The comment above `known` in `scripts/conformance.ts` lists the other things tha
 The first is the content server.
 For each project with a `myst.yml`, the server starts `myst start --headless`, which builds every page and serves a content server.
 Clients that already run mystmd pass `--root` and the content server's address with `--content-server` instead.
-The server indexes the result, so it knows every page, label and citation, and reloads the index when the content server reports a change.
+The server indexes the result, so it knows every page, label and citation.
+It reloads the index when the content server reports a change.
 Warnings for unknown targets and completion of labels from other pages need this.
 
 The second is the open documents.

@@ -87,7 +87,7 @@ export function markdownCells(uri: string, json: string): (readonly [string, str
 }
 
 export function workspaceFiles(dir: string, pattern = /\.(md|ipynb)$/): string[] {
-  if (!existsSync(dir)) return []; // a root that doesn't exist on disk, as the tests' don't, has no files
+  if (!existsSync(dir)) return []; // the tests use roots that aren't on disk
   return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '_build') return [];
     const path = join(dir, e.name);
@@ -119,7 +119,8 @@ export function createService(root: string, project: ReturnType<typeof createPro
   // Citations from the project's .bib files, read on startup and again on `reloadConfig()`.
   let bib = { entries: [] as BibEntry[], complete: false };
   let citations = new Map<string, BibEntry>();
-  // Whether myst.yml lists plugins, so we can't tell an unknown directive or role from a plugin's that didn't load.
+  // Whether myst.yml lists plugins.
+  // If it does, an unknown directive or role may come from a plugin that didn't load, so we can't flag it.
   let plugins = false;
   // The same directives and roles as mystmd's parser (`mystmd-client/parse`), plus the plugins' once `loadPlugins` runs.
   let directiveSpecs = byName(directives);
@@ -221,7 +222,10 @@ export function createService(root: string, project: ReturnType<typeof createPro
     return d && { uri, range: rangeOf(d) };
   }
 
-  /** The URI and text of the project's Markdown files and open documents, and with `notebooks`, of the Markdown cells of notebooks on disk. */
+  /**
+   * The URI and text of the project's Markdown files and open documents.
+   * With `notebooks`, also the Markdown cells of notebooks on disk.
+   */
   function projectDocs(notebooks: boolean) {
     // Skip files that are open: the client's URI for them can be encoded differently from ours.
     const open = new Set([...texts.keys()].map(pathOf));
@@ -418,7 +422,11 @@ export function createService(root: string, project: ReturnType<typeof createPro
       return { changes };
     },
 
-    /** Before files or folders move, update the `{doc}` roles, Markdown links and directive file arguments that point to them or are in them, in the files rename edits. */
+    /**
+     * Before files or folders move, update the references that point to them, and the relative ones inside them.
+     * These are `{doc}` roles, Markdown links and directive file arguments.
+     * It edits the same files as rename.
+     */
     willRenameFiles({ files }: { files: { oldUri: string; newUri: string }[] }) {
       // Where `path` will be after the move. A file in a moved folder moves too, and an extensionless `{doc}` target moves with its file.
       const moved = (path: string) => {
@@ -446,7 +454,8 @@ export function createService(root: string, project: ReturnType<typeof createPro
 
     inlayHints({ textDocument }: { textDocument: { uri: string } }) {
       return resolvedRefs(textDocument.uri).flatMap(([ref, r]) => {
-        // An xref link without text renders with the remote title, so show that. A `{term}` already shows its term.
+        // mystmd shows an xref link with no text as the remote page's title, so the hint shows that title too.
+        // A `{term}` already shows its term, so it gets no hint.
         const label = r.kind === 'label' ? r.target.kind !== 'term' && hint(r.target) : r.kind === 'xref' && !ref.text && r.entry.title;
         return label ? [{ position: { line: ref.line, character: ref.after }, label, paddingLeft: true }] : [];
       });
@@ -520,7 +529,9 @@ export function createService(root: string, project: ReturnType<typeof createPro
         const message = `Duplicate label \`${t.identifier}\`, also defined in ${[...new Set(others.map((o) => o.file))].join(', ')}`;
         return [{ severity: DiagnosticSeverity.Warning, range, message, source: 'myst' }];
       });
-      // mystmd's own warnings from parsing this page, except the ones we check project-wide above: references (including the citations parse.ts can't link) and duplicate labels.
+      // mystmd's own warnings from parsing this page.
+      // We skip its warnings about references and duplicate labels, since we check those project-wide above.
+      // Its reference warnings include the citations parse.ts can't link.
       // Invalid frontmatter is skipped too, since half-typed YAML is normal while editing.
       const skip = ['reference-target-resolves', 'identifier-is-unique', 'frontmatter-is-yaml', ...(plugins ? ['directive-known', 'role-known'] : [])];
       const mystmd = project.messages(uri).filter((m) => !skip.includes(String(m.ruleId))).map((m) => {

@@ -9,9 +9,10 @@ import { labelDefinition, refsInText, splitLines } from '../src/syntax.ts';
 type Case = { id: string; src: string };
 const kinds = ['label role', 'doc role', 'path link', 'label link', 'label definition'];
 
-// The label roles below must match the role alternation in src/syntax.ts,
-// and labelChars there must match TARGET_PATTERN in markdown-it-myst.
-// Spec examples where the regexes are known to differ from mystmd, and why.
+// The label roles below must match the role alternation in src/syntax.ts.
+// labelChars there must match TARGET_PATTERN in markdown-it-myst.
+//
+// `known` lists the spec examples where the regexes are known to differ from mystmd, and why.
 const known = new Set([
   // mystmd accepts spaces in `:label:`, like `:name: My code`, but matching them makes frontmatter `name:` and option text look like definitions on real projects.
   'directives.code.yml: Code directive, starting line',

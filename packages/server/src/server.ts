@@ -19,7 +19,7 @@ if (args.help) {
 }
 if (args.root) args.root = resolve(args.root); // compared with document paths
 
-// The LSP wiring: features live in service.ts.
+// Connects LSP requests to the features in service.ts.
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 // Notebooks from clients with notebook sync (VS Code): each Markdown cell is a document.
@@ -27,9 +27,8 @@ const notebooks = new NotebookDocuments(TextDocument);
 const cells = notebooks.cellTextDocuments;
 let workspace: ClientCapabilities['workspace'];
 let canWatchFiles = false;
-// Diagnostics are pushed until the client pulls them, so it doesn't see each one twice.
-// Waiting for a pull, not trusting the capability, is for @codemirror/lsp-client, which advertises pull diagnostics but never pulls.
-// See https://github.com/choldgraf/mystmd-lsp/issues/1.
+// Push diagnostics until the client first pulls, since @codemirror/lsp-client says it pulls but never does.
+// See docs/editors.md#how-warnings-reach-your-editor and https://github.com/choldgraf/mystmd-lsp/issues/1.
 let push = true;
 // The workspace folders: a document's project is the nearest myst.yml at or above it, no higher than these.
 let ceilings: string[] = [];
@@ -56,7 +55,7 @@ async function createEntry(root: string): Promise<Entry> {
     entry.loading = false;
     project.unwatch();
     entry.progress?.done();
-    connection.window.showWarningMessage(`MyST: ${message}. Project-wide features are off; see the server log.`);
+    connection.window.showWarningMessage(`MyST: ${message}. Project-wide features are off. See the server log.`);
   };
   // Unless told otherwise, the server runs mystmd itself when the project has a myst.yml, so clients needn't start it.
   // --content-server is the --root project's mystmd, started by the client.
