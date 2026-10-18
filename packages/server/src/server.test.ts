@@ -10,13 +10,13 @@ import { CompletionItemKind, createProtocolConnection, StreamMessageReader, Stre
 const server = new URL('../dist/server.cjs', import.meta.url).pathname;
 
 /** Start the bundle with `args` on a temp workspace holding `files`, and initialize it. */
-async function startServer(t: TestContext, files: Record<string, string>, args: string[] = []) {
+async function startServer(t: TestContext, files: Record<string, string>, args: string[] = [], capabilities = {}) {
   const root = tmpWorkspace(t, files);
   const child = spawn(process.execPath, [server, '--stdio', ...args]);
   const conn = createProtocolConnection(new StreamMessageReader(child.stdout), new StreamMessageWriter(child.stdin));
   t.after(() => (conn.dispose(), child.kill()));
   conn.listen();
-  await conn.sendRequest('initialize', { processId: null, rootUri: pathToFileURL(root).href, capabilities: {} });
+  await conn.sendRequest('initialize', { processId: null, rootUri: pathToFileURL(root).href, capabilities });
   conn.sendNotification('initialized', {});
   return { root, child, conn };
 }
@@ -47,9 +47,11 @@ See {numref}\`fig-logo\` and {ref}\`missing\`.
 
 // Each feature is tested through `createService` in service.test.ts. This checks that the server wires a few of them to LSP requests.
 test('server completes, hints and diagnoses over stdio', async (t) => {
-  const { root, conn } = await startServer(t, { 'myst.yml': '', 'a.png': '' }, ['--no-myst']);
+  // A client that claims to pull diagnostics, as @codemirror/lsp-client does, still gets them pushed until it pulls.
+  const { root, conn } = await startServer(t, { 'myst.yml': '', 'a.png': '' }, ['--no-myst'], { textDocument: { diagnostic: {} } });
   const uri = pathToFileURL(join(root, 'index.md')).href;
-  const diagnostics = new Promise<any>((resolve) => conn.onNotification('textDocument/publishDiagnostics', resolve));
+  const pushes: any[] = [];
+  const diagnostics = new Promise<any>((resolve) => conn.onNotification('textDocument/publishDiagnostics', (p) => (pushes.push(p), resolve(p))));
   conn.sendNotification('textDocument/didOpen', { textDocument: { uri, languageId: 'markdown', version: 1, text } });
 
   // Without a content server, unknown targets aren't flagged (they may live in files that aren't open).
@@ -57,8 +59,9 @@ test('server completes, hints and diagnoses over stdio', async (t) => {
   const [xref, ...rest] = pushed.diagnostics;
   assert.match(xref.message, /Unknown external project `nope`/);
   assert.deepEqual(rest, []);
-  // Clients that pull diagnostics get the same ones.
+  // Pulling gets the same ones, and clears the pushed ones so they don't show twice.
   assert.deepEqual(await conn.sendRequest('textDocument/diagnostic', { textDocument: { uri } }), { kind: 'full', items: pushed.diagnostics });
+  assert.deepEqual(pushes.at(-1), { uri, diagnostics: [] });
 
   const items: any[] = await conn.sendRequest('textDocument/completion', { textDocument: { uri }, position: { line: 10, character: 9 } });
   assert.deepEqual(items.map((i) => [i.label, i.detail, i.labelDetails.description, i.kind]), [['fig-logo', 'Figure 1 · index.md', 'Figure 1', CompletionItemKind.Color]]);

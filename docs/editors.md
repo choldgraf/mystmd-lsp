@@ -66,6 +66,9 @@ roots = ["myst.yml"]
 
 `language-servers` replaces Helix's default Markdown servers, so list them too if you use one.
 
+The server pushes diagnostics until your client first pulls them, rather than trusting the `textDocument.diagnostic` capability.
+That's because `@codemirror/lsp-client` advertises that capability but never pulls.
+
 If you write an LSP client that pulls diagnostics, its document selector must include notebook cells.
 In VS Code that is `{ notebook: { notebookType: 'jupyter-notebook' }, language: 'markdown' }`.
 Without it, open cells only get diagnostics from workspace pulls.

@@ -27,7 +27,8 @@ const notebooks = new NotebookDocuments(TextDocument);
 const cells = notebooks.cellTextDocuments;
 let workspace: ClientCapabilities['workspace'];
 let canWatchFiles = false;
-// Clients that pull diagnostics get them that way only, so they don't see each one twice.
+// Diagnostics are pushed until the client pulls them, so it doesn't see each one twice.
+// Waiting for a pull, not trusting the capability, is for @codemirror/lsp-client, which advertises pull diagnostics but never pulls.
 let push = true;
 // The workspace folders: a document's project is the nearest myst.yml at or above it, no higher than these.
 let ceilings: string[] = [];
@@ -115,7 +116,6 @@ connection.onInitialize((params) => {
   ceilings = (params.workspaceFolders?.map((f) => f.uri) ?? (params.rootUri ? [params.rootUri] : [])).map((uri) => resolve(fileURLToPath(uri)));
   workspace = params.capabilities.workspace;
   canWatchFiles = !!workspace?.didChangeWatchedFiles?.dynamicRegistration;
-  push = !params.capabilities.textDocument?.diagnostic;
   return {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
@@ -170,8 +170,19 @@ connection.onWorkspaceSymbol(async ({ query }) => {
   return (await all()).flatMap((e) => e.service.workspaceSymbols({ query })).sort((a, b) => exact(b.name) - exact(a.name));
 });
 connection.onDocumentSymbol(onDocument((s, p) => s.documentSymbols(p)));
-connection.languages.diagnostics.on(async (p) => ({ kind: 'full', items: (await serviceFor(p.textDocument.uri))?.diagnostics(p.textDocument.uri) ?? [] }));
-connection.languages.diagnostics.onWorkspace(async () => ({ items: (await all()).flatMap((e) => e.service.workspaceDiagnostics().items) }));
+// The first pull stops the pushes, and clears what was pushed before it.
+const pulled = () => {
+  if (push) for (const { uri } of [...documents.all(), ...cells.all()]) connection.sendDiagnostics({ uri, diagnostics: [] });
+  push = false;
+};
+connection.languages.diagnostics.on(async (p) => {
+  pulled();
+  return { kind: 'full', items: (await serviceFor(p.textDocument.uri))?.diagnostics(p.textDocument.uri) ?? [] };
+});
+connection.languages.diagnostics.onWorkspace(async () => {
+  pulled();
+  return { items: (await all()).flatMap((e) => e.service.workspaceDiagnostics().items) };
+});
 
 // Diagnostics are sent when the project changes (after the service re-parses an edited document), not on every keystroke.
 // Every document in a project is kept, page or not, so one that becomes a page after a rebuild has its text.

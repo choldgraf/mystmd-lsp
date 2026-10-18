@@ -63,8 +63,8 @@ See [](troubleshooting.md) if warnings don't show up.
 Open pages also get mystmd's own warnings from parsing them, such as unknown directives, roles and directive options.
 If `myst.yml` lists plugins, unknown directives and roles aren't reported, since the server's parser doesn't load plugins.
 
-Editors that support pull diagnostics ask the server for them.
-Other editors get them pushed as each page changes.
+The server pushes diagnostics as each page changes.
+Once an editor pulls diagnostics, the server stops pushing them to it.
 Editors that pull workspace diagnostics also get them for the pages and notebook Markdown cells on disk, not just open ones, across every project in the window.
 
 ## Inlay hints and semantic tokens
