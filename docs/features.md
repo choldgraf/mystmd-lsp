@@ -113,7 +113,7 @@ That list is `myst.xref.json` for a MyST site, or `objects.inv` for a Sphinx sit
 
 ## Notebooks
 
-Each Markdown cell is a document in its notebook's file, with all the features above.
+Each Markdown cell is its own document, at the notebook's path, and gets all the features above.
 Clients can send cells through LSP notebook sync, as VS Code does.
 Other clients can open each cell as a document at the notebook's URI with `#<cell id>` on the end.
 

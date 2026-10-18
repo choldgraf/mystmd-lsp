@@ -52,7 +52,7 @@ Here is a line to edit: {ref}`fig-logo`
 :::
 
 :::{tip} Try this: find references and rename
-1. Put the cursor on `fig-logo` in the paragraph above (or on `:label: fig-logo` in the figure).
+1. Put the cursor on `fig-logo` in the line to edit above (or on `:label: fig-logo` in the figure).
 2. Press Shift+F12 to see every reference, across pages.
 3. Press F2 and rename it to `fig-brand`. The figure's label and every reference change together, including the ones in other files.
 :::
