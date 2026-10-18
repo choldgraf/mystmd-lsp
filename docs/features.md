@@ -73,7 +73,7 @@ Editors that pull warnings for the whole workspace also get them for pages and n
 ## Inlay hints and semantic tokens
 
 Inlay hints are grey text after each reference that shows what it points to, such as `Figure 1` or `(1)`.
-Semantic tokens tell the editor what kind of thing each piece of text is, so it can colour it.
+Semantic tokens tell the editor what kind of thing each piece of text is, so the editor can colour it.
 Each reference is a `label` token, with its target's kind as a modifier, such as `label.figure`.
 Citations are `label.citation`.
 See [](configuration.md#semantic-token-colours) to colour them.

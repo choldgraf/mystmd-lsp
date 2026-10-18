@@ -32,7 +32,7 @@ With a `uri`, the answer describes that document:
 
 A document with no project gets `{}`.
 Without a `uri`, the answer describes the `--root` project, or is `{}` when there is no `--root`.
-MyST Author's VS Code extension asks it for each document, to point its preview at the same mystmd.
+MyST Author's VS Code extension sends this request for each document, to point its preview at the same mystmd.
 
 ## Starting mystmd
 
@@ -57,7 +57,7 @@ A document gets features only if it's a page of its project, one that mystmd bui
 mystmd decides what counts, including through `project.toc` and `project.exclude`.
 That way the editor and the build agree.
 Until the first build is indexed, any Markdown file or notebook under the project folder counts as a page.
-Without mystmd, that stays the rule.
+If mystmd doesn't run, that fallback stays the rule.
 
 `--root` replaces all of this with one project at that folder, with or without a `myst.yml`.
 A `myst.yml` created after the server started, or a workspace folder added later, isn't picked up until the server restarts (in VS Code, reload the window).

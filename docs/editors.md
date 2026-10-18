@@ -39,7 +39,7 @@ jupyterlab-lsp doesn't send notebook Markdown cells to a language server, so cel
 Install the server (see [Install](index.md#install)), then point your editor's LSP client at `mystmd-lsp --stdio` for Markdown files.
 The configurations below tell the editor that a folder with a `myst.yml` is a project root.
 So the editor sends the project folder as the workspace folder, and the server starts mystmd there.
-Project-wide completion and warnings appear once its first build finishes.
+Project-wide completion and warnings appear once mystmd's first build finishes.
 
 Neovim 0.11 or newer:
 

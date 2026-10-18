@@ -3,7 +3,8 @@
 Runs the [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) language server in VS Code, for the pages of MyST projects.
 Pages can be Markdown files or the Markdown cells of notebooks.
 See its [features](https://chrisholdgraf.com/mystmd-lsp/features) for what you get.
-Highlighting comes from the [MyST Syntax](https://github.com/choldgraf/myst-syntax) extension, which this one depends on so that one install gives both.
+Highlighting comes from the [MyST Syntax](https://github.com/choldgraf/myst-syntax) extension.
+This extension depends on it, so installing this one installs both.
 [MyST Author](https://chrisholdgraf.com/myst-author/) builds on this extension to add a live preview.
 
 ## Install
@@ -21,7 +22,7 @@ Until MyST Syntax is published, build and install its `.vsix` from the [myst-syn
 
 ## Projects
 
-The extension activates when a workspace folder contains a `myst.yml` anywhere, and the server starts with it.
+The extension activates, and starts the server, when a workspace folder contains a `myst.yml` anywhere.
 A `myst.yml` added after that needs a window reload.
 
 Only files that are pages of a MyST project get completion, warnings and navigation.

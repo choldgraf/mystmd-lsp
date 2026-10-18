@@ -3,9 +3,8 @@ title: External references
 ---
 
 `myst.yml` lists two other sites under `project.references`.
-`myst` is the MyST guide, a MyST site.
-`python` is the Python docs, a Sphinx site.
-The server downloads each one's inventory when it starts, so this needs network access.
+`myst` is the MyST guide, a MyST site, and `python` is the Python docs, a Sphinx site.
+The server downloads each site's inventory, its list of targets you can link to, when it starts, so this needs network access.
 
 A link to a page in the MyST guide: [](xref:myst/quickstart).
 A link to a figure in it: [](xref:myst/quickstart#frontmatter-before).
