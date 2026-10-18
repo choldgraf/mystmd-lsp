@@ -29,6 +29,7 @@ let workspace: ClientCapabilities['workspace'];
 let canWatchFiles = false;
 // Diagnostics are pushed until the client pulls them, so it doesn't see each one twice.
 // Waiting for a pull, not trusting the capability, is for @codemirror/lsp-client, which advertises pull diagnostics but never pulls.
+// See https://github.com/choldgraf/mystmd-lsp/issues/1.
 let push = true;
 // The workspace folders: a document's project is the nearest myst.yml at or above it, no higher than these.
 let ceilings: string[] = [];
