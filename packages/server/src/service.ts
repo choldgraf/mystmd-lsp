@@ -15,16 +15,19 @@ import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref
 
 // Directive and role specs by name and alias.
 const byName = <T extends { name: string; alias?: string[] }>(specs: T[]) => new Map(specs.flatMap((s) => [s.name, ...(s.alias ?? [])].map((n) => [n, s] as const)));
-// Spec types are names like `myst`, or constructors like `String`.
+// Spec types are names like `myst` (MyST Markdown), or constructors like `String`.
 type Param = { type?: string | { name: string }; doc?: string; required?: boolean };
-const typeName = (type: Param['type']) => (typeof type === 'string' ? type : type?.name.toLowerCase());
+function typeName(type: Param['type']) {
+  if (type === 'myst') return 'markdown';
+  return typeof type === 'string' ? type : type?.name.toLowerCase();
+}
 // `(string, optional)`, or nothing when every part is empty.
 const parens = (...parts: (string | false | undefined)[]) => (parts.some(Boolean) ? `(${parts.filter(Boolean).join(', ')})` : '');
 /** Markdown docs for a directive, role or option spec, laid out like a docstring: its description, argument, body and options. */
 function specDoc(spec?: { doc?: string; arg?: Param; body?: Param; options?: Record<string, Param> }) {
-  const param = (name: string, p?: Param) => p && [`**${name}**`, parens(typeName(p.type), !p.required && 'optional')].filter(Boolean).join(' ') + (p.doc ? `: ${p.doc}` : '');
-  // Only each option's first line, to keep the list short. Hover on an option shows all of it.
-  const options = Object.entries(spec?.options ?? {}).map(([k, o]) => ['-', `\`:${k}:\``, parens(typeName(o.type)), o.doc?.split('\n')[0]].filter(Boolean).join(' '));
+  // Only the first paragraph of the argument and body, and the first line of each option, to keep it short.
+  const param = (name: string, p?: Param) => p && [`**${name}**`, parens(typeName(p.type), !p.required && 'optional')].filter(Boolean).join(' ') + (p.doc ? `: ${p.doc.split('\n\n')[0]}` : '');
+  const options = Object.entries(spec?.options ?? {}).map(([k, o]) => ['-', `\`${k}\``, parens(typeName(o.type)), o.doc?.split('\n')[0]].filter(Boolean).join(' '));
   return [spec?.doc, param('Argument', spec?.arg), param('Body', spec?.body), options.length && `**Options**\n\n${options.join('\n')}`].filter(Boolean).join('\n\n');
 }
 // LSP Markdown content, or nothing when there's no text, so clients don't show an empty panel.
@@ -37,6 +40,11 @@ function title(t: Target) {
   const kind = t.kind === 'heading' ? 'Section' : t.kind[0].toUpperCase() + t.kind.slice(1);
   if (!t.enumerator) return kind;
   return t.kind === 'equation' ? `${kind} (${t.enumerator})` : `${kind} ${t.enumerator}`;
+}
+
+/** Markdown showing what a target is: an equation's LaTeX, a term's definition, or a caption or heading. */
+function preview(t: Target) {
+  return t.kind === 'equation' ? `\`\`\`latex\n${t.text}\n\`\`\`` : t.doc ?? t.text;
 }
 
 /** The ghost text shown after a resolved reference. */
@@ -244,16 +252,6 @@ export function createService(root: string, project: ReturnType<typeof createPro
     return doc ? { contents: { kind: 'markdown' as const, value: `**${name}**\n\n${doc}` } } : null;
   }
 
-  /** Markdown describing what a reference points to, for its hover and completion. */
-  function describe(r: Resolved) {
-    const value =
-      r.kind === 'xref' ? `**${r.entry.title || r.entry.name || r.entry.page || r.entry.url}** · ${r.entry.kind}\n\n${r.entry.url}`
-      : r.kind === 'citation' ? `**${authorYear(r.entry) || r.entry.key}** · ${relative(root, r.entry.file)}\n\n${r.entry.title ?? ''}`
-      : r.kind === 'label' ? `**${title(r.target)}** · ${r.target.file}\n\n${r.target.doc ?? r.target.text}`
-      : undefined;
-    return markdown(value);
-  }
-
   /** Options of the enclosing directive (from its mystmd spec), minus ones already set. */
   function optionItems(opt: NonNullable<ReturnType<typeof optionAt>>, line: number): CompletionItem[] {
     const options = directiveSpecs.get(opt.directive)?.options ?? {};
@@ -312,12 +310,12 @@ export function createService(root: string, project: ReturnType<typeof createPro
       });
 
       const citeItems = () =>
-        bib.entries.map((e) => item(e.key, CompletionItemKind.Value, { detail: [authorYear(e), e.title].filter(Boolean).join(' · '), documentation: describe({ kind: 'citation', entry: e }), filterText: `${e.key} ${e.author ?? ''} ${e.title ?? ''}` }));
+        bib.entries.map((e) => item(e.key, CompletionItemKind.Value, { detail: [authorYear(e), e.title].filter(Boolean).join(' · '), filterText: `${e.key} ${e.author ?? ''} ${e.title ?? ''}` }));
       const labelItem = (t: Target) =>
         item(t.identifier, kindIcon(t.kind), {
           labelDetails: { description: title(t) }, // shown on every row, unlike `detail`
           detail: `${title(t)} · ${t.file}`,
-          documentation: describe({ kind: 'label', target: t }),
+          documentation: markdown(preview(t)), // `detail` already says what and where it is
           filterText: `${t.identifier} ${t.text}`,
         });
 
@@ -338,7 +336,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
           return project
             .targets()
             .filter((t) => t.kind === 'term')
-            .map((t) => item(t.text, kindIcon(t.kind), { detail: t.file, documentation: describe({ kind: 'label', target: t }) }));
+            .map((t) => item(t.text, kindIcon(t.kind), { detail: t.file, documentation: markdown(preview(t)) }));
         case 'doc':
         case 'link-path':
         case 'path': {
@@ -359,7 +357,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
           const all = (xrefs[key]?.entries ?? []).filter((e) => has(e) && `${e.name} ${e.title ?? ''}`.toLowerCase().includes(q));
           const matches = [...all.filter((e) => e.name.toLowerCase().startsWith(q)), ...all.filter((e) => !e.name.toLowerCase().startsWith(q))];
           // Sphinx inventories can have tens of thousands of entries: send the best 200 and ask the client to re-query as the user types.
-          const items = matches.slice(0, 200).map((e) => item(e.name, kindIcon(e.kind), { labelDetails: { description: e.kind }, detail: e.title && e.title !== e.name ? `${e.title} · ${e.kind}` : e.kind, documentation: describe({ kind: 'xref', entry: e }), filterText: `${e.name} ${e.title ?? ''}` }));
+          const items = matches.slice(0, 200).map((e) => item(e.name, kindIcon(e.kind), { labelDetails: { description: e.kind }, detail: e.title && e.title !== e.name ? `${e.title} · ${e.kind}` : e.kind, documentation: e.url, filterText: `${e.name} ${e.title ?? ''}` }));
           return { isIncomplete: matches.length > 200, items };
         }
         case 'directive':
@@ -380,8 +378,13 @@ export function createService(root: string, project: ReturnType<typeof createPro
     hover(at: At) {
       const ref = refAtCursor(at);
       if (!ref) return specHover(at);
-      const contents = describe(resolveRef(ref, at.textDocument.uri));
-      return contents ? { contents } : null;
+      const r = resolveRef(ref, at.textDocument.uri);
+      const value =
+        r.kind === 'xref' ? `**${r.entry.title || r.entry.name || r.entry.page || r.entry.url}** · ${r.entry.kind}\n\n${r.entry.url}`
+        : r.kind === 'citation' ? `**${authorYear(r.entry) || r.entry.key}** · ${relative(root, r.entry.file)}\n\n${r.entry.title ?? ''}`
+        : r.kind === 'label' ? `**${title(r.target)}** · ${r.target.file}\n\n${preview(r.target)}`
+        : undefined;
+      return value ? { contents: { kind: 'markdown' as const, value } } : null;
     },
 
     definition(at: At) {

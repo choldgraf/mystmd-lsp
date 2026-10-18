@@ -23,7 +23,7 @@ It uses mystmd's own parser and directive specs, so it knows the same directives
 
 See [](configuration.md#what-it-reads-from-myst-yml) for where citation keys come from.
 
-Completions of references, citations, terms, directives and roles show the same docs as their hover.
+Completions show a preview of the target, like a figure's caption or an equation's LaTeX, and the docs of directives and roles.
 
 Directives and roles from the JavaScript plugins in `myst.yml` complete too, after mystmd's first build.
 The server reads them from the same files mystmd loads, so it does this only when mystmd runs for the project.
