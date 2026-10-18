@@ -15,10 +15,17 @@ import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref
 
 // Directive and role specs by name and alias.
 const byName = <T extends { name: string; alias?: string[] }>(specs: T[]) => new Map(specs.flatMap((s) => [s.name, ...(s.alias ?? [])].map((n) => [n, s] as const)));
-/** Markdown docs for a directive, role or option spec: its description, argument and options. */
-function specDoc(spec?: { doc?: string; arg?: { doc?: string }; options?: Record<string, unknown> }) {
-  const options = Object.keys(spec?.options ?? {}).map((k) => `\`:${k}:\``).join(', ');
-  return [spec?.doc, spec?.arg?.doc && `**Argument**: ${spec.arg.doc}`, options && `**Options**: ${options}`].filter(Boolean).join('\n\n');
+// Spec types are names like `myst`, or constructors like `String`.
+type Param = { type?: string | { name: string }; doc?: string; required?: boolean };
+const typeName = (type: Param['type']) => (typeof type === 'string' ? type : type?.name.toLowerCase());
+// `(string, optional)`, or nothing when every part is empty.
+const parens = (...parts: (string | false | undefined)[]) => (parts.some(Boolean) ? `(${parts.filter(Boolean).join(', ')})` : '');
+/** Markdown docs for a directive, role or option spec, laid out like a docstring: its description, argument, body and options. */
+function specDoc(spec?: { doc?: string; arg?: Param; body?: Param; options?: Record<string, Param> }) {
+  const param = (name: string, p?: Param) => p && [`**${name}**`, parens(typeName(p.type), !p.required && 'optional')].filter(Boolean).join(' ') + (p.doc ? `: ${p.doc}` : '');
+  // Only each option's first line, to keep the list short. Hover on an option shows all of it.
+  const options = Object.entries(spec?.options ?? {}).map(([k, o]) => ['-', `\`:${k}:\``, parens(typeName(o.type)), o.doc?.split('\n')[0]].filter(Boolean).join(' '));
+  return [spec?.doc, param('Argument', spec?.arg), param('Body', spec?.body), options.length && `**Options**\n\n${options.join('\n')}`].filter(Boolean).join('\n\n');
 }
 // LSP Markdown content, or nothing when there's no text, so clients don't show an empty panel.
 const markdown = (value?: string) => (value ? { kind: 'markdown' as const, value } : undefined);
@@ -256,7 +263,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
       .map(([key, o]) => ({
         label: key,
         kind: CompletionItemKind.Property,
-        detail: typeof o.type === 'string' ? o.type : o.type?.name?.toLowerCase(),
+        detail: typeName(o.type),
         documentation: markdown(o.doc),
         textEdit: { range, newText: `${key}: ` },
       }));

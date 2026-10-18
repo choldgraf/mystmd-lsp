@@ -219,7 +219,7 @@ test('hover shows mystmd docs for directives, options and roles, but references 
   const { text, at } = marks('```{i|nclude} x.md\n:la|nguage: python\n```\n{k|bd}`Ctrl` {numref}`fig-|built`\n');
   service.update(uri, text);
   const hover = (i: number) => service.hover({ textDocument: { uri }, position: at[i] })?.contents.value;
-  assert.match(hover(0)!, /^\*\*\{include\}\*\*\n\nAllows you to include .*\n\n\*\*Argument\*\*: The file path/);
+  assert.match(hover(0)!, /^\*\*\{include\}\*\*\n\nAllows you to include .*\n\n\*\*Argument\*\* \(string\): The file path/);
   assert.match(hover(1)!, /^\*\*:language:\*\*\n\nThe language of the code/);
   assert.match(hover(2)!, /^\*\*\{kbd\}\*\*/);
   assert.match(hover(3)!, /^\*\*Figure 2\*\*/);
@@ -230,7 +230,7 @@ test('completions carry the same docs as hover', () => {
   const { text, at } = marks('```{fig|\n```\n{numref}`fig-|built`\n');
   service.update(uri, text);
   const doc = (i: number, label: string) => (service.completion({ textDocument: { uri }, position: at[i] }) as any[]).find((x) => x.label === label).documentation.value;
-  assert.match(doc(0, 'figure'), /\*\*Options\*\*: .*`:width:`/);
+  assert.match(doc(0, 'figure'), /\*\*Options\*\*\n\n(- .*\n)*- `:width:` \(string\)/);
   assert.equal(doc(1, 'fig-built'), service.hover({ textDocument: { uri }, position: at[1] })!.contents.value);
 });
 
