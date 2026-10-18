@@ -23,6 +23,8 @@ It uses mystmd's own parser and directive specs, so it knows the same directives
 
 See [](configuration.md#what-it-reads-from-myst-yml) for where citation keys come from.
 
+Completions of references, citations, terms, directives and roles show the same docs as their hover.
+
 Directives and roles from the JavaScript plugins in `myst.yml` complete too, after mystmd's first build.
 The server reads them from the same files mystmd loads, so it does this only when mystmd runs for the project.
 Reload the window after changing a local plugin or adding a new one.
@@ -30,7 +32,7 @@ Reload the window after changing a local plugin or adding a new one.
 ## Hover and go to definition
 
 References get hover and go to definition.
-Directive names, directive options and role names get hover with the docs from mystmd's specs.
+Directive names, directive options and role names get hover with the docs from mystmd's specs, including a directive's argument and options.
 `{doc}` references and links to local files, like `[](chapter.md)`, get document links and go to definition when the file exists.
 
 ## File arguments

@@ -225,6 +225,15 @@ test('hover shows mystmd docs for directives, options and roles, but references 
   assert.match(hover(3)!, /^\*\*Figure 2\*\*/);
 });
 
+test('completions carry the same docs as hover', () => {
+  const service = createService(root, stub());
+  const { text, at } = marks('```{fig|\n```\n{numref}`fig-|built`\n');
+  service.update(uri, text);
+  const doc = (i: number, label: string) => (service.completion({ textDocument: { uri }, position: at[i] }) as any[]).find((x) => x.label === label).documentation.value;
+  assert.match(doc(0, 'figure'), /\*\*Options\*\*: .*`:width:`/);
+  assert.equal(doc(1, 'fig-built'), service.hover({ textDocument: { uri }, position: at[1] })!.contents.value);
+});
+
 test('directive option completion offers the directive\'s options, minus ones already set', () => {
   const service = createService(root, stub());
   const { text, at } = marks('```{figure} a.png\n:name: x\n:|\n```\n');

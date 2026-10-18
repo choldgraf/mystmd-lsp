@@ -15,6 +15,13 @@ import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref
 
 // Directive and role specs by name and alias.
 const byName = <T extends { name: string; alias?: string[] }>(specs: T[]) => new Map(specs.flatMap((s) => [s.name, ...(s.alias ?? [])].map((n) => [n, s] as const)));
+/** Markdown docs for a directive, role or option spec: its description, argument and options. */
+function specDoc(spec?: { doc?: string; arg?: { doc?: string }; options?: Record<string, unknown> }) {
+  const options = Object.keys(spec?.options ?? {}).map((k) => `\`:${k}:\``).join(', ');
+  return [spec?.doc, spec?.arg?.doc && `**Argument**: ${spec.arg.doc}`, options && `**Options**: ${options}`].filter(Boolean).join('\n\n');
+}
+// LSP Markdown content, or nothing when there's no text, so clients don't show an empty panel.
+const markdown = (value?: string) => (value ? { kind: 'markdown' as const, value } : undefined);
 // Directives and roles listed first in the `/` menu.
 const common = new Set(['note', 'warning', 'tip', 'figure', 'code-block', 'math', 'table', 'dropdown', 'tab-set', 'ref', 'doc', 'cite', 'term', 'kbd']);
 
@@ -221,13 +228,23 @@ export function createService(root: string, project: ReturnType<typeof createPro
   function specHover({ textDocument, position }: At) {
     const n = nameAt(linesOf(textDocument.uri), position.line, position.character);
     if (!n) return null;
-    const spec: { doc?: string; arg?: { doc?: string } } | undefined =
+    const spec =
       n.kind === 'option'
         ? Object.entries(directiveSpecs.get(n.directive)?.options ?? {}).find(([k, o]) => k === n.name || o.alias?.includes(n.name))?.[1]
         : (n.kind === 'directive' ? directiveSpecs : roleSpecs).get(n.name);
-    const doc = [spec?.doc, spec?.arg?.doc && `**Argument**: ${spec.arg.doc}`].filter(Boolean).join('\n\n');
+    const doc = specDoc(spec);
     const name = n.kind === 'option' ? `:${n.name}:` : `{${n.name}}`;
     return doc ? { contents: { kind: 'markdown' as const, value: `**${name}**\n\n${doc}` } } : null;
+  }
+
+  /** Markdown describing what a reference points to, for its hover and completion. */
+  function describe(r: Resolved) {
+    const value =
+      r.kind === 'xref' ? `**${r.entry.title || r.entry.name || r.entry.page || r.entry.url}** · ${r.entry.kind}\n\n${r.entry.url}`
+      : r.kind === 'citation' ? `**${authorYear(r.entry) || r.entry.key}** · ${relative(root, r.entry.file)}\n\n${r.entry.title ?? ''}`
+      : r.kind === 'label' ? `**${title(r.target)}** · ${r.target.file}\n\n${r.target.doc ?? r.target.text}`
+      : undefined;
+    return markdown(value);
   }
 
   /** Options of the enclosing directive (from its mystmd spec), minus ones already set. */
@@ -240,7 +257,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
         label: key,
         kind: CompletionItemKind.Property,
         detail: typeof o.type === 'string' ? o.type : o.type?.name?.toLowerCase(),
-        documentation: o.doc,
+        documentation: markdown(o.doc),
         textEdit: { range, newText: `${key}: ` },
       }));
   }
@@ -288,12 +305,12 @@ export function createService(root: string, project: ReturnType<typeof createPro
       });
 
       const citeItems = () =>
-        bib.entries.map((e) => item(e.key, CompletionItemKind.Value, { detail: [authorYear(e), e.title].filter(Boolean).join(' · '), filterText: `${e.key} ${e.author ?? ''} ${e.title ?? ''}` }));
+        bib.entries.map((e) => item(e.key, CompletionItemKind.Value, { detail: [authorYear(e), e.title].filter(Boolean).join(' · '), documentation: describe({ kind: 'citation', entry: e }), filterText: `${e.key} ${e.author ?? ''} ${e.title ?? ''}` }));
       const labelItem = (t: Target) =>
         item(t.identifier, kindIcon(t.kind), {
           labelDetails: { description: title(t) }, // shown on every row, unlike `detail`
           detail: `${title(t)} · ${t.file}`,
-          documentation: t.text,
+          documentation: describe({ kind: 'label', target: t }),
           filterText: `${t.identifier} ${t.text}`,
         });
 
@@ -314,7 +331,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
           return project
             .targets()
             .filter((t) => t.kind === 'term')
-            .map((t) => item(t.text, kindIcon(t.kind), { detail: t.file, documentation: t.doc }));
+            .map((t) => item(t.text, kindIcon(t.kind), { detail: t.file, documentation: describe({ kind: 'label', target: t }) }));
         case 'doc':
         case 'link-path':
         case 'path': {
@@ -335,20 +352,20 @@ export function createService(root: string, project: ReturnType<typeof createPro
           const all = (xrefs[key]?.entries ?? []).filter((e) => has(e) && `${e.name} ${e.title ?? ''}`.toLowerCase().includes(q));
           const matches = [...all.filter((e) => e.name.toLowerCase().startsWith(q)), ...all.filter((e) => !e.name.toLowerCase().startsWith(q))];
           // Sphinx inventories can have tens of thousands of entries: send the best 200 and ask the client to re-query as the user types.
-          const items = matches.slice(0, 200).map((e) => item(e.name, kindIcon(e.kind), { labelDetails: { description: e.kind }, detail: e.title && e.title !== e.name ? `${e.title} · ${e.kind}` : e.kind, filterText: `${e.name} ${e.title ?? ''}` }));
+          const items = matches.slice(0, 200).map((e) => item(e.name, kindIcon(e.kind), { labelDetails: { description: e.kind }, detail: e.title && e.title !== e.name ? `${e.title} · ${e.kind}` : e.kind, documentation: describe({ kind: 'xref', entry: e }), filterText: `${e.name} ${e.title ?? ''}` }));
           return { isIncomplete: matches.length > 200, items };
         }
         case 'directive':
-          return [...directiveSpecs.keys()].map((n) => item(n, CompletionItemKind.Keyword));
+          return [...directiveSpecs].map(([n, d]) => item(n, CompletionItemKind.Keyword, { documentation: markdown(specDoc(d)) }));
         case 'role':
-          return [...roleSpecs.keys()].map((n) => item(n, CompletionItemKind.Function));
+          return [...roleSpecs].map(([n, r]) => item(n, CompletionItemKind.Function, { documentation: markdown(specDoc(r)) }));
         case 'slash': {
           // Templates for every directive (at the start of a line) and role, with common ones listed first.
-          const template = (name: string, kind: CompletionItemKind, newText: string, doc?: string) =>
-            item(name, kind, { detail: kind === CompletionItemKind.Keyword ? 'directive' : 'role', filterText: `/${name}`, sortText: `${common.has(name) ? 0 : 1}${name}`, insertTextFormat: InsertTextFormat.Snippet, textEdit: { range, newText }, documentation: doc && { kind: 'markdown', value: doc } });
+          const template = (name: string, kind: CompletionItemKind, newText: string, doc: string) =>
+            item(name, kind, { detail: kind === CompletionItemKind.Keyword ? 'directive' : 'role', filterText: `/${name}`, sortText: `${common.has(name) ? 0 : 1}${name}`, insertTextFormat: InsertTextFormat.Snippet, textEdit: { range, newText }, documentation: markdown(doc) });
           const atLineStart = !lines[position.line].slice(0, ctx.start).trim();
-          const blocks = atLineStart ? [...directiveSpecs].map(([n, d]) => template(n, CompletionItemKind.Keyword, `:::{${n}}${d.arg ? ' $1' : ''}\n${d.body ? '$0\n' : ''}:::`, d.doc)) : [];
-          return [...blocks, ...[...roleSpecs].map(([n, r]) => template(n, CompletionItemKind.Function, `{${n}}\`$0\``, r.doc))];
+          const blocks = atLineStart ? [...directiveSpecs].map(([n, d]) => template(n, CompletionItemKind.Keyword, `:::{${n}}${d.arg ? ' $1' : ''}\n${d.body ? '$0\n' : ''}:::`, specDoc(d))) : [];
+          return [...blocks, ...[...roleSpecs].map(([n, r]) => template(n, CompletionItemKind.Function, `{${n}}\`$0\``, specDoc(r)))];
         }
       }
     },
@@ -356,13 +373,8 @@ export function createService(root: string, project: ReturnType<typeof createPro
     hover(at: At) {
       const ref = refAtCursor(at);
       if (!ref) return specHover(at);
-      const r = resolveRef(ref, at.textDocument.uri);
-      const value =
-        r.kind === 'xref' ? `**${r.entry.title || r.entry.name || r.entry.page || r.entry.url}** · ${r.entry.kind}\n\n${r.entry.url}`
-        : r.kind === 'citation' ? `**${authorYear(r.entry) || r.entry.key}** · ${relative(root, r.entry.file)}\n\n${r.entry.title ?? ''}`
-        : r.kind === 'label' ? `**${title(r.target)}** · ${r.target.file}\n\n${r.target.doc ?? r.target.text}`
-        : undefined;
-      return value ? { contents: { kind: 'markdown' as const, value } } : null;
+      const contents = describe(resolveRef(ref, at.textDocument.uri));
+      return contents ? { contents } : null;
     },
 
     definition(at: At) {

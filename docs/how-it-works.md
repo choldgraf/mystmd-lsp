@@ -50,7 +50,7 @@ Rename and file moves only edit open cells, since the editor owns a notebook's c
 ## To add a reference kind
 
 1. Add its pattern to `refPatterns` and its name to the `kind` of `Ref` in `src/syntax.ts`, and to `contexts` if it should complete.
-2. Resolve it in `resolveRef` in `src/service.ts`, and add its completions under its trigger in `completion`.
+2. Resolve it in `resolveRef` in `src/service.ts`, add its hover and completion text to `describe`, and add its completions under its trigger in `completion`.
 3. If it points at a new kind of target, give that kind a completion icon in `src/kinds.ts` and a modifier in `semanticTokensLegend` in `src/service.ts`.
 4. If mystmd's parse shows it, add it to `kinds` in `scripts/conformance.ts`.
 5. Add a test to `src/syntax.test.ts` for the pattern, or to `src/service.test.ts` for the feature.
