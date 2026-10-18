@@ -1,6 +1,6 @@
 {
   "name": "mystmd-lsp",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A language server for MyST Markdown projects, built on the mystmd engine.",
   "type": "module",
   "engines": {
