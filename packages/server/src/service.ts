@@ -7,15 +7,14 @@ import { directives, roles } from 'mystmd-client/parse';
 import { authorYear, readBibliography, type BibEntry } from './cite.ts';
 import { kindIcon } from './kinds.ts';
 import type { createProject } from './project.ts';
+import { pluginSpecs } from './plugins.ts';
 import { readProjectConfig } from './root.ts';
 import { labelChars, labelDefinition, nameAt, optionAt, refAt, refsInText, splitLines, type Ref } from './syntax.ts';
 import type { Target } from './index-targets.ts';
 import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
 
-// The same directives and roles as mystmd's parser (`mystmd-client/parse`), by name and alias.
+// Directive and role specs by name and alias.
 const byName = <T extends { name: string; alias?: string[] }>(specs: T[]) => new Map(specs.flatMap((s) => [s.name, ...(s.alias ?? [])].map((n) => [n, s] as const)));
-const directiveSpecs = byName(directives);
-const roleSpecs = byName(roles);
 // Directives and roles listed first in the `/` menu.
 const common = new Set(['note', 'warning', 'tip', 'figure', 'code-block', 'math', 'table', 'dropdown', 'tab-set', 'ref', 'doc', 'cite', 'term', 'kbd']);
 
@@ -98,8 +97,11 @@ export function createService(root: string, project: ReturnType<typeof createPro
   // Citations from the project's .bib files, read on startup and again on `reloadConfig()`.
   let bib = { entries: [] as BibEntry[], complete: false };
   let citations = new Map<string, BibEntry>();
-  // Whether myst.yml lists plugins, whose directives and roles our parser doesn't know.
+  // Whether myst.yml lists plugins, so we can't tell an unknown directive or role from a plugin's that didn't load.
   let plugins = false;
+  // The same directives and roles as mystmd's parser (`mystmd-client/parse`), plus the plugins' once `loadPlugins` runs.
+  let directiveSpecs = byName(directives);
+  let roleSpecs = byName(roles);
   const reloadConfig = () => {
     const config = readProjectConfig(root);
     // Like mystmd: `project.bibliography` from myst.yml, else every `.bib` in the project.
@@ -245,6 +247,14 @@ export function createService(root: string, project: ReturnType<typeof createPro
 
   const service = {
     reloadConfig,
+    /** Add the directives and roles of myst.yml's plugins, or keep the specs as they were if `plugins` is malformed. This imports them, so only call it when mystmd runs the project. */
+    loadPlugins: async () => {
+      try {
+        const specs = await pluginSpecs(root, readProjectConfig(root).plugins);
+        directiveSpecs = byName([...directives, ...specs.directives]);
+        roleSpecs = byName([...roles, ...specs.roles]);
+      } catch {}
+    },
     /** Whether the document is a page of the project, which is what gets language features. */
     isPage: (uri: string) => project.isPage(toFile(uri)),
 

@@ -248,6 +248,21 @@ test('`/` offers directive templates at the start of a line, and role templates 
   assert.ok(!items(1).some((i) => i.label === 'note'), 'no directives mid-line');
 });
 
+test('`/` offers directives from myst.yml plugins once they load', async (t) => {
+  const dir = tmpWorkspace(t, {
+    'myst.yml': 'version: 1\nproject:\n  plugins:\n    - plugin.mjs\n',
+    'plugin.mjs': "export default { directives: [{ name: 'myst:demo', body: { type: String } }] };",
+  });
+  const service = createService(dir, stub());
+  const doc = pathToFileURL(join(dir, 'index.md')).href;
+  const { text, at } = marks('/my|');
+  service.update(doc, text);
+  const demo = () => (service.completion({ textDocument: { uri: doc }, position: at[0] }) as any[]).find((i) => i.label === 'myst:demo');
+  assert.equal(demo(), undefined);
+  await service.loadPlugins();
+  assert.equal(demo().textEdit.newText, ':::{myst:demo}\n$0\n:::');
+});
+
 test('directive file arguments: links, completion, and a warning when missing', (t) => {
   const dir = tmpWorkspace(t, { 'img/plot.png': '' });
   const service = createService(dir, stub());

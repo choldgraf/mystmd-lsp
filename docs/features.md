@@ -23,6 +23,10 @@ It uses mystmd's own parser and directive specs, so it knows the same directives
 
 See [](configuration.md#what-it-reads-from-myst-yml) for where citation keys come from.
 
+Directives and roles from the JavaScript plugins in `myst.yml` complete too, after mystmd's first build.
+The server reads them from the same files mystmd loads, so it does this only when mystmd runs for the project.
+Reload the window after changing a local plugin or adding a new one.
+
 ## Hover and go to definition
 
 References get hover and go to definition.

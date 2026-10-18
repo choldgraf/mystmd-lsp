@@ -69,6 +69,8 @@ async function createEntry(root: string): Promise<Entry> {
     if (entry.loading && project.loaded) {
       entry.loading = false;
       entry.progress?.done();
+      // mystmd has now loaded the plugins (and cached remote ones), so their specs can be read.
+      service.loadPlugins();
     }
     // A document that stopped being a page after a rebuild gets its diagnostics cleared.
     if (push) for (const { uri } of [...documents.all(), ...cells.all()]) if (rootFor(uri) === root) connection.sendDiagnostics({ uri, diagnostics: service.isPage(uri) ? service.diagnostics(uri) : [] });
@@ -81,7 +83,8 @@ async function createEntry(root: string): Promise<Entry> {
   const xrefs: Record<string, XrefProject> = {};
   const readXrefs = () => syncXrefs(xrefs, readReferences(root), refresh);
   const service = createService(root, project, xrefs);
-  const entry: Entry = { service, url, loading: !!url, reloadConfig: () => (service.reloadConfig(), readXrefs(), refresh()) };
+  // Plugins load only when mystmd runs (`url`), so `--no-myst` never imports their code.
+  const entry: Entry = { service, url, loading: !!url, reloadConfig: () => (service.reloadConfig(), url && service.loadPlugins(), readXrefs(), refresh()) };
   readXrefs();
   if (notStarted) fail(notStarted);
   // Show "Loading <folder>" while mystmd builds. Clients without progress support get a no-op reporter.
