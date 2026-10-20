@@ -35,7 +35,7 @@ npm run conformance # compares the reference regexes with mystmd (see Conformanc
 
 `npm test` skips the tests that start mystmd, so it passes without a working mystmd.
 `npm run test:mystmd` runs them, and fails if mystmd doesn't start.
-CI runs `test:mystmd`, `typecheck` and `conformance`, and packages the VS Code extension.
+CI is defined in `.github/workflows/test.yml`.
 
 ## Try your build
 
@@ -54,6 +54,7 @@ In VS Code, point the MyST Language Server extension's `mystmdLsp.serverPath` se
 - `src/xref.ts`: external project inventories and `xref:` resolution.
 - `src/cite.ts`: reads the project's `.bib` files.
 - `src/kinds.ts`: the completion icon for each kind of target.
+- `src/plugins.ts`: directive and role specs from the JavaScript plugins in `myst.yml`.
 - `src/service.ts`: the features (completion, hover, diagnostics, ...) without an LSP connection, so tests can call them directly.
 - `src/server.ts`: connects the features in `service.ts` to LSP requests.
 - `mystmd-client`, a separate package, has three exports:
@@ -91,7 +92,6 @@ Corpus differences are reported but don't fail the run.
 
 Change these together:
 
-- `.github/workflows/test.yml` and the commands under Set up.
 - The `mystmd` version here and the `myst-parser` version that mystmd-client pins, listed in [mystmd-client's README](https://github.com/choldgraf/mystmd-client).
 - What the VS Code extension's `activate` returns, under Layout, and what MyST Author's extension reads from it.
 

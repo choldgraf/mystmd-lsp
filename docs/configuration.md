@@ -8,6 +8,8 @@ The server has a few command-line flags, and reads your project's `myst.yml`.
 mystmd-lsp --stdio [--root=path/to/project] [--content-server=URL] [--no-myst] [--execute]
 ```
 
+To run it with your own `node`, use the installed package's `dist/server.cjs`, which is the whole server in one file.
+
 - `--root`: use one project at this folder for every document, instead of finding each document's project (see [](#finding-the-project)).
 - `--content-server`: the URL of a `myst start --headless` [content server](how-it-works.md) you already run for the `--root` project.
   The server uses it instead of starting its own.
@@ -70,6 +72,7 @@ It re-reads them when `myst.yml` or a `.bib` file changes, if your editor suppor
 - `project.bibliography`: the `.bib` files for citations.
   Without it, every `.bib` file in the project is used, as in mystmd.
 - `project.references`: the keys for [external references](features.md#external-references).
+- `project.plugins`: the directives and roles of JavaScript plugins, for [completion](features.md#completion).
 
 ## Semantic token colours
 
