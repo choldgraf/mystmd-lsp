@@ -479,12 +479,11 @@ export function createService(root: string, project: ReturnType<typeof createPro
       });
     },
 
-    // Labels as workspace symbols, matched by label or text, exact matches first (clients find a label's definition with this).
+    // Labels as workspace symbols, matched by label or text. server.ts puts exact matches first.
     workspaceSymbols({ query }: { query: string }) {
       const q = query.toLowerCase();
-      const matches = project.targets().filter((t) => `${t.identifier} ${t.text}`.toLowerCase().includes(q));
-      matches.sort((a, b) => Number(b.identifier.toLowerCase() === q) - Number(a.identifier.toLowerCase() === q));
-      return matches.map((t) => ({ name: t.identifier, kind: SymbolKind.Key, containerName: hint(t), location: locationOf(t) }));
+      return project.targets().filter((t) => `${t.identifier} ${t.text}`.toLowerCase().includes(q))
+        .map((t) => ({ name: t.identifier, kind: SymbolKind.Key, containerName: hint(t), location: locationOf(t) }));
     },
 
     // The page outline: headings nested by level, with labeled blocks (e.g. "Figure 1 · caption") under their section.
@@ -531,7 +530,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
       });
       // mystmd's own warnings from parsing this page.
       // We skip its warnings about references and duplicate labels, since we check those project-wide above.
-      // Its reference warnings include the citations parse.ts can't link.
+      // Its reference warnings include the citations parseMyst can't link.
       // Invalid frontmatter is skipped too, since half-typed YAML is normal while editing.
       const skip = ['reference-target-resolves', 'identifier-is-unique', 'frontmatter-is-yaml', ...(plugins ? ['directive-known', 'role-known'] : [])];
       const mystmd = project.messages(uri).filter((m) => !skip.includes(String(m.ruleId))).map((m) => {

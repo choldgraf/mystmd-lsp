@@ -26,7 +26,6 @@ const documents = new TextDocuments(TextDocument);
 const notebooks = new NotebookDocuments(TextDocument);
 const cells = notebooks.cellTextDocuments;
 let workspace: ClientCapabilities['workspace'];
-let canWatchFiles = false;
 // Push diagnostics until the client first pulls, since @codemirror/lsp-client says it pulls but never does.
 // See docs/editors.md#how-warnings-reach-your-editor and https://github.com/choldgraf/mystmd-lsp/issues/1.
 let push = true;
@@ -115,7 +114,6 @@ connection.onInitialize((params) => {
   // resolve() drops a trailing slash, so a folder compares equal to the dirname() of its files.
   ceilings = (params.workspaceFolders?.map((f) => f.uri) ?? (params.rootUri ? [params.rootUri] : [])).map((uri) => resolve(fileURLToPath(uri)));
   workspace = params.capabilities.workspace;
-  canWatchFiles = !!workspace?.didChangeWatchedFiles?.dynamicRegistration;
   return {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
@@ -140,7 +138,7 @@ connection.onInitialize((params) => {
 
 connection.onInitialized(() => {
   // Re-read the bibliography and external references when they change, so edits don't need a restart.
-  if (canWatchFiles) connection.client.register(DidChangeWatchedFilesNotification.type, { watchers: [{ globPattern: '**/*.bib' }, { globPattern: '**/myst.yml' }] });
+  if (workspace?.didChangeWatchedFiles?.dynamicRegistration) connection.client.register(DidChangeWatchedFilesNotification.type, { watchers: [{ globPattern: '**/*.bib' }, { globPattern: '**/myst.yml' }] });
 });
 
 // Where a document's project is, for clients that build on this server (MyST Author's preview uses the same mystmd).
