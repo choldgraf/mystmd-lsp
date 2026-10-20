@@ -46,7 +46,7 @@ Take the cursor on `label` in `` {ref}`label` ``.
 
 Each Markdown cell of an open notebook is its own document, at the notebook's path with the cell id as the fragment, like `file:///nb.ipynb#<cell id>` from JupyterLab.
 The index keys open documents by URI, so each cell has its own live targets.
-For find references and workspace diagnostics, `markdownCells` in `service.ts` splits notebooks on disk into their Markdown cells.
+For find references and workspace diagnostics, `markdownCells` in `root.ts` splits notebooks on disk into their Markdown cells.
 Rename and file moves only edit open cells, since the editor owns a notebook's cells and may hold its file open.
 
 ## To add a reference kind

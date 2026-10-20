@@ -8,8 +8,8 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { contentServer } from 'mystmd-client/content-server';
 import { startMyst } from 'mystmd-client/start';
 import { createProject } from './project.ts';
-import { findProjectRoot } from './root.ts';
-import { createService, pathOf, semanticTokensLegend } from './service.ts';
+import { findProjectRoot, pathOf } from './root.ts';
+import { createService, semanticTokensLegend } from './service.ts';
 import { readReferences, syncXrefs, type XrefProject } from './xref.ts';
 
 const args = parseArgs({ strict: false, options: { 'content-server': { type: 'string' }, root: { type: 'string' }, 'no-myst': { type: 'boolean' }, execute: { type: 'boolean' }, help: { type: 'boolean', short: 'h' } } }).values as { 'content-server'?: string; root?: string; 'no-myst'?: boolean; execute?: boolean; help?: boolean };

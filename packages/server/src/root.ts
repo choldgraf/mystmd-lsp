@@ -1,5 +1,6 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { load } from 'js-yaml';
 
 /**
@@ -24,3 +25,28 @@ export function readProjectConfig(root: string): Record<string, any> {
     return {};
   }
 }
+
+/** The Markdown cells of the notebook `json` at `uri`: each one's URI as JupyterLab sends it (with the cell id as the fragment), and its text. */
+export function markdownCells(uri: string, json: string): (readonly [string, string])[] {
+  try {
+    const { cells = [] } = JSON.parse(json);
+    return cells.filter((c: any) => c.cell_type === 'markdown' && c.id).map((c: any) => [`${uri}#${c.id}`, [c.source].flat().join('')] as const);
+  } catch {
+    return [];
+  }
+}
+
+export function workspaceFiles(dir: string, pattern = /\.(md|ipynb)$/): string[] {
+  if (!existsSync(dir)) return []; // the tests use roots that aren't on disk
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '_build') return [];
+    const path = join(dir, e.name);
+    return e.isDirectory() ? workspaceFiles(path, pattern) : pattern.test(e.name) ? [path] : [];
+  });
+}
+
+/**
+ * A document's path. Notebook cells are documents with the notebook's path and a fragment for the cell:
+ * `file:///nb.ipynb#<cell id>` from JupyterLab, `vscode-notebook-cell:/nb.ipynb#...` from VS Code.
+ */
+export const pathOf = (uri: string) => fileURLToPath('file:' + uri.slice(uri.indexOf(':') + 1));

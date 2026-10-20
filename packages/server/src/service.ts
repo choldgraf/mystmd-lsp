@@ -1,6 +1,6 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 import { normalizeLabel } from 'myst-common';
 import { CompletionItemKind, DiagnosticSeverity, ErrorCodes, InsertTextFormat, ResponseError, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position, type TextEdit } from 'vscode-languageserver';
 import { directives, roles } from 'mystmd-client/parse';
@@ -8,7 +8,7 @@ import { authorYear, readBibliography, type BibEntry } from './cite.ts';
 import { kindIcon } from './kinds.ts';
 import type { createProject } from './project.ts';
 import { pluginSpecs } from './plugins.ts';
-import { readProjectConfig } from './root.ts';
+import { markdownCells, pathOf, readProjectConfig, workspaceFiles } from './root.ts';
 import { labelChars, labelDefinition, nameAt, optionAt, refAt, refsInText, splitLines, type Ref } from './syntax.ts';
 import type { Target } from './index-targets.ts';
 import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
@@ -76,31 +76,6 @@ type Resolved =
   | { kind: 'file'; path: string }
   | { kind: 'missing'; problem?: string };
 
-/** The Markdown cells of the notebook `json` at `uri`: each one's URI as JupyterLab sends it (with the cell id as the fragment), and its text. */
-export function markdownCells(uri: string, json: string): (readonly [string, string])[] {
-  try {
-    const { cells = [] } = JSON.parse(json);
-    return cells.filter((c: any) => c.cell_type === 'markdown' && c.id).map((c: any) => [`${uri}#${c.id}`, [c.source].flat().join('')] as const);
-  } catch {
-    return [];
-  }
-}
-
-export function workspaceFiles(dir: string, pattern = /\.(md|ipynb)$/): string[] {
-  if (!existsSync(dir)) return []; // the tests use roots that aren't on disk
-  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
-    if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '_build') return [];
-    const path = join(dir, e.name);
-    return e.isDirectory() ? workspaceFiles(path, pattern) : pattern.test(e.name) ? [path] : [];
-  });
-}
-
-/**
- * A document's path. Notebook cells are documents with the notebook's path and a fragment for the cell:
- * `file:///nb.ipynb#<cell id>` from JupyterLab, `vscode-notebook-cell:/nb.ipynb#...` from VS Code.
- */
-export const pathOf = (uri: string) => fileURLToPath('file:' + uri.slice(uri.indexOf(':') + 1));
-
 /**
  * The language server's features, without an LSP connection.
  * `root` is the project folder. `project` indexes the built pages and open files.
@@ -119,9 +94,9 @@ export function createService(root: string, project: ReturnType<typeof createPro
   // Citations from the project's .bib files, read on startup and again on `reloadConfig()`.
   let bib = { entries: [] as BibEntry[], complete: false };
   let citations = new Map<string, BibEntry>();
-  // Whether myst.yml lists plugins.
-  // If it does, an unknown directive or role may come from a plugin that didn't load, so we can't flag it.
-  let plugins = false;
+  // myst.yml's plugins.
+  // If it lists any, an unknown directive or role may come from a plugin that didn't load, so we can't flag it.
+  let plugins: any[] = [];
   // The same directives and roles as mystmd's parser (`mystmd-client/parse`), plus the plugins' once `loadPlugins` runs.
   let directiveSpecs = byName(directives);
   let roleSpecs = byName(roles);
@@ -131,7 +106,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
     const files: string[] = [config.bibliography ?? workspaceFiles(root, /\.bib$/)].flat();
     bib = readBibliography(root, files);
     citations = new Map(bib.entries.map((e) => [e.key, e]));
-    plugins = !!config.plugins?.length;
+    plugins = config.plugins ?? [];
   };
 
   const toUri = (file: string) => pathToFileURL(resolve(root, file)).href;
@@ -276,7 +251,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
     /** Add the directives and roles of myst.yml's plugins, or keep the specs as they were if `plugins` is malformed. This imports them, so only call it when mystmd runs the project. */
     loadPlugins: async () => {
       try {
-        const specs = await pluginSpecs(root, readProjectConfig(root).plugins);
+        const specs = await pluginSpecs(root, plugins);
         directiveSpecs = byName([...directives, ...specs.directives]);
         roleSpecs = byName([...roles, ...specs.roles]);
       } catch {}
@@ -532,7 +507,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
       // We skip its warnings about references and duplicate labels, since we check those project-wide above.
       // Its reference warnings include the citations parseMyst can't link.
       // Invalid frontmatter is skipped too, since half-typed YAML is normal while editing.
-      const skip = ['reference-target-resolves', 'identifier-is-unique', 'frontmatter-is-yaml', ...(plugins ? ['directive-known', 'role-known'] : [])];
+      const skip = ['reference-target-resolves', 'identifier-is-unique', 'frontmatter-is-yaml', ...(plugins.length ? ['directive-known', 'role-known'] : [])];
       const mystmd = project.messages(uri).filter((m) => !skip.includes(String(m.ruleId))).map((m) => {
         const line = (m.line ?? 1) - 1;
         const range = { start: { line, character: (m.column ?? 1) - 1 }, end: { line, character: lines[line]?.length ?? 0 } };

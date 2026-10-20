@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { relative } from 'node:path';
 import { load } from 'js-yaml';
 import { parse } from 'mystmd-client/parse';
-import { markdownCells, workspaceFiles } from '../src/service.ts';
+import { markdownCells, workspaceFiles } from '../src/root.ts';
 import { labelDefinition, refsInText, splitLines } from '../src/syntax.ts';
 
 type Case = { id: string; src: string };

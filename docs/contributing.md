@@ -50,7 +50,8 @@ In VS Code, point the MyST Language Server extension's `mystmdLsp.serverPath` se
 - `src/syntax.ts`: finds reference syntax in text.
 - `src/index-targets.ts`: collects reference targets from an mdast tree.
 - `src/project.ts`: the project index, from the content server's pages and the open documents.
-- `src/root.ts`: finds a document's project, looking no higher than its workspace folder, and reads its `myst.yml`.
+- `src/root.ts`: finds a document's project, looking no higher than its workspace folder.
+  It also reads the project's `myst.yml`, lists its files and splits notebooks into Markdown cells.
 - `src/xref.ts`: external project inventories and `xref:` resolution.
 - `src/cite.ts`: reads the project's `.bib` files.
 - `src/kinds.ts`: the completion icon for each kind of target.
@@ -92,7 +93,7 @@ Corpus differences are reported but don't fail the run.
 
 Change these together:
 
-- The `mystmd` version here and the `myst-parser` version that mystmd-client pins, listed in [mystmd-client's README](https://github.com/choldgraf/mystmd-client).
+- The `mystmd` version here and the `myst-parser` version that this repo's `package-lock.json` resolves for mystmd-client.
 - What the VS Code extension's `activate` returns, under Layout, and what MyST Author's extension reads from it.
 
 ## Docs
