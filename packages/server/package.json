@@ -45,7 +45,6 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/choldgraf/mystmd-lsp.git",
-    "directory": "packages/server"
+    "url": "git+https://github.com/choldgraf/mystmd-lsp.git"
   }
 }

@@ -1,5 +1,6 @@
 // Bundles the server into one file, which starts several times faster than the TypeScript source (it answers `initialize` sooner).
 import { build } from 'esbuild';
+import { copyFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 await build({
@@ -12,3 +13,6 @@ await build({
   target: 'node22',
   logLevel: 'warning',
 });
+// So the npm page isn't blank. npm resolves the README's relative links from the repository root, so package.json has no `directory`.
+copyFileSync(new URL('../../README.md', import.meta.url), new URL('README.md', import.meta.url));
+copyFileSync(new URL('../../LICENSE', import.meta.url), new URL('LICENSE', import.meta.url));
