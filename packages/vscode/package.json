@@ -54,7 +54,16 @@
     },
     "configurationDefaults": {
       "markdown.suggest.paths.enabled": false
-    }
+    },
+    "semanticTokenScopes": [
+      {
+        "scopes": {
+          "label": [
+            "string.other.link.label.myst"
+          ]
+        }
+      }
+    ]
   },
   "scripts": {
     "build": "npm run build --prefix ../server && node build.mjs",

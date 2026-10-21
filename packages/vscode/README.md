@@ -5,6 +5,7 @@ Pages can be Markdown files or the Markdown cells of notebooks.
 See its [features](https://chrisholdgraf.com/mystmd-lsp/features) for what you get.
 Highlighting comes from the [MyST Syntax](https://github.com/choldgraf/myst-syntax) extension.
 This extension depends on it, so installing this one installs both.
+References use its `string.other.link.label.myst` scope, so they match their `(label)=` targets.
 [MyST Author](https://chrisholdgraf.com/myst-author/) builds on this extension to add a live preview.
 
 ## Install
