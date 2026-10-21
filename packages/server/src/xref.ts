@@ -25,7 +25,8 @@ export function parseInventory(data: Buffer, base: string): XrefEntry[] {
 /** Entries of a MyST site's `myst.xref.json`. `title` is read if present (proposed upstream: https://github.com/choldgraf/myst-author/blob/main/upstream/U1-richer-xref-entries.md). */
 function mystEntries(json: { references: any[] }, base: string): XrefEntry[] {
   return json.references.map((r) => ({
-    name: r.identifier ?? '',
+    // Glossary terms have identifiers like `term-myst ast`, so links use their `html_id` (`term-myst-ast`).
+    name: r.html_id ?? r.identifier ?? '',
     kind: r.kind,
     title: r.title,
     url: base.replace(/\/$/, '') + r.url + (r.identifier ? `#${r.html_id ?? r.identifier}` : ''),
