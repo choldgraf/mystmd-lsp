@@ -20,7 +20,8 @@ type RefContext = { trigger: Trigger; prefix: string; start: number; end: number
  */
 export type Ref = { kind: 'ref' | 'numref' | 'eq' | 'doc' | 'term' | 'link' | 'xref' | 'cite' | 'path'; target: string; line: number; start: number; end: number; after: number; text?: string };
 
-// Fills in NAME, the characters of a role or directive name. mystmd accepts any character but `}`.
+// Fills in NAME with a pattern for one character of a role or directive name.
+// mystmd accepts any character but `}`.
 const withName = (re: RegExp) => new RegExp(re.source.replaceAll('NAME', String.raw`[\w:.+-]`), re.flags);
 
 // The start of a directive whose argument is a file path.

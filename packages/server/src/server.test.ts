@@ -45,7 +45,7 @@ See {numref}\`fig-logo\` and {ref}\`missing\`.
 [](xref:nope#x)
 `;
 
-// Each feature is tested through `createService` in service.test.ts. This checks that the server wires a few of them to LSP requests.
+// Each feature is tested through `createService` in service.test.ts. This checks that a few of them answer LSP requests over stdio.
 test('server completes, hints and diagnoses over stdio', async (t) => {
   // A client that claims to pull diagnostics, as @codemirror/lsp-client does, still gets them pushed until it pulls.
   const { root, conn } = await startServer(t, { 'myst.yml': '', 'a.png': '' }, ['--no-myst'], { textDocument: { diagnostic: {} } });
@@ -86,7 +86,7 @@ test('each document belongs to the nearest myst.yml below the workspace folder, 
   assert.deepEqual(await conn.sendRequest('textDocument/completion', { textDocument: { uri: uri('z.md') }, position: { line: 10, character: 9 } }), null);
 });
 
-// Needs a working mystmd, so `npm run test:mystmd` asks for these.
+// These tests need a working mystmd, so they're skipped unless TEST_MYSTMD is set, as `npm run test:mystmd` does.
 const mystmd = { skip: !process.env.TEST_MYSTMD, timeout: 90_000 };
 const mystProject = {
   'myst.yml': 'version: 1\nproject:\n  id: test\nsite:\n  template: book-theme\n',

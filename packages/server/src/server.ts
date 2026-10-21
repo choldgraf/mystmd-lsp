@@ -29,16 +29,19 @@ let workspace: ClientCapabilities['workspace'];
 // Push diagnostics until the client first pulls, since @codemirror/lsp-client says it pulls but never does.
 // See docs/editors.md#how-warnings-reach-your-editor and https://github.com/choldgraf/mystmd-lsp/issues/1.
 let push = true;
-// The workspace folders: a document's project is the nearest myst.yml at or above it, no higher than these.
+// The workspace folders, which findProjectRoot never searches above.
 let ceilings: string[] = [];
 
 type Service = ReturnType<typeof createService>;
-// A project: its mystmd (`url` is the content server), index and service. `loading` is true until mystmd's first build is indexed.
+// One project. `service` answers its requests and holds its index.
+// `url` is its mystmd's content server, if it has one.
+// `loading` is true until mystmd's first build is indexed.
 type Entry = { service: Service; url?: string; loading: boolean; progress?: WorkDoneProgressServerReporter; reloadConfig: () => void };
 // Projects by root, started when the first document in them opens. The promise is stored so two documents opening at once share one mystmd.
 const entries = new Map<string, Promise<Entry>>();
 
-// A document's project folder: --root for everything, else see findProjectRoot. Undefined outside every workspace folder.
+// A document's project folder: --root if given, else what findProjectRoot finds.
+// Without --root, it's undefined when the document is outside every workspace folder, or when no myst.yml sits between the document and its workspace folder.
 const rootFor = (uri: string) => args.root ?? findProjectRoot(dirname(pathOf(uri)), ceilings);
 
 function entryFor(root: string) {
@@ -141,8 +144,9 @@ connection.onInitialized(() => {
   if (workspace?.didChangeWatchedFiles?.dynamicRegistration) connection.client.register(DidChangeWatchedFilesNotification.type, { watchers: [{ globPattern: '**/*.bib' }, { globPattern: '**/myst.yml' }] });
 });
 
-// Where a document's project is, for clients that build on this server (MyST Author's preview uses the same mystmd).
-// Without `uri`, the --root project.
+// Tells a client a document's project folder, its mystmd content server, and whether the document is a page.
+// MyST Author's preview uses this to share the server's mystmd.
+// Without `uri`, it answers for the --root project.
 connection.onRequest('myst/project', async (params: { uri?: string } | null): Promise<{ root?: string; contentServer?: string; page?: boolean }> => {
   const uri = params?.uri;
   const root = uri ? rootFor(uri) : args.root;
@@ -162,7 +166,7 @@ connection.workspace.onWillRenameFiles(async (p) => ({ changes: Object.assign({}
 connection.languages.inlayHint.on(onDocument((s, p) => s.inlayHints(p)));
 connection.languages.semanticTokens.on(onDocument((s, p) => s.semanticTokens(p)));
 connection.onDocumentLinks(onDocument((s, p) => s.documentLinks(p)));
-// Across projects, exact matches still come first, since clients find a label's definition with this (see features.md).
+// Exact matches come first across all projects, so a client searching for one label sees its definition at the top.
 connection.onWorkspaceSymbol(async ({ query }) => {
   const exact = (name: string) => Number(name.toLowerCase() === query.toLowerCase());
   return (await all()).flatMap((e) => e.service.workspaceSymbols({ query })).sort((a, b) => exact(b.name) - exact(a.name));

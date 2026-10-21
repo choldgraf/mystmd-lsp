@@ -16,7 +16,8 @@ export function createProject(server: { pages(): Promise<Pick<BuiltPage, 'locati
   let loaded = false;
 
   async function load() {
-    // A page's targets include those of the files it includes, filed under those files.
+    // A page's tree also holds the targets of the files it includes.
+    // targetsFromTree gives those targets the included file, not the page.
     const fetched = await server!.pages();
     const fileOf = (page: { location: string }) => page.location.replace(/^\//, '');
     built = fetched.flatMap((page) => targetsFromTree(page.mdast, fileOf(page)));

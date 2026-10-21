@@ -54,8 +54,9 @@ function hint(t: Target) {
 }
 
 /**
- * Semantic tokens: each reference is a `label`, with its target's kind as a modifier (e.g. `label.figure`).
- * Kinds not listed here get the bare `label` type.
+ * Semantic tokens: each label, citation or xref reference is a `label` token, with its target's kind as a modifier (e.g. `label.figure`).
+ * References to files get no token.
+ * Unknown targets, and kinds not listed here, get the bare `label` type.
  */
 export const semanticTokensLegend = {
   tokenTypes: ['label'],
@@ -400,7 +401,7 @@ export function createService(root: string, project: ReturnType<typeof createPro
     /**
      * Before files or folders move, update the references that point to them, and the relative ones inside them.
      * These are `{doc}` roles, Markdown links and directive file arguments.
-     * It edits the same files as rename.
+     * Like rename, it edits the project's Markdown pages and open documents, so closed notebooks are left alone.
      */
     willRenameFiles({ files }: { files: { oldUri: string; newUri: string }[] }) {
       // Where `path` will be after the move. A file in a moved folder moves too, and an extensionless `{doc}` target moves with its file.

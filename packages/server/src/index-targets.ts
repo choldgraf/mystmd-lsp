@@ -10,7 +10,7 @@ export type Target = { identifier: string; kind: string; text: string; enumerato
 const targetTypes = new Set(['heading', 'container', 'math', 'code', 'table', 'paragraph', 'image', 'list', 'blockquote', 'proof', 'exercise', 'admonition', 'definitionTerm']);
 const kinds: Record<string, string> = { math: 'equation', definitionTerm: 'term' };
 
-/** Collect reference targets from an mdast tree (fast parse or built page JSON). */
+/** Collect reference targets from an mdast tree, from a live parse or a built page's JSON. */
 export function targetsFromTree(tree: GenericNode, file: string): Target[] {
   const targets: Target[] = [];
   // `next` is the following sibling: a glossary term's definition.

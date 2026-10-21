@@ -6,7 +6,7 @@ let client: LanguageClient | undefined;
 export async function activate(context: vscode.ExtensionContext) {
   const config = vscode.workspace.getConfiguration('mystmdLsp');
   const server = config.get<string>('serverPath') || context.asAbsolutePath('dist/server.cjs');
-  // mystmd runs the project's plugins, so an untrusted workspace gets the server without it.
+  // mystmd runs the project's plugins, so in an untrusted workspace the server starts with `--no-myst`.
   const args = [...(config.get<boolean>('execute') ? ['--execute'] : []), ...(vscode.workspace.isTrusted ? [] : ['--no-myst'])];
   client = new LanguageClient(
     'mystmdLsp',
@@ -34,7 +34,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const name = root && basename(root);
     if (!root) {
       status.text = 'MyST: no project';
-      explanation = 'No myst.yml between this file and its workspace folder. Run `myst init` in the folder to make a project.';
+      explanation = 'No myst.yml between this file and its workspace folder. To make a project, run myst init in the folder that should hold it.';
     } else if (page) {
       status.text = `MyST: ${name}`;
       explanation = `${file} is a page of the MyST project at ${root}.`;
@@ -52,8 +52,8 @@ export async function activate(context: vscode.ExtensionContext) {
   );
   update();
 
-  // The extension's public API, read by MyST Author's extension.
-  // It sends `myst/project` through `client`, and spawns `server` for its own editors.
+  // MyST Author's extension reads this API.
+  // MyST Author sends `myst/project` through `client`, and spawns `server` for its own editors.
   return { client, server };
 }
 

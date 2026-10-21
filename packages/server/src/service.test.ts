@@ -28,7 +28,7 @@ test('a loaded project resolves built targets and flags unknown ones', () => {
     uri: 'file:///book/chapter/plots.md',
     range: { start: { line: 4, character: 0 }, end: { line: 4, character: 0 } },
   });
-  // Open files outside the workspace keep absolute paths.
+  // A target in a file outside the project folder keeps its absolute path.
   assert.equal(service.definition({ textDocument: { uri }, position: { line: 1, character: 7 } })?.uri, 'file:///elsewhere/notes.md');
 });
 
@@ -203,7 +203,7 @@ test('moving a file updates `{doc}` roles, links and directive arguments that po
   const text = '{doc}`Intro <a>` [](a.md#sec) [](sub/a.md)\n```{include} /a.md\n```\n';
   service.update(uri('b.md'), text);
   const { changes } = service.willRenameFiles({ files: [{ oldUri: uri('a.md'), newUri: uri('guide/a.md') }] });
-  assert.deepEqual(Object.keys(changes).sort(), [uri('a.md'), uri('b.md')]); // `a.md`'s own `x.png` follows it
+  assert.deepEqual(Object.keys(changes).sort(), [uri('a.md'), uri('b.md')]); // `a.md`'s relative `x.png` is rewritten for its new folder
   const moved = TextDocument.applyEdits(TextDocument.create(uri('b.md'), 'markdown', 0, text), changes[uri('b.md')]);
   assert.equal(moved, '{doc}`Intro <guide/a>` [](guide/a.md#sec) [](sub/a.md)\n```{include} /guide/a.md\n```\n');
 });

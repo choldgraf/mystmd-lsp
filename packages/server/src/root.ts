@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { load } from 'js-yaml';
 
 /**
- * A document's project: the nearest folder at or above `start` with a `myst.yml`, no higher than the workspace folder (one of `ceilings`) that holds it.
+ * The project folder for `start`: the nearest folder at or above `start` that has a `myst.yml`.
+ * The search stops at the innermost workspace folder in `ceilings` that contains `start`.
  * Nothing above the folder you opened is picked up, so a stray `myst.yml` there is never built.
  */
 export function findProjectRoot(start: string, ceilings: string[]): string | undefined {
@@ -26,7 +27,11 @@ export function readProjectConfig(root: string): Record<string, any> {
   }
 }
 
-/** The Markdown cells of the notebook `json` at `uri`: each one's URI as JupyterLab sends it (with the cell id as the fragment), and its text. */
+/**
+ * The Markdown cells of the notebook `json` at `uri`, as [URI, text] pairs.
+ * A cell's URI is `uri` with the cell id as the fragment, as JupyterLab sends it.
+ * Cells without an id are left out.
+ */
 export function markdownCells(uri: string, json: string): (readonly [string, string])[] {
   try {
     const { cells = [] } = JSON.parse(json);
