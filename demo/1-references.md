@@ -34,7 +34,7 @@ $$ (eq-energy)
 See {numref}`fig-logo`, {ref}`tbl-results`, {eq}`eq-energy`, and [the intro](#sec-intro).
 
 :::{tip} Try this: completion
-Below, delete the text between the backticks, then type a backtick and pick from the list:
+Below, delete the text between the backticks, then ask for completion and pick from the list:
 - `{ref}` offers every label in the project, with its kind and file.
 - `{numref}` offers only numbered things (figures, tables, equations).
 - `{eq}` offers only equations.
@@ -54,7 +54,9 @@ Here is a line to edit: {ref}`fig-logo`
 :::{tip} Try this: find references and rename
 1. Put the cursor on `fig-logo` in the line to edit above (or on `:label: fig-logo` in the figure).
 2. Press Shift+F12 to see every reference, across pages.
-3. Press F2 and rename it to `fig-brand`. The figure's label and every reference change together, including the ones in other files.
+3. Press F2 and rename it to `fig-brand`.
+   The figure's label and every reference change together, including the ones in other files.
+   Open `notebook.ipynb` first if you want its reference to change too, since rename only edits open notebook cells.
 :::
 
 :::{tip} Try this: outline and symbols

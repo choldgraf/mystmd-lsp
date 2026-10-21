@@ -7,9 +7,9 @@ title: Troubleshooting
 These need mystmd's content server, so most gaps mean it isn't running or the project hasn't finished loading.
 Check that:
 
-- the file belongs to a project and is a page of it, so not left out by `project.toc` or `project.exclude` (see [](configuration.md#finding-the-project)),
+- the file is a page of a project, and `project.toc` or `project.exclude` doesn't leave it out (see [](configuration.md#finding-the-project)),
 - `myst` is installed, and `myst start` works in the project folder,
-- you didn't pass `--no-myst`,
+- you didn't pass `--no-myst`, and in VS Code the folder is trusted,
 - the project has finished loading.
 
 In VS Code, the status bar item says whether the file is a page of a project (see [](vscode.md)).

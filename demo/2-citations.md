@@ -9,7 +9,8 @@ Several at once: [@knuth1984; @lamport1994].
 In a role: {cite:p}`knuth1984` and {cite:t}`perez2007`.
 
 :::{tip} Try this
-- Delete `knuth1984` from the first line and type `@`. You get the citations, with author, year and title, and the project's labels.
+- Delete `@knuth1984` from the first line and type `@` again.
+  You get the citations, with author, year and title, and the project's labels.
 - Type `` {cite}` `` and pick a key.
 - Hover over `@perez2007`: you get "Perez et al. 2007" and the title.
 - Cmd-click `@lamport1994`: you jump to its entry in `refs.bib`.

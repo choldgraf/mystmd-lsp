@@ -5,6 +5,7 @@ title: Contributing
 ## Layout
 
 - `packages/server`: the `mystmd-lsp` npm package. `npm run build` bundles `src` into `dist/server.cjs`.
+  It also copies the root README and LICENSE into `packages/server` for the npm page, so edit the root README, not that copy.
 - `packages/vscode`: the VS Code extension, which copies that bundle in at build time.
   For extensions that build on it, `activate()` returns `{ client, server }`.
   `client` is the language client, and `server` is the path of the server script.
@@ -14,7 +15,7 @@ title: Contributing
 - `docs`: this site.
 - `.devcontainer` and `binder`: the Codespaces and Binder configs, which open the demo with the extension and with jupyterlab-lsp.
 
-The root `package.json` is private and runs each command in every package, so the commands below work from the repository root.
+The root `package.json` is private, and its scripts call the packages' scripts, so the commands below work from the repository root.
 Paths like `src/service.ts` in these docs are inside `packages/server`.
 
 [MyST Author](https://chrisholdgraf.com/myst-author/) is one client of this server.

@@ -28,7 +28,8 @@ Completions for directives and roles show their docs.
 
 Directives and roles from the JavaScript plugins in `myst.yml` complete too, after mystmd's first build.
 The server loads them from the same files mystmd loads, so this only works when mystmd runs for the project.
-Reload the window after changing a local plugin or adding a new one.
+Reload the window after changing a local plugin's code, or after adding a plugin by URL.
+A new local plugin is picked up when `myst.yml` changes, if your editor supports file watching.
 
 ## Hover and go to definition
 
@@ -46,7 +47,7 @@ URLs, notebook cells (`#id`), and paths with a `*` wildcard aren't checked.
 ## Find references and rename
 
 Both work on labels, from a reference or from the label's definition.
-A definition is `(label)=`, `:label:`, or `$$ (label)`.
+A definition is `(label)=`, `:label:`, `:name:`, or `$$ (label)`.
 They search the pages mystmd builds (see [](configuration.md#finding-the-project)), using unsaved text for open documents.
 Find references also searches the Markdown cells of notebooks on disk.
 Rename edits every reference and the definition, but in notebooks only the open cells.
@@ -105,7 +106,8 @@ Headings are nested by level, and each section lists its labeled figures, tables
 
 This covers `[](xref:key#target)` and `<xref:key/page#target>`.
 You get completion of keys, pages and targets.
-Hover shows the URL a link points to, and an inlay hint shows the remote page's title.
+Hover shows the URL a link points to.
+A link with no text gets an inlay hint with the remote page's title.
 You also get diagnostics and document links.
 Keys come from `project.references` in `myst.yml`.
 The server fetches each external project's list of targets when the project loads, and again when `myst.yml` changes (see [](configuration.md#what-it-reads-from-myst-yml)).

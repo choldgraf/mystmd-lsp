@@ -43,7 +43,7 @@
         "mystmdLsp.serverPath": {
           "type": "string",
           "default": "",
-          "description": "Path to another build of the server, such as dist/server.cjs from a mystmd-lsp clone, instead of the bundled one. Reload the window after changing it."
+          "description": "Path to another build of the server, such as packages/server/dist/server.cjs from a mystmd-lsp clone, instead of the bundled one. Reload the window after changing it."
         },
         "mystmdLsp.execute": {
           "type": "boolean",

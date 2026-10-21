@@ -52,7 +52,8 @@ To run a `myst` that isn't on your `PATH`, set the `MYST_BIN` environment variab
 
 A document's project is the nearest `myst.yml` at or above the document's folder, no higher than the workspace folder that contains it.
 So nothing above the folder you opened is picked up.
-A folder can hold several projects, and each one starts its own mystmd and index when the first document in it opens.
+A folder can hold several projects.
+The server starts a separate mystmd and index for each one when the first document in it opens.
 A document outside every workspace folder, or with no `myst.yml` between it and its workspace folder, has no project and gets no features.
 
 A document gets features only if it's a page of its project, one that mystmd builds.
@@ -66,7 +67,7 @@ A `myst.yml` created after the server started, or a workspace folder added later
 
 ## What it reads from `myst.yml`
 
-The server reads the bibliography and external references from `myst.yml`.
+The server reads the bibliography, external references and plugins from `myst.yml`.
 It re-reads them when `myst.yml` or a `.bib` file changes, if your editor supports file watching.
 
 - `project.bibliography`: the `.bib` files for citations.
@@ -80,4 +81,4 @@ The server tags each reference with its target's kind as a semantic token, so yo
 The kinds are listed in `semanticTokensLegend` in [`src/service.ts`](https://github.com/choldgraf/mystmd-lsp/blob/main/packages/server/src/service.ts).
 In VS Code, references are coloured like `(label)=` targets until you colour them yourself.
 To colour references to figures in VS Code, set `"editor.semanticTokenColorCustomizations": { "rules": { "label.figure": "#2a9d8f" } }`.
-References to other kinds keep the default colour.
+References to other kinds keep the `(label)=` colour.

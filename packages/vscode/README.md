@@ -5,7 +5,7 @@ Pages can be Markdown files or the Markdown cells of notebooks.
 See its [features](https://chrisholdgraf.com/mystmd-lsp/features) for what you get.
 Highlighting comes from the [MyST Syntax](https://github.com/choldgraf/myst-syntax) extension.
 This extension depends on it, so installing this one installs both.
-References use its `string.other.link.label.myst` scope, so they match their `(label)=` targets.
+References are coloured with MyST Syntax's `string.other.link.label.myst` scope, so they look like their `(label)=` targets.
 [MyST Author](https://chrisholdgraf.com/myst-author/) builds on this extension to add a live preview.
 
 ## Install
@@ -29,7 +29,7 @@ A `myst.yml` added after that needs a window reload.
 Only files that are pages of a MyST project get completion, warnings and navigation.
 [Finding the project](https://chrisholdgraf.com/mystmd-lsp/configuration#finding-the-project) says how a file's project is found.
 
-A status bar item follows the active Markdown file or notebook cell.
+A status bar item names the project of the active Markdown file or notebook cell.
 It shows `MyST: <folder>` when the file is a page of a project, and `MyST: not a page of <folder>` or `MyST: no project` when it isn't.
 Click it for a sentence explaining the state.
 
