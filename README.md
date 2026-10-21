@@ -9,7 +9,7 @@ It speaks the [Language Server Protocol](https://microsoft.github.io/language-se
 It reads your project through mystmd, so completion and warnings cover every page, not just the open one.
 It has a VS Code extension.
 [MyST Author](https://chrisholdgraf.com/myst-author/) builds on the server and adds a live preview.
-See [editor setup](docs/editors.md) for both.
+See [editor setup](docs/editors.md) for the extension and for MyST Author.
 
 ![In VS Code: completing a numref reference and a citation, then hovering the reference to see what it points to](docs/images/mystmd-lsp.gif)
 
@@ -41,7 +41,7 @@ The Codespaces badge above opens it in VS Code with the extension, and the Binde
 - Hover, go to definition, find references, and rename for labels.
 - Warnings for unknown references, missing figure and include files, and duplicate labels.
 - Inlay hints about what a reference points to, plus outline and workspace symbols.
-- Markdown cells in notebooks, in VS Code, or in JupyterLab through MyST Author.
+- All of the above in notebooks' Markdown cells, in VS Code, or in JupyterLab through MyST Author.
 
 See [features](docs/features.md) for the full list.
 

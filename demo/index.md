@@ -11,7 +11,8 @@ Each page has **Try this** boxes: do what they say, and check that you get what 
   In VS Code, wait for "Loading demo" in the status bar to finish.
   JupyterLab doesn't show this progress.
 - References are coloured by kind (figure, table, equation, heading, citation) and followed by grey text saying what they point to.
-  Those are semantic tokens and inlay hints, and this folder's settings turn them on.
+  Those are semantic tokens and inlay hints.
+  This folder's `.vscode/settings.json` turns them on.
 - If something doesn't work, check the server log (in VS Code, the Output panel's "MyST Language Server" channel).
 :::
 

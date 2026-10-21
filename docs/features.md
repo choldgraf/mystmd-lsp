@@ -61,7 +61,7 @@ Like rename, it leaves closed notebooks alone.
 ## Diagnostics
 
 The server warns about references to unknown targets, and labels defined more than once in the project.
-Like mystmd, headings without an explicit label can share a name.
+Headings without an explicit label can share a name without a warning, like in mystmd.
 It also warns about missing files in directive arguments, such as a `{figure}`'s image, and about broken external references.
 `{doc}` references and `[](file.md)` links to missing files aren't reported, since their targets can also be page slugs.
 See [](troubleshooting.md) if warnings don't show up.

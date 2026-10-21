@@ -13,7 +13,7 @@ Check that:
 - the project has finished loading.
 
 In VS Code, the status bar item says whether the file is a page of a project (see [](vscode.md)).
-MyST Author's web editor and JupyterLab don't show the {gui}`Loading <folder>` progress, so a project can still be loading when it looks idle.
+MyST Author's web editor and JupyterLab extension don't show the {gui}`Loading <folder>` progress, so a project can still be loading when it looks idle.
 See [](how-it-works.md) for why the server works this way.
 
 ## No citation warnings

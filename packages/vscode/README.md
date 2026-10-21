@@ -38,7 +38,8 @@ So the project-wide features are off until you trust the folder.
 
 ## Settings
 
-`mystmdLsp.serverPath` runs a server you built yourself, and `mystmdLsp.execute` runs the project's code when mystmd builds.
+`mystmdLsp.serverPath` runs a server you built yourself.
+`mystmdLsp.execute` runs the project's code when mystmd builds.
 The Settings UI describes each.
 The extension also turns off VS Code's own Markdown path suggestions (`markdown.suggest.paths.enabled`).
 They offer GitHub-style heading slugs that mystmd doesn't use, and the server completes files and labels itself.

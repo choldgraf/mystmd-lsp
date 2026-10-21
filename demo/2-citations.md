@@ -14,7 +14,8 @@ In a role: {cite:p}`knuth1984` and {cite:t}`perez2007`.
 - Type `` {cite}` `` and pick a key.
 - Hover over `@perez2007`: you get "Perez et al. 2007" and the title.
 - Cmd-click `@lamport1994`: you jump to its entry in `refs.bib`.
-- Type `@nobody2020` anywhere. After a moment you get a warning, since no such citation or label exists.
+- Type `@nobody2020` anywhere.
+  After a moment you get a warning, since no such citation or label exists.
 :::
 
 An `@key` that isn't a citation is read as a label instead, as in mystmd: @fig-logo.
