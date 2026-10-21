@@ -67,7 +67,7 @@ It also warns about missing files in directive arguments, such as a `{figure}`'s
 See [](troubleshooting.md) if warnings don't show up.
 
 Open pages also get mystmd's own warnings from parsing them, such as unknown directives, roles and directive options.
-If `myst.yml` lists plugins, unknown directives and roles aren't reported, since the server's parser doesn't load plugins.
+If `myst.yml` lists plugins, unknown directives and roles aren't reported, since they may come from a plugin that hasn't loaded.
 
 Editors that pull warnings for the whole workspace also get them for pages and notebook Markdown cells that aren't open (see [](editors.md#how-warnings-reach-your-editor)).
 
