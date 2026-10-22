@@ -12,7 +12,6 @@
     "conformance": "npm run conformance -w packages/server",
     "docs": "cd docs && myst build --html",
     "docs:live": "cd docs && myst start",
-    "demo:copy": "rsync -a --delete --exclude _build --exclude .ipynb_checkpoints demo/ /tmp/mystmd-lsp-demo/",
-    "demo:live": "npm run demo:copy && cd /tmp/mystmd-lsp-demo && myst start"
+    "demo:copy": "rsync -a --delete --exclude _build --exclude .ipynb_checkpoints demo/ /tmp/mystmd-lsp-demo/"
   }
 }
