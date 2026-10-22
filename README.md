@@ -11,7 +11,9 @@ It has a VS Code extension.
 [MyST Author](https://chrisholdgraf.com/myst-author/) builds on the server and adds a live preview.
 See [editor setup](docs/editors.md) for the extension and for MyST Author.
 
-![In VS Code: completing a numref reference and a citation, then hovering the reference to see what it points to](docs/images/mystmd-lsp.gif)
+<!-- GitHub shows this attachment as a video. docs/index.md shows the downloaded copy instead. -->
+https://github.com/user-attachments/assets/a26eeda2-b251-4a7d-82ad-b5f20c3609b8
+<!-- end of video -->
 
 **Warning**: This is experimental and evolving rapidly! See "Project status" below.
 

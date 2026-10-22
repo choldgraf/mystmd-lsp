@@ -1,0 +1,174 @@
+# Records the VS Code demo video, in VS Code in the browser with code-server.
+# See "Record the demo video" in docs/contributing.md for how to run it.
+# The first run downloads code-server to /tmp/mystmd-lsp-code-server.
+output: docs/videos/vscode.webm
+cursor: true
+
+# Install the extension and MyST Syntax, which it depends on.
+# MyST Syntax isn't on Open VSX yet, so build its .vsix from a clone.
+# The settings keep the window plain and the text large.
+# A fresh user folder resets VS Code's state, such as whether completion details are open.
+# `files.autoSave` saves edits to disk, so mystmd rebuilds as you type.
+sh: |
+  set -e
+  CS=/tmp/mystmd-lsp-code-server
+  test -x $CS/bin/code-server || curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=$CS
+  test -f $CS/myst-syntax.vsix || (
+    rm -rf $CS/myst-syntax && git clone --depth 1 https://github.com/choldgraf/myst-syntax $CS/myst-syntax
+    cd $CS/myst-syntax && npm ci && npm run package -w packages/vscode && cp packages/vscode/myst-syntax.vsix $CS/
+  )
+  npm run package -w packages/vscode
+  for vsix in $CS/myst-syntax.vsix packages/vscode/mystmd-lsp.vsix; do
+    $CS/bin/code-server --extensions-dir $CS/extensions --install-extension $vsix --force
+  done
+  rm -rf $CS/user && mkdir -p $CS/user/User
+  cat > $CS/user/User/settings.json <<'EOF'
+  {
+    "workbench.colorTheme": "Default Light Modern",
+    "workbench.startupEditor": "none",
+    "workbench.secondarySideBar.defaultVisibility": "hidden",
+    "chat.disableAIFeatures": true,
+    "editor.minimap.enabled": false,
+    "editor.fontSize": 16,
+    "editor.wordWrap": "on",
+    "editor.smoothScrolling": true,
+    "files.autoSave": "afterDelay",
+    "files.exclude": { "_build": true, ".ipynb_checkpoints": true, ".vscode": true }
+  }
+  EOF
+  rm -rf /tmp/mystmd-lsp-video && mkdir -p /tmp/mystmd-lsp-video
+  rsync -a --exclude _build --exclude .ipynb_checkpoints demo/ /tmp/mystmd-lsp-video/demo/
+server: exec /tmp/mystmd-lsp-code-server/bin/code-server --auth none --bind-addr 127.0.0.1:9300 --extensions-dir /tmp/mystmd-lsp-code-server/extensions --user-data-dir /tmp/mystmd-lsp-code-server/user --disable-telemetry --disable-workspace-trust /tmp/mystmd-lsp-video/demo
+url: http://127.0.0.1:9300/?folder=/tmp/mystmd-lsp-video/demo
+wait_for: ".explorer-folders-view"
+# Glide the cursor to each click.
+# Keyboard actions move the text cursor but not the mouse, so scenes call toCaret() to glide the mouse to the text cursor.
+# glide() sends its mousemove to the page, which moves the drawn cursor without VS Code seeing it.
+javascript: |
+  const glide = (x, y, target = document) => target.dispatchEvent(new MouseEvent("mousemove", { clientX: x, clientY: y, bubbles: true }));
+  window.toCaret = () => setTimeout(() => {
+    const caret = document.querySelector(".editor-group-container .cursors-layer .cursor").getBoundingClientRect();
+    glide(caret.left, caret.top + caret.height / 2);
+  }, 100);
+  // Rest the mouse on `word` in the line containing `line`, so VS Code shows its hover.
+  // VS Code draws spaces as non-breaking spaces.
+  window.hover = (line, word) => {
+    const row = [...document.querySelectorAll(".view-line")].find((el) => el.textContent.replace(/\u00a0/g, " ").includes(line));
+    const span = [...row.querySelectorAll("span span")].find((el) => el.textContent.includes(word));
+    const r = span.getBoundingClientRect();
+    glide(r.left + r.width / 2, r.top + r.height / 2, span);
+  };
+  // Scroll the editor down by `px` with a few small wheel events, from an empty spot on the right.
+  // VS Code reads Chrome's wheelDeltaY, which a new WheelEvent leaves at 0.
+  window.scrollEditor = (px) => new Promise((resolve) => {
+    glide(1100, 400);
+    const lines = document.querySelector(".editor-group-container .view-lines");
+    let step = 0;
+    const timer = setInterval(() => {
+      const e = new WheelEvent("wheel", { deltaY: px / 10, bubbles: true, cancelable: true });
+      Object.defineProperty(e, "wheelDeltaY", { value: -px / 10 });
+      lines.dispatchEvent(e);
+      if (++step === 10) clearInterval(timer), setTimeout(resolve, 500);
+    }, 60);
+  });
+  // This comes last because Playwright calls the script's last value if it's a function.
+  document.head.insertAdjacentHTML("beforeend", `<style>
+    #shot-scraper-cursor { transition: left 450ms ease-in-out, top 450ms ease-in-out, opacity 120ms !important; }
+    .shot-scraper-click-ring { opacity: 0; animation-duration: 250ms !important; animation-delay: 450ms !important; }
+  </style>`);
+
+# Completion only pops up by itself after a trigger character, such as a backtick or `@`.
+# Elsewhere, Control+Space asks for it, as in "Insert a figure".
+scenes:
+- name: Open a page
+  do:
+  - click: '.explorer-folders-view :text("1-references.md")'
+  # Wait for mystmd's first build, so project-wide completion and warnings work.
+  - wait_for: '.statusbar :text("Loading demo")'
+  - wait_for: '.statusbar:not(:has-text("Loading demo"))'
+  - press: ControlOrMeta+B
+  - pause: 1
+  - js: scrollEditor(500)
+  - pause: 2
+
+- name: Hover a reference
+  do:
+  - js: hover("See {numref}", "fig-logo")
+  - wait_for: '.monaco-hover-content:has-text("The MyST logo")'
+  - pause: 3
+
+- name: Complete a reference
+  do:
+  - click: '.view-line:has-text("Using them")'
+  - press: End
+  - press: Enter
+  - press: Enter
+  - js: toCaret()
+  - type: {into: &editor .editor-group-container .native-edit-context, text: "The logo is {numref}`", delay_ms: 90}
+  - wait_for: &completions .suggest-widget.visible
+  - pause: 1.5
+  - type: {into: *editor, text: "logo", delay_ms: 150}
+  # Show the details pane, with the figure's caption.
+  - press: Control+Space
+  - pause: 2
+  - press: Enter
+  - js: toCaret()
+  - pause: 1.5
+
+- name: Complete a citation
+  do:
+  - type: {into: *editor, text: ", and the idea is old [@", delay_ms: 90}
+  - wait_for: *completions
+  - pause: 1.5
+  - type: {into: *editor, text: "knu", delay_ms: 150}
+  - pause: 1
+  - press: Enter
+  - type: {into: *editor, text: "].", delay_ms: 90}
+  - js: toCaret()
+  - pause: 1.5
+
+- name: Get a warning for an unknown label
+  do:
+  - type: {into: *editor, text: " See also {ref}`fig-lgo`.", delay_ms: 90}
+  - pause: 1.5
+  - js: hover("See also", "fig-lgo")
+  - wait_for: '.monaco-hover-content:has-text("fig-lgo")'
+  - pause: 3
+
+- name: Insert a figure
+  do:
+  - press: End
+  - press: Enter
+  - press: Enter
+  - js: toCaret()
+  - type: {into: *editor, text: "/fig", delay_ms: 150}
+  - wait_for: *completions
+  - pause: 1.5
+  - press: Enter
+  - js: toCaret()
+  - pause: 1
+  - press: Control+Space
+  - wait_for: *completions
+  - pause: 1.5
+  - type: {into: *editor, text: "logo", delay_ms: 150}
+  - press: Enter
+  - press: Tab
+  - js: toCaret()
+  - type: {into: *editor, text: "The logo, again.", delay_ms: 70}
+  - pause: 2
+
+- name: Rename a label everywhere
+  do:
+  - click: '.view-line:has-text("The logo is") >> text=fig-logo'
+  - pause: 0.5
+  - press: F2
+  - wait_for: .rename-box input
+  - pause: 1
+  - type: {into: .rename-box input, text: "fig-brand", delay_ms: 120}
+  - pause: 0.8
+  - press: Enter
+  - pause: 2.5
+  # Go to definition, to show the figure's new label.
+  - press: F12
+  - js: toCaret()
+  - pause: 3

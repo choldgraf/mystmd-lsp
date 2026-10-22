@@ -109,6 +109,29 @@ Each fact has one home, so change it there rather than repeating it:
 Run `npm run docs:live` to preview the site, and `npm run docs` to build it.
 The site deploys to GitHub Pages when `main` changes.
 
+## Record the demo video
+
+The demo video at the top of the README and the docs is an attachment on [issue #2](https://github.com/choldgraf/mystmd-lsp/issues/2), not a file in git.
+mystmd can't show a remote video in a figure yet ([mystmd#3100](https://github.com/jupyter-book/mystmd/issues/3100)).
+So `npm run docs` and `npm run docs:live` first run `npm run docs:videos`, which downloads it into `docs/videos/`.
+It skips the download when the video is already there, so delete `docs/videos/vscode.mp4` to download the attached one again.
+The video's URL is in `docs/videos/download.mjs`.
+
+Record the video again when a feature in it looks different.
+It's recorded with [shot-scraper](https://shot-scraper.datasette.io/en/stable/video.html), from the storyboard in `docs/videos/vscode.yml`.
+Run it from the repository root:
+
+```sh
+uvx shot-scraper video docs/videos/vscode.yml --mp4 --timeout 120000
+```
+
+It uses port 9300 and records on a copy of the demo in `/tmp/mystmd-lsp-video`.
+If a recording stops partway, code-server may keep running, so stop it with `pkill -f /tmp/mystmd-lsp-code-server` before you try again.
+It writes `vscode.webm` and `vscode.mp4` into `docs/videos/`.
+The docs build shows the new MP4 right away, because `npm run docs:videos` doesn't replace it.
+To publish it, drag the MP4 into a comment on the issue above.
+Then replace the old URL with the new attachment's URL in `docs/videos/download.mjs` and the README.
+
 ## Releasing
 
 Each package is released on its own, with its own version.

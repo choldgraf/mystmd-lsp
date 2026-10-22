@@ -10,8 +10,9 @@
     "test:mystmd": "npm run test:mystmd -w packages/server",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "conformance": "npm run conformance -w packages/server",
-    "docs": "cd docs && myst build --html",
-    "docs:live": "cd docs && myst start",
+    "docs:videos": "node docs/videos/download.mjs",
+    "docs": "npm run docs:videos && cd docs && myst build --html",
+    "docs:live": "npm run docs:videos && cd docs && myst start",
     "demo:copy": "rsync -a --delete --exclude _build --exclude .ipynb_checkpoints demo/ /tmp/mystmd-lsp-demo/"
   }
 }

@@ -2,3 +2,5 @@ node_modules/
 dist/
 _build
 .ipynb_checkpoints/
+docs/videos/*.mp4
+docs/videos/*.webm
